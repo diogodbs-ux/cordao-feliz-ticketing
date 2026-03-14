@@ -56,11 +56,17 @@ export default function RecreadorPanel() {
           <h1 className="text-2xl font-bold text-foreground">Check-in de Visitantes</h1>
           <p className="text-sm text-muted-foreground">Guichê {String(guiche).padStart(2, '0')} — {user?.nome}</p>
         </div>
-        <div className="flex items-center gap-2 bg-card rounded-xl shadow-card px-4 py-3">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="text-2xl font-bold text-foreground font-mono-data">{checkinHoje}</p>
-            <p className="text-[10px] text-muted-foreground">atendidos hoje</p>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setCadastroOpen(true)} className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            Cadastro Manual
+          </Button>
+          <div className="flex items-center gap-2 bg-card rounded-xl shadow-card px-4 py-3">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-2xl font-bold text-foreground font-mono-data">{checkinHoje}</p>
+              <p className="text-[10px] text-muted-foreground">atendidos hoje</p>
+            </div>
           </div>
         </div>
       </div>
