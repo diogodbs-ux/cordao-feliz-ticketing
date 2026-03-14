@@ -1,4 +1,5 @@
 import { useData } from '@/contexts/DataContext';
+import MLInsightsPanel from '@/components/MLInsightsPanel';
 import { CordaoColor, getCordaoLabel } from '@/types';
 import { Users, Baby, Accessibility, Activity, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -139,6 +140,9 @@ export default function CoordenadorPanel() {
           </div>
         )}
       </div>
+
+      {/* ML Insights */}
+      <MLInsightsPanel />
     </div>
   );
 }

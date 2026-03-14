@@ -4,9 +4,10 @@ import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, GrupoVisita } from '@/types';
-import { Search, Users, CheckCircle2, Accessibility, Clock } from 'lucide-react';
+import { Search, Users, CheckCircle2, Accessibility, Clock, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CordaoPopup from '@/components/CordaoPopup';
+import CadastroManualDialog from '@/components/CadastroManualDialog';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -15,6 +16,7 @@ export default function RecreadorPanel() {
   const { grupos, marcarCheckin } = useData();
   const [busca, setBusca] = useState('');
   const [selectedGrupo, setSelectedGrupo] = useState<GrupoVisita | null>(null);
+  const [cadastroOpen, setCadastroOpen] = useState(false);
 
   const guiche = user?.guiche || 1;
 
@@ -54,11 +56,17 @@ export default function RecreadorPanel() {
           <h1 className="text-2xl font-bold text-foreground">Check-in de Visitantes</h1>
           <p className="text-sm text-muted-foreground">Guichê {String(guiche).padStart(2, '0')} — {user?.nome}</p>
         </div>
-        <div className="flex items-center gap-2 bg-card rounded-xl shadow-card px-4 py-3">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="text-2xl font-bold text-foreground font-mono-data">{checkinHoje}</p>
-            <p className="text-[10px] text-muted-foreground">atendidos hoje</p>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setCadastroOpen(true)} className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            Cadastro Manual
+          </Button>
+          <div className="flex items-center gap-2 bg-card rounded-xl shadow-card px-4 py-3">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-2xl font-bold text-foreground font-mono-data">{checkinHoje}</p>
+              <p className="text-[10px] text-muted-foreground">atendidos hoje</p>
+            </div>
           </div>
         </div>
       </div>
@@ -144,6 +152,9 @@ export default function RecreadorPanel() {
         onConfirm={handleConfirm}
         onClose={() => setSelectedGrupo(null)}
       />
+
+      {/* Cadastro Manual Dialog */}
+      <CadastroManualDialog open={cadastroOpen} onOpenChange={setCadastroOpen} />
     </div>
   );
 }
