@@ -1,4 +1,5 @@
 import { useData } from '@/contexts/DataContext';
+import MLInsightsPanel from '@/components/MLInsightsPanel';
 import { CordaoColor, getCordaoLabel } from '@/types';
 import { Users, Baby, Accessibility, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
