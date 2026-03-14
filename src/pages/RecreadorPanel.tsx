@@ -152,6 +152,9 @@ export default function RecreadorPanel() {
         onConfirm={handleConfirm}
         onClose={() => setSelectedGrupo(null)}
       />
+
+      {/* Cadastro Manual Dialog */}
+      <CadastroManualDialog open={cadastroOpen} onOpenChange={setCadastroOpen} />
     </div>
   );
 }
