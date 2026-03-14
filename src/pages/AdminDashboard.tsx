@@ -137,6 +137,9 @@ export default function AdminDashboard() {
           {checkins.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum check-in registrado</p>}
         </div>
       </div>
+
+      {/* ML Insights */}
+      <MLInsightsPanel />
     </div>
   );
 }

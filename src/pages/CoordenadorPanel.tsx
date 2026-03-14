@@ -140,6 +140,9 @@ export default function CoordenadorPanel() {
           </div>
         )}
       </div>
+
+      {/* ML Insights */}
+      <MLInsightsPanel />
     </div>
   );
 }
