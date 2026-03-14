@@ -4,9 +4,10 @@ import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, GrupoVisita } from '@/types';
-import { Search, Users, CheckCircle2, Accessibility, Clock } from 'lucide-react';
+import { Search, Users, CheckCircle2, Accessibility, Clock, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CordaoPopup from '@/components/CordaoPopup';
+import CadastroManualDialog from '@/components/CadastroManualDialog';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
