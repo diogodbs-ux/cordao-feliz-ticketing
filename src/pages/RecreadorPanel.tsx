@@ -16,6 +16,7 @@ export default function RecreadorPanel() {
   const { grupos, marcarCheckin } = useData();
   const [busca, setBusca] = useState('');
   const [selectedGrupo, setSelectedGrupo] = useState<GrupoVisita | null>(null);
+  const [cadastroOpen, setCadastroOpen] = useState(false);
 
   const guiche = user?.guiche || 1;
 
