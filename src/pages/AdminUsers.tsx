@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Shield, Users as UsersIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -83,8 +83,8 @@ export default function AdminUsers() {
     }
   };
 
-  const roleLabel: Record<UserRole, string> = { admin: 'Administrador', coordenador: 'Coordenador', recreador: 'Recreador' };
-  const roleBadge: Record<UserRole, string> = { admin: 'bg-cordao-preto text-primary-foreground', coordenador: 'bg-primary text-primary-foreground', recreador: 'bg-cordao-verde text-primary-foreground' };
+  const roleLabel: Record<UserRole, string> = { admin: 'Administrador', coordenador: 'Coordenador', recreador: 'Recreador', observador: 'Observador (Teste)' };
+  const roleBadge: Record<UserRole, string> = { admin: 'bg-cordao-preto text-primary-foreground', coordenador: 'bg-primary text-primary-foreground', recreador: 'bg-cordao-verde text-primary-foreground', observador: 'bg-cordao-cinza text-primary-foreground' };
 
   return (
     <div className="p-6 space-y-6">
@@ -143,7 +143,6 @@ export default function AdminUsers() {
         </table>
       </div>
 
-      {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -170,12 +169,20 @@ export default function AdminUsers() {
                   <SelectItem value="admin">Administrador</SelectItem>
                   <SelectItem value="coordenador">Coordenador</SelectItem>
                   <SelectItem value="recreador">Recreador</SelectItem>
+                  <SelectItem value="observador">Observador (Teste)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            {form.role === 'recreador' && (
+            {form.role === 'observador' && (
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground">
+                  O perfil <strong>Observador</strong> pode visualizar o sistema como um recreador, mas <strong>não ocupa guichê</strong> e seus check-ins são marcados como teste.
+                </p>
+              </div>
+            )}
+            {(form.role === 'recreador' || form.role === 'observador') && (
               <div className="space-y-2">
-                <Label>Guichê (1-6)</Label>
+                <Label>Guichê (1-6) {form.role === 'observador' && <span className="text-muted-foreground">(opcional)</span>}</Label>
                 <Input type="number" min={1} max={6} value={form.guiche} onChange={e => setForm(f => ({ ...f, guiche: e.target.value }))} />
               </div>
             )}
