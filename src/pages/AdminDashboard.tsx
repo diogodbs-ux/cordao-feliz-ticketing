@@ -1,7 +1,8 @@
+import { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
-import { CordaoColor, getCordaoLabel } from '@/types';
-import { Users, Baby, Accessibility, BarChart3 } from 'lucide-react';
+import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, getOrigemLabel } from '@/types';
+import { Users, Baby, Accessibility, BarChart3, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -15,10 +16,52 @@ const CORDAO_HEX: Record<CordaoColor, string> = {
   preto: '#1E293B',
 };
 
+const PERIODOS: { value: PeriodoFiltro; label: string }[] = [
+  { value: 'hoje', label: 'Hoje' },
+  { value: 'semana', label: 'Semana' },
+  { value: 'mes', label: 'Mês' },
+  { value: 'ano', label: 'Ano' },
+  { value: 'todos', label: 'Todos' },
+];
+
 export default function AdminDashboard() {
   const { stats, grupos, checkins } = useData();
+  const [periodo, setPeriodo] = useState<PeriodoFiltro>('hoje');
 
-  const porCorData = Object.entries(stats.porCor)
+  const filteredCheckins = useMemo(() =>
+    filtrarPorPeriodo(checkins, periodo, 'dataHora'),
+  [checkins, periodo]);
+
+  const filteredGrupos = useMemo(() => {
+    const checkedInIds = new Set(filteredCheckins.map(c => c.grupoVisitaId));
+    return grupos.filter(g => checkedInIds.has(g.id));
+  }, [grupos, filteredCheckins]);
+
+  const filteredStats = useMemo(() => {
+    const porCor: Record<CordaoColor, number> = { azul: 0, verde: 0, amarelo: 0, vermelho: 0, rosa: 0, cinza: 0, preto: 0 };
+    const porGuiche: Record<number, number> = {};
+    let totalPCD = 0;
+
+    filteredGrupos.forEach(g => {
+      porCor.rosa += 1;
+      g.responsavel.criancas.forEach(c => {
+        porCor[c.cordaoCor] = (porCor[c.cordaoCor] || 0) + 1;
+        if (c.pcd) totalPCD++;
+      });
+      if (g.guiche) porGuiche[g.guiche] = (porGuiche[g.guiche] || 0) + 1;
+    });
+
+    return {
+      totalVisitantes: filteredGrupos.reduce((a, g) => a + 1 + g.responsavel.criancas.length, 0),
+      totalCriancas: filteredGrupos.reduce((a, g) => a + g.responsavel.criancas.length, 0),
+      totalResponsaveis: filteredGrupos.length,
+      totalPCD,
+      porCor,
+      porGuiche,
+    };
+  }, [filteredGrupos]);
+
+  const porCorData = Object.entries(filteredStats.porCor)
     .filter(([, v]) => v > 0)
     .map(([cor, qtd]) => ({
       name: cor.charAt(0).toUpperCase() + cor.slice(1),
@@ -26,7 +69,7 @@ export default function AdminDashboard() {
       fill: CORDAO_HEX[cor as CordaoColor],
     }));
 
-  const porGuicheData = Object.entries(stats.porGuiche).map(([g, qtd]) => ({
+  const porGuicheData = Object.entries(filteredStats.porGuiche).map(([g, qtd]) => ({
     name: `Guichê ${g}`,
     atendimentos: qtd,
   }));
@@ -35,18 +78,37 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard Administrativo</h1>
-        <p className="text-sm text-muted-foreground">Visão geral da operação — {new Date().toLocaleDateString('pt-BR')}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard Administrativo</h1>
+          <p className="text-sm text-muted-foreground">Visão geral da operação — {new Date().toLocaleDateString('pt-BR')}</p>
+        </div>
+        <div className="flex items-center gap-1 bg-card rounded-xl shadow-card p-1">
+          {PERIODOS.map(p => (
+            <button
+              key={p.value}
+              onClick={() => setPeriodo(p.value)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                periodo === p.value
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-secondary'
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Total no Parque', value: stats.totalVisitantes, icon: Users, color: 'text-primary' },
-          { label: 'Crianças', value: stats.totalCriancas, icon: Baby, color: 'text-cordao-verde' },
-          { label: 'Responsáveis', value: stats.totalResponsaveis, icon: Users, color: 'text-cordao-rosa' },
-          { label: 'PCD Atendidos', value: stats.totalPCD, icon: Accessibility, color: 'text-primary' },
+          { label: 'Total Atendidos', value: filteredStats.totalVisitantes, icon: Users, color: 'text-primary' },
+          { label: 'Crianças', value: filteredStats.totalCriancas, icon: Baby, color: 'text-cordao-verde' },
+          { label: 'Responsáveis', value: filteredStats.totalResponsaveis, icon: Users, color: 'text-cordao-rosa' },
+          { label: 'PCD Atendidos', value: filteredStats.totalPCD, icon: Accessibility, color: 'text-primary' },
+          { label: 'Pendentes', value: pendentes, icon: Calendar, color: 'text-cordao-amarelo' },
         ].map(s => (
           <div key={s.label} className="bg-card rounded-xl shadow-card p-5">
             <div className="flex items-center justify-between mb-3">
@@ -58,20 +120,8 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-card rounded-xl shadow-card p-5">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Pendentes</p>
-          <p className="text-3xl font-bold text-foreground font-mono-data">{pendentes}</p>
-        </div>
-        <div className="bg-card rounded-xl shadow-card p-5">
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Check-ins Hoje</p>
-          <p className="text-3xl font-bold text-foreground font-mono-data">{checkins.length}</p>
-        </div>
-      </div>
-
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Distribuição por Cor */}
         <div className="bg-card rounded-xl shadow-card p-6">
           <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -89,11 +139,10 @@ export default function AdminDashboard() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">Sem dados</div>
+            <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">Sem dados no período</div>
           )}
         </div>
 
-        {/* Performance por Guichê */}
         <div className="bg-card rounded-xl shadow-card p-6">
           <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -110,35 +159,47 @@ export default function AdminDashboard() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">Sem dados</div>
+            <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">Sem dados no período</div>
           )}
         </div>
       </div>
 
-      {/* Recent checkins */}
+      {/* Recent checkins with responsible details */}
       <div className="bg-card rounded-xl shadow-card p-6">
-        <h3 className="text-sm font-semibold text-foreground mb-4">Últimos Check-ins</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-4">Últimos Check-ins ({filteredCheckins.length})</h3>
         <div className="space-y-2">
-          {checkins.slice(-10).reverse().map(c => (
-            <div key={c.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-              <div>
-                <p className="text-sm font-medium text-foreground">{c.responsavelNome}</p>
-                <p className="text-xs text-muted-foreground">{c.totalCriancas} criança(s) · Guichê {c.guiche} · {c.atendidoPor}</p>
+          {filteredCheckins.slice(-15).reverse().map(c => {
+            const grupo = grupos.find(g => g.id === c.grupoVisitaId);
+            return (
+              <div key={c.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{c.responsavelNome}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.totalCriancas} criança(s) · Guichê {c.guiche} · {c.atendidoPor}
+                    {grupo?.origem && grupo.origem !== 'agendamento' && (
+                      <span className="ml-1 text-[10px] bg-secondary px-1 py-0.5 rounded">{getOrigemLabel(grupo.origem)}</span>
+                    )}
+                  </p>
+                  {grupo && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {grupo.responsavel.bairro}, {grupo.responsavel.cidade} · {grupo.responsavel.contato}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {c.cordoes.map((co, i) => (
+                    <span key={i} className="text-xs font-mono-data text-muted-foreground">
+                      {co.quantidade}x {co.cor}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                {c.cordoes.map((co, i) => (
-                  <span key={i} className="text-xs font-mono-data text-muted-foreground">
-                    {co.quantidade}x {co.cor}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-          {checkins.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum check-in registrado</p>}
+            );
+          })}
+          {filteredCheckins.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum check-in no período</p>}
         </div>
       </div>
 
-      {/* ML Insights */}
       <MLInsightsPanel />
     </div>
   );

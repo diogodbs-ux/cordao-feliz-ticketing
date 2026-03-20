@@ -3,11 +3,11 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import logo from '@/assets/logo-completa.png';
 import { Button } from '@/components/ui/button';
 import {
-  LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight,
+  LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const NAV_ITEMS = {
+const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = {
   admin: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
     { label: 'Importar Dados', icon: ClipboardCheck, path: '/admin/importar' },
@@ -19,6 +19,9 @@ const NAV_ITEMS = {
   ],
   recreador: [
     { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
+  ],
+  observador: [
+    { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
   ],
 };
 
@@ -33,7 +36,6 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
       <aside className="w-64 bg-card border-r border-border flex flex-col shadow-card">
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
@@ -89,7 +91,6 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 overflow-auto">
         <Outlet />
       </main>

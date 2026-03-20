@@ -3,21 +3,31 @@ import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { getCordaoCor, GrupoVisita, Crianca } from '@/types';
+import { getCordaoCor, GrupoVisita, Crianca, OrigemVisitante } from '@/types';
 import { Plus, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface CadastroManualDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export default function CadastroManualDialog({ open, onOpenChange }: CadastroManualDialogProps) {
-  const { setGrupos, grupos } = useData();
+const ORIGEM_OPTIONS: { value: OrigemVisitante; label: string; desc: string }[] = [
+  { value: 'manual', label: 'Cadastro Manual', desc: 'Visitante sem agendamento prévio' },
+  { value: 'lista_adicional', label: 'Lista Adicional', desc: 'Convidado ou lista extra' },
+  { value: 'problema_sistema', label: 'Problema no Sistema', desc: 'Falha no sistema de agendamento' },
+];
 
+export default function CadastroManualDialog({ open, onOpenChange }: CadastroManualDialogProps) {
+  const { addGrupoManual } = useData();
+
+  const [origem, setOrigem] = useState<OrigemVisitante>('manual');
+  const [observacao, setObservacao] = useState('');
   const [resp, setResp] = useState({
     nome: '', contato: '', email: '', bairro: '', cidade: 'FORTALEZA', uf: 'CE', tipoAgendamento: 'FAMILIAR',
   });
@@ -40,6 +50,8 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
   };
 
   const resetForm = () => {
+    setOrigem('manual');
+    setObservacao('');
     setResp({ nome: '', contato: '', email: '', bairro: '', cidade: 'FORTALEZA', uf: 'CE', tipoAgendamento: 'FAMILIAR' });
     setCriancas([{ nome: '', idade: '', genero: 'MASCULINO', pcd: false, pcdDescricao: '' }]);
   };
@@ -67,11 +79,13 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
       };
     });
 
+    const prefixo = origem === 'lista_adicional' ? 'LISTA' : origem === 'problema_sistema' ? 'PROB' : 'MANUAL';
+
     const novoGrupo: GrupoVisita = {
       id: crypto.randomUUID(),
       responsavel: {
         id: crypto.randomUUID(),
-        protocolo: `MANUAL-${Date.now()}`,
+        protocolo: `${prefixo}-${Date.now()}`,
         nome: resp.nome.toUpperCase(),
         contato: resp.contato,
         email: resp.email,
@@ -82,10 +96,15 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
         criancas: novoCriancas,
       },
       checkinRealizado: false,
+      origem,
+      observacao: observacao.trim() || undefined,
+      criadoEm: new Date().toISOString(),
     };
 
-    setGrupos([...grupos, novoGrupo]);
-    toast.success(`Cadastro manual realizado! ${resp.nome} com ${criancas.length} criança(s).`);
+    addGrupoManual(novoGrupo);
+    
+    const origemLabel = ORIGEM_OPTIONS.find(o => o.value === origem)?.label || 'Manual';
+    toast.success(`${origemLabel}: ${resp.nome} com ${criancas.length} criança(s) cadastrado(s).`);
     resetForm();
     onOpenChange(false);
   };
@@ -96,11 +115,43 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" />
-            Cadastro Manual de Visitante
+            Cadastro de Visitante
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Origem / Motivo */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Origem do Cadastro</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {ORIGEM_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setOrigem(opt.value)}
+                  className={cn(
+                    'rounded-xl p-3 text-left border-2 transition-all',
+                    origem === opt.value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/30'
+                  )}
+                >
+                  <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 space-y-1.5">
+              <Label className="text-xs">Observação (opcional)</Label>
+              <Textarea
+                value={observacao}
+                onChange={e => setObservacao(e.target.value)}
+                placeholder="Motivo ou detalhes adicionais..."
+                className="resize-none h-16"
+              />
+            </div>
+          </div>
+
           {/* Responsável */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3">Dados do Responsável</h3>

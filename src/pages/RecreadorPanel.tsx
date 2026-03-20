@@ -3,8 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, GrupoVisita } from '@/types';
-import { Search, Users, CheckCircle2, Accessibility, Clock, UserPlus } from 'lucide-react';
+import { getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, GrupoVisita, getOrigemLabel } from '@/types';
+import { Search, Users, CheckCircle2, Accessibility, Clock, UserPlus, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CordaoPopup from '@/components/CordaoPopup';
 import CadastroManualDialog from '@/components/CadastroManualDialog';
@@ -18,7 +18,8 @@ export default function RecreadorPanel() {
   const [selectedGrupo, setSelectedGrupo] = useState<GrupoVisita | null>(null);
   const [cadastroOpen, setCadastroOpen] = useState(false);
 
-  const guiche = user?.guiche || 1;
+  const isObservador = user?.role === 'observador';
+  const guiche = user?.guiche || 0;
 
   const filtrados = useMemo(() => {
     if (!busca.trim()) return grupos.filter(g => !g.checkinRealizado);
@@ -40,6 +41,12 @@ export default function RecreadorPanel() {
 
   const handleConfirm = () => {
     if (!selectedGrupo || !user) return;
+    if (isObservador) {
+      toast.info('Modo observador: check-in simulado (não registrado).');
+      setSelectedGrupo(null);
+      setBusca('');
+      return;
+    }
     marcarCheckin(selectedGrupo.id, guiche, user.nome);
     toast.success(`Check-in realizado com sucesso no Guichê ${String(guiche).padStart(2, '0')}.`, {
       description: `${selectedGrupo.responsavel.nome} — ${selectedGrupo.responsavel.criancas.length} criança(s)`,
@@ -53,8 +60,18 @@ export default function RecreadorPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Check-in de Visitantes</h1>
-          <p className="text-sm text-muted-foreground">Guichê {String(guiche).padStart(2, '0')} — {user?.nome}</p>
+          <h1 className="text-2xl font-bold text-foreground">
+            Check-in de Visitantes
+            {isObservador && (
+              <span className="ml-2 inline-flex items-center gap-1 text-sm font-normal text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                <Eye className="h-3 w-3" />
+                Modo Observador
+              </span>
+            )}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {guiche > 0 ? `Guichê ${String(guiche).padStart(2, '0')} — ` : ''}{user?.nome}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" onClick={() => setCadastroOpen(true)} className="gap-2">
@@ -89,7 +106,11 @@ export default function RecreadorPanel() {
           <div className="text-center py-12 text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-3 opacity-40" />
             <p className="text-lg font-medium">Nenhum visitante encontrado</p>
-            <p className="text-sm">CPF não encontrado na base de hoje. Deseja realizar cadastro manual?</p>
+            <p className="text-sm">Não encontrado na base de hoje. Deseja realizar cadastro manual?</p>
+            <Button variant="outline" className="mt-4 gap-2" onClick={() => setCadastroOpen(true)}>
+              <UserPlus className="h-4 w-4" />
+              Cadastro Manual / Lista Adicional
+            </Button>
           </div>
         )}
 
@@ -108,6 +129,11 @@ export default function RecreadorPanel() {
                   <h3 className="text-base font-bold text-foreground truncate">{grupo.responsavel.nome}</h3>
                   {grupo.responsavel.criancas.some(c => c.pcd) && (
                     <Accessibility className="h-4 w-4 text-primary animate-pulse-glow flex-shrink-0" />
+                  )}
+                  {grupo.origem && grupo.origem !== 'agendamento' && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground flex-shrink-0">
+                      {getOrigemLabel(grupo.origem)}
+                    </span>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
@@ -145,7 +171,6 @@ export default function RecreadorPanel() {
         )}
       </div>
 
-      {/* Cordão Popup */}
       <CordaoPopup
         grupo={selectedGrupo}
         guiche={guiche}
@@ -153,7 +178,6 @@ export default function RecreadorPanel() {
         onClose={() => setSelectedGrupo(null)}
       />
 
-      {/* Cadastro Manual Dialog */}
       <CadastroManualDialog open={cadastroOpen} onOpenChange={setCadastroOpen} />
     </div>
   );

@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'coordenador' | 'recreador';
+export type UserRole = 'admin' | 'coordenador' | 'recreador' | 'observador';
 
 export interface User {
   id: string;
@@ -12,6 +12,8 @@ export interface User {
 }
 
 export type CordaoColor = 'azul' | 'verde' | 'amarelo' | 'vermelho' | 'rosa' | 'cinza' | 'preto';
+
+export type OrigemVisitante = 'agendamento' | 'lista_adicional' | 'manual' | 'problema_sistema';
 
 export interface Crianca {
   id: string;
@@ -45,6 +47,9 @@ export interface GrupoVisita {
   checkinHora?: string;
   guiche?: number;
   atendidoPor?: string;
+  origem: OrigemVisitante;
+  observacao?: string;
+  criadoEm: string;
 }
 
 export interface CheckinRegistro {
@@ -66,6 +71,8 @@ export interface DashboardStats {
   porCor: Record<CordaoColor, number>;
   porGuiche: Record<number, number>;
 }
+
+export type PeriodoFiltro = 'hoje' | 'semana' | 'mes' | 'ano' | 'todos';
 
 export function getCordaoCor(idade: number): CordaoColor {
   if (idade >= 0 && idade <= 3) return 'azul';
@@ -104,4 +111,57 @@ export function getCordaoTailwindBg(cor: CordaoColor): string {
 export function getCordaoTailwindText(cor: CordaoColor): string {
   if (cor === 'amarelo') return 'text-foreground';
   return 'text-primary-foreground';
+}
+
+export function getOrigemLabel(origem: OrigemVisitante): string {
+  const labels: Record<OrigemVisitante, string> = {
+    agendamento: 'Agendamento',
+    lista_adicional: 'Lista Adicional',
+    manual: 'Cadastro Manual',
+    problema_sistema: 'Problema no Sistema',
+  };
+  return labels[origem];
+}
+
+export function filtrarPorPeriodo<T extends { dataHora?: string; criadoEm?: string; checkinData?: string }>(
+  items: T[],
+  periodo: PeriodoFiltro,
+  dateField: keyof T = 'criadoEm' as keyof T
+): T[] {
+  if (periodo === 'todos') return items;
+  
+  const now = new Date();
+  const hoje = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  return items.filter(item => {
+    const raw = item[dateField] as string | undefined;
+    if (!raw) return false;
+    
+    // Handle dd/mm/yyyy format
+    let itemDate: Date;
+    if (raw.includes('/')) {
+      const [d, m, y] = raw.split('/').map(Number);
+      itemDate = new Date(y, m - 1, d);
+    } else {
+      itemDate = new Date(raw);
+    }
+    
+    if (isNaN(itemDate.getTime())) return false;
+    
+    switch (periodo) {
+      case 'hoje':
+        return itemDate >= hoje;
+      case 'semana': {
+        const inicioSemana = new Date(hoje);
+        inicioSemana.setDate(hoje.getDate() - hoje.getDay());
+        return itemDate >= inicioSemana;
+      }
+      case 'mes':
+        return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+      case 'ano':
+        return itemDate.getFullYear() === now.getFullYear();
+      default:
+        return true;
+    }
+  });
 }
