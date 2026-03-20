@@ -1,11 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
 import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo } from '@/types';
 import { Users, Baby, Accessibility, Activity, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { useEffect, useState as useS } from 'react';
 
 const CORDAO_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9',
