@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
+import AlertsPanel from '@/components/AlertsPanel';
 import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, calcAdultCordoes } from '@/types';
 import { Users, Baby, Accessibility, Activity, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -208,6 +209,7 @@ export default function CoordenadorPanel() {
         )}
       </div>
 
+      <AlertsPanel />
       <MLInsightsPanel />
     </div>
   );

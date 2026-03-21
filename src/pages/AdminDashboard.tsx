@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
+import AlertsPanel from '@/components/AlertsPanel';
 import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, getOrigemLabel, calcAdultCordoes } from '@/types';
 import { Users, Baby, Accessibility, BarChart3, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -208,6 +209,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      <AlertsPanel />
       <MLInsightsPanel />
     </div>
   );
