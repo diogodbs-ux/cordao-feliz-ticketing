@@ -43,7 +43,8 @@ export default function AdminDashboard() {
     let totalPCD = 0;
 
     filteredGrupos.forEach(g => {
-      porCor.rosa += 1;
+      const numAdultos = calcAdultCordoes(g.responsavel.criancas.length);
+      porCor.rosa += numAdultos;
       g.responsavel.criancas.forEach(c => {
         porCor[c.cordaoCor] = (porCor[c.cordaoCor] || 0) + 1;
         if (c.pcd) totalPCD++;
