@@ -80,8 +80,15 @@ export default function CoordenadorPanel() {
     atendimentos: filteredStats.porGuiche[g] || 0,
   }));
 
-  const pendentes = grupos.filter(g => !g.checkinRealizado).length;
-  const totalAgendados = grupos.length;
+  // Pendentes = only today's scheduled visitors not checked in
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const gruposHoje = grupos.filter(g => {
+    if (g.dataAgendamento) return g.dataAgendamento === hoje;
+    const created = new Date(g.criadoEm);
+    return created.toLocaleDateString('pt-BR') === hoje;
+  });
+  const pendentes = gruposHoje.filter(g => !g.checkinRealizado).length;
+  const totalAgendados = gruposHoje.length;
 
   return (
     <div className="p-6 space-y-6">

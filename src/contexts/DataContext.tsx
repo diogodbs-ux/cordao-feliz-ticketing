@@ -31,12 +31,16 @@ function readCheckins(): CheckinRegistro[] {
 }
 
 function calcStats(grupos: GrupoVisita[], checkins: CheckinRegistro[]): DashboardStats {
-  const checkedIn = grupos.filter(g => g.checkinRealizado);
+  // Stats are for today only by default
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const checkedIn = grupos.filter(g => g.checkinRealizado && g.checkinData === hoje);
   const porCor: Record<CordaoColor, number> = { azul: 0, verde: 0, amarelo: 0, vermelho: 0, rosa: 0, cinza: 0, preto: 0 };
   const porGuiche: Record<number, number> = {};
 
   checkedIn.forEach(g => {
-    porCor.rosa += 1;
+    // Business rule: each child = 2 adult cordões
+    const numAdultos = Math.min(g.responsavel.criancas.length * 2, g.responsavel.criancas.length * 2);
+    porCor.rosa += numAdultos;
     g.responsavel.criancas.forEach(c => {
       porCor[c.cordaoCor] = (porCor[c.cordaoCor] || 0) + 1;
     });
@@ -46,13 +50,17 @@ function calcStats(grupos: GrupoVisita[], checkins: CheckinRegistro[]): Dashboar
   });
 
   return {
-    totalVisitantes: checkedIn.reduce((acc, g) => acc + 1 + g.responsavel.criancas.length, 0),
+    totalVisitantes: checkedIn.reduce((acc, g) => acc + calcAdultCordoes(g.responsavel.criancas.length) + g.responsavel.criancas.length, 0),
     totalCriancas: checkedIn.reduce((acc, g) => acc + g.responsavel.criancas.length, 0),
     totalResponsaveis: checkedIn.length,
     totalPCD: checkedIn.reduce((acc, g) => acc + g.responsavel.criancas.filter(c => c.pcd).length, 0),
     porCor,
     porGuiche,
   };
+}
+
+function calcAdultCordoes(numCriancas: number): number {
+  return numCriancas * 2; // 1 child = 2 adult wristbands
 }
 
 export function DataProvider({ children }: { children: React.ReactNode }) {

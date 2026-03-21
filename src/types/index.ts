@@ -49,7 +49,13 @@ export interface GrupoVisita {
   atendidoPor?: string;
   origem: OrigemVisitante;
   observacao?: string;
+  dataAgendamento?: string; // dd/mm/yyyy from CSV
   criadoEm: string;
+}
+
+// Business rule: each child entitles 2 adults
+export function calcAdultCordoes(numCriancas: number): number {
+  return Math.min(numCriancas * 2, numCriancas * 2); // 1 child = 2 adult wristbands
 }
 
 export interface CheckinRegistro {
