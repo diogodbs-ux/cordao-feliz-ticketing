@@ -53,7 +53,7 @@ export default function AdminDashboard() {
     });
 
     return {
-      totalVisitantes: filteredGrupos.reduce((a, g) => a + 1 + g.responsavel.criancas.length, 0),
+      totalVisitantes: filteredGrupos.reduce((a, g) => a + calcAdultCordoes(g.responsavel.criancas.length) + g.responsavel.criancas.length, 0),
       totalCriancas: filteredGrupos.reduce((a, g) => a + g.responsavel.criancas.length, 0),
       totalResponsaveis: filteredGrupos.length,
       totalPCD,
