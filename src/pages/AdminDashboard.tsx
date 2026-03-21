@@ -209,6 +209,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      <AlertsPanel />
       <MLInsightsPanel />
     </div>
   );
