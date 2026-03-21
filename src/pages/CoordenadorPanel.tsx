@@ -209,6 +209,7 @@ export default function CoordenadorPanel() {
         )}
       </div>
 
+      <AlertsPanel />
       <MLInsightsPanel />
     </div>
   );
