@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor } from '@/types';
+import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor, calcAdultCordoes } from '@/types';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Accessibility, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
