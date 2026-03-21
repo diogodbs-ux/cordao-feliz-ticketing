@@ -203,6 +203,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           },
           checkinRealizado: false,
           origem: 'agendamento',
+          dataAgendamento: row['Data'] || '',
           criadoEm: new Date().toISOString(),
         });
       }
