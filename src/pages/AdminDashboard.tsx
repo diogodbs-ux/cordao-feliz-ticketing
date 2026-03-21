@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
-import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, getOrigemLabel } from '@/types';
+import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, getOrigemLabel, calcAdultCordoes } from '@/types';
 import { Users, Baby, Accessibility, BarChart3, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
