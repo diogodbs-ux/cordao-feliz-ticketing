@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
-import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo } from '@/types';
+import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, calcAdultCordoes } from '@/types';
 import { Users, Baby, Accessibility, Activity, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
@@ -49,7 +49,8 @@ export default function CoordenadorPanel() {
     let totalPCD = 0;
 
     filteredGrupos.forEach(g => {
-      porCor.rosa += 1;
+      const numAdultos = calcAdultCordoes(g.responsavel.criancas.length);
+      porCor.rosa += numAdultos;
       g.responsavel.criancas.forEach(c => {
         porCor[c.cordaoCor] = (porCor[c.cordaoCor] || 0) + 1;
         if (c.pcd) totalPCD++;
@@ -58,7 +59,7 @@ export default function CoordenadorPanel() {
     });
 
     return {
-      totalVisitantes: filteredGrupos.reduce((a, g) => a + 1 + g.responsavel.criancas.length, 0),
+      totalVisitantes: filteredGrupos.reduce((a, g) => a + calcAdultCordoes(g.responsavel.criancas.length) + g.responsavel.criancas.length, 0),
       totalCriancas: filteredGrupos.reduce((a, g) => a + g.responsavel.criancas.length, 0),
       totalResponsaveis: filteredGrupos.length,
       totalPCD,
@@ -80,8 +81,15 @@ export default function CoordenadorPanel() {
     atendimentos: filteredStats.porGuiche[g] || 0,
   }));
 
-  const pendentes = grupos.filter(g => !g.checkinRealizado).length;
-  const totalAgendados = grupos.length;
+  // Pendentes = only today's scheduled visitors not checked in
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const gruposHoje = grupos.filter(g => {
+    if (g.dataAgendamento) return g.dataAgendamento === hoje;
+    const created = new Date(g.criadoEm);
+    return created.toLocaleDateString('pt-BR') === hoje;
+  });
+  const pendentes = gruposHoje.filter(g => !g.checkinRealizado).length;
+  const totalAgendados = gruposHoje.length;
 
   return (
     <div className="p-6 space-y-6">

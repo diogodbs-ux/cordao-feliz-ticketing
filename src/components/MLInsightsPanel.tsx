@@ -7,13 +7,25 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 export default function MLInsightsPanel() {
   const { checkins, stats, grupos } = useData();
 
-  const hourlyData = analyzeHourlyPattern(checkins);
+  // Use only today's checkins for daily capacity metrics
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const todayCheckins = checkins.filter(c => {
+    const d = new Date(c.dataHora);
+    return d.toLocaleDateString('pt-BR') === hoje;
+  });
+
+  const hourlyData = analyzeHourlyPattern(todayCheckins);
   const peakHour = getPeakHour(hourlyData);
-  const trend = analyzeTrend(checkins);
+  const trend = analyzeTrend(checkins); // trend uses all data
   const anomaly = detectAnomaly(stats.totalVisitantes, checkins.map(c => 1 + c.totalCriancas));
-  const clusters = clusterVisitors(checkins, grupos);
-  const avgTime = calcAvgServiceTime(checkins);
-  const capacity = forecastCapacity(stats.totalVisitantes, checkins);
+  const todayGrupos = grupos.filter(g => {
+    if (g.dataAgendamento) return g.dataAgendamento === hoje;
+    const created = new Date(g.criadoEm);
+    return created.toLocaleDateString('pt-BR') === hoje;
+  });
+  const clusters = clusterVisitors(todayCheckins, todayGrupos);
+  const avgTime = calcAvgServiceTime(todayCheckins);
+  const capacity = forecastCapacity(stats.totalVisitantes, todayCheckins);
 
   const TrendIcon = trend.direction === 'up' ? TrendingUp : trend.direction === 'down' ? TrendingDown : Minus;
 

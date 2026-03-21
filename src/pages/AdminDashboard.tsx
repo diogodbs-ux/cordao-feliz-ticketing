@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
-import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, getOrigemLabel } from '@/types';
+import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, getOrigemLabel, calcAdultCordoes } from '@/types';
 import { Users, Baby, Accessibility, BarChart3, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -43,7 +43,8 @@ export default function AdminDashboard() {
     let totalPCD = 0;
 
     filteredGrupos.forEach(g => {
-      porCor.rosa += 1;
+      const numAdultos = calcAdultCordoes(g.responsavel.criancas.length);
+      porCor.rosa += numAdultos;
       g.responsavel.criancas.forEach(c => {
         porCor[c.cordaoCor] = (porCor[c.cordaoCor] || 0) + 1;
         if (c.pcd) totalPCD++;
@@ -52,7 +53,7 @@ export default function AdminDashboard() {
     });
 
     return {
-      totalVisitantes: filteredGrupos.reduce((a, g) => a + 1 + g.responsavel.criancas.length, 0),
+      totalVisitantes: filteredGrupos.reduce((a, g) => a + calcAdultCordoes(g.responsavel.criancas.length) + g.responsavel.criancas.length, 0),
       totalCriancas: filteredGrupos.reduce((a, g) => a + g.responsavel.criancas.length, 0),
       totalResponsaveis: filteredGrupos.length,
       totalPCD,
@@ -74,7 +75,14 @@ export default function AdminDashboard() {
     atendimentos: qtd,
   }));
 
-  const pendentes = grupos.filter(g => !g.checkinRealizado).length;
+  // Pendentes = only today's scheduled visitors not checked in
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const gruposHoje = grupos.filter(g => {
+    if (g.dataAgendamento) return g.dataAgendamento === hoje;
+    const created = new Date(g.criadoEm);
+    return created.toLocaleDateString('pt-BR') === hoje;
+  });
+  const pendentes = gruposHoje.filter(g => !g.checkinRealizado).length;
 
   return (
     <div className="p-6 space-y-6">

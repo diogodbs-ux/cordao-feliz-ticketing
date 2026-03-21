@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor } from '@/types';
+import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor, calcAdultCordoes } from '@/types';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Accessibility, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,8 +14,15 @@ interface CordaoPopupProps {
 export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: CordaoPopupProps) {
   if (!grupo) return null;
 
+  const numCriancas = grupo.responsavel.criancas.length;
+  const numAdultos = calcAdultCordoes(numCriancas);
+
   const membros: { nome: string; cor: CordaoColor; idade?: number; pcd?: boolean; pcdDesc?: string; tipo: string }[] = [
-    { nome: grupo.responsavel.nome, cor: 'rosa', tipo: 'Responsável' },
+    ...Array.from({ length: numAdultos }, (_, i) => ({
+      nome: i === 0 ? grupo.responsavel.nome : `Acompanhante ${i}`,
+      cor: 'rosa' as CordaoColor,
+      tipo: i === 0 ? 'Responsável' : 'Acompanhante',
+    })),
     ...grupo.responsavel.criancas.map(c => ({
       nome: c.nome,
       cor: c.cordaoCor,
