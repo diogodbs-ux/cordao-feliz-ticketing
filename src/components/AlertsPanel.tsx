@@ -46,6 +46,7 @@ export default function AlertsPanel() {
     const list: Alert[] = [];
 
     // 1. PCD check-in alerts (last 5 minutes)
+    if (config.alertaPCD) {
     const fiveMinAgo = Date.now() - 5 * 60 * 1000;
     todayCheckins.forEach(c => {
       const grupo = grupos.find(g => g.id === c.grupoVisitaId);
