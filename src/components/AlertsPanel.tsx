@@ -13,6 +13,8 @@ function loadAlertConfig(): AlertConfig {
 }
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Remove import of framer-motion duplicated below
+
 interface Alert {
   id: string;
   type: 'pcd' | 'high_volume' | 'capacity' | 'idle' | 'milestone';
