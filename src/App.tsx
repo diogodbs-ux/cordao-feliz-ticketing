@@ -11,6 +11,9 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminImport from "@/pages/AdminImport";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminRelatorios from "@/pages/AdminRelatorios";
+import AdminConfiguracoes from "@/pages/AdminConfiguracoes";
+import AdminHistorico from "@/pages/AdminHistorico";
+import ListasEspeciais from "@/pages/ListasEspeciais";
 import CoordenadorPanel from "@/pages/CoordenadorPanel";
 import RecreadorPanel from "@/pages/RecreadorPanel";
 import NotFound from "@/pages/NotFound";
@@ -48,6 +51,9 @@ const App = () => (
                 <Route path="admin/importar" element={<ProtectedRoute roles={['admin']}><AdminImport /></ProtectedRoute>} />
                 <Route path="admin/usuarios" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
                 <Route path="admin/relatorios" element={<ProtectedRoute roles={['admin']}><AdminRelatorios /></ProtectedRoute>} />
+                <Route path="admin/configuracoes" element={<ProtectedRoute roles={['admin']}><AdminConfiguracoes /></ProtectedRoute>} />
+                <Route path="admin/historico" element={<ProtectedRoute roles={['admin']}><AdminHistorico /></ProtectedRoute>} />
+                <Route path="admin/listas-especiais" element={<ProtectedRoute roles={['admin', 'coordenador']}><ListasEspeciais /></ProtectedRoute>} />
                 <Route path="coordenador" element={<ProtectedRoute roles={['coordenador', 'admin']}><CoordenadorPanel /></ProtectedRoute>} />
                 <Route path="recreador" element={<ProtectedRoute roles={['recreador', 'admin', 'observador']}><RecreadorPanel /></ProtectedRoute>} />
               </Route>
