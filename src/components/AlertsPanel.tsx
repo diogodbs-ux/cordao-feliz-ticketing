@@ -64,8 +64,10 @@ export default function AlertsPanel() {
         });
       }
     });
+    }
 
     // 2. High volume booth alerts
+    if (config.alertaAltoVolume) {
     const guicheCounts: Record<number, number> = {};
     todayCheckins.forEach(c => {
       guicheCounts[c.guiche] = (guicheCounts[c.guiche] || 0) + 1;
