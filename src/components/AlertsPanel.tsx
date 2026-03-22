@@ -10,10 +10,7 @@ function loadAlertConfig(): AlertConfig {
     const stored = localStorage.getItem('sentinela_alert_config');
     return stored ? { ...DEFAULT_ALERT_CONFIG, ...JSON.parse(stored) } : DEFAULT_ALERT_CONFIG;
   } catch { return DEFAULT_ALERT_CONFIG; }
-}
 import { motion, AnimatePresence } from 'framer-motion';
-
-// Remove import of framer-motion duplicated below
 
 interface Alert {
   id: string;
