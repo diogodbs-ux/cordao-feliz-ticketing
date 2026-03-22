@@ -4,6 +4,7 @@ import logo from '@/assets/logo-completa.png';
 import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
+  FileSpreadsheet, BarChart3, History, Cake, Building,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -11,11 +12,15 @@ const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = 
   admin: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
     { label: 'Importar Dados', icon: ClipboardCheck, path: '/admin/importar' },
+    { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
+    { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
+    { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
     { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
-    { label: 'Relatórios', icon: Settings, path: '/admin/relatorios' },
+    { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
   ],
   coordenador: [
     { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
+    { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
   ],
   recreador: [
     { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
@@ -52,7 +57,7 @@ export default function Layout() {
             const active = location.pathname === item.path;
             return (
               <button
-                key={item.path}
+                key={item.path + item.label}
                 onClick={() => navigate(item.path)}
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
