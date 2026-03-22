@@ -27,6 +27,7 @@ export default function AlertsPanel() {
   const { grupos, checkins, stats } = useData();
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState(true);
+  const config = loadAlertConfig();
 
   const hoje = new Date().toLocaleDateString('pt-BR');
 
