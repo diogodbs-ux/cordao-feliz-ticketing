@@ -74,7 +74,7 @@ export default function AlertsPanel() {
     });
     const avgPerGuiche = todayCheckins.length / Math.max(Object.keys(guicheCounts).length, 1);
     Object.entries(guicheCounts).forEach(([g, count]) => {
-      if (count > avgPerGuiche * 1.5 && count >= 5) {
+      if (count > avgPerGuiche * config.limiarAltoVolume && count >= 5) {
         list.push({
           id: `highvol-${g}`,
           type: 'high_volume',
