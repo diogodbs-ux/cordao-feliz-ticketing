@@ -1,8 +1,16 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { calcAdultCordoes, CordaoColor, getCordaoLabel } from '@/types';
+import { AlertConfig, DEFAULT_ALERT_CONFIG } from '@/types/listas';
 import { AlertTriangle, Accessibility, TrendingUp, Users, Bell, X, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+function loadAlertConfig(): AlertConfig {
+  try {
+    const stored = localStorage.getItem('sentinela_alert_config');
+    return stored ? { ...DEFAULT_ALERT_CONFIG, ...JSON.parse(stored) } : DEFAULT_ALERT_CONFIG;
+  } catch { return DEFAULT_ALERT_CONFIG; }
+}
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Alert {
