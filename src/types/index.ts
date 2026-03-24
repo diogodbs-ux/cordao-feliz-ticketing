@@ -25,6 +25,12 @@ export interface Crianca {
   cordaoCor: CordaoColor;
 }
 
+export interface Acompanhante {
+  id: string;
+  nome: string;
+  parentesco?: string;
+}
+
 export interface Responsavel {
   id: string;
   protocolo: string;
@@ -37,6 +43,7 @@ export interface Responsavel {
   tipoAgendamento: string;
   nomeInstituicao?: string;
   criancas: Crianca[];
+  acompanhantes?: Acompanhante[];
 }
 
 export interface GrupoVisita {
