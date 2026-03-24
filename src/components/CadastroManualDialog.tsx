@@ -7,8 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { getCordaoCor, GrupoVisita, Crianca, OrigemVisitante } from '@/types';
-import { Plus, Trash2, UserPlus } from 'lucide-react';
+import { getCordaoCor, GrupoVisita, Crianca, OrigemVisitante, Acompanhante, calcVagasAcompanhante } from '@/types';
+import { Plus, Trash2, UserPlus, Users, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -36,17 +36,44 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
     nome: string; idade: string; genero: string; pcd: boolean; pcdDescricao: string;
   }[]>([{ nome: '', idade: '', genero: 'MASCULINO', pcd: false, pcdDescricao: '' }]);
 
+  const [acompanhantes, setAcompanhantes] = useState<{ nome: string; parentesco: string }[]>([]);
+
+  const maxAdultos = criancas.length * 2;
+  const vagasRestantes = calcVagasAcompanhante(criancas.length, acompanhantes.length);
+
   const addCrianca = () => {
     setCriancas(prev => [...prev, { nome: '', idade: '', genero: 'MASCULINO', pcd: false, pcdDescricao: '' }]);
   };
 
   const removeCrianca = (idx: number) => {
     if (criancas.length <= 1) return;
-    setCriancas(prev => prev.filter((_, i) => i !== idx));
+    const newCriancas = criancas.filter((_, i) => i !== idx);
+    setCriancas(newCriancas);
+    // Trim acompanhantes if over limit with fewer children
+    const newMax = newCriancas.length * 2 - 1;
+    if (acompanhantes.length > newMax) {
+      setAcompanhantes(prev => prev.slice(0, Math.max(0, newMax)));
+    }
+  };
+
+  const addAcompanhante = () => {
+    if (vagasRestantes <= 0) {
+      toast.error(`Limite atingido: ${maxAdultos} adultos para ${criancas.length} criança(s).`);
+      return;
+    }
+    setAcompanhantes(prev => [...prev, { nome: '', parentesco: '' }]);
+  };
+
+  const removeAcompanhante = (idx: number) => {
+    setAcompanhantes(prev => prev.filter((_, i) => i !== idx));
   };
 
   const updateCrianca = (idx: number, field: string, value: any) => {
     setCriancas(prev => prev.map((c, i) => i === idx ? { ...c, [field]: value } : c));
+  };
+
+  const updateAcompanhante = (idx: number, field: string, value: string) => {
+    setAcompanhantes(prev => prev.map((a, i) => i === idx ? { ...a, [field]: value } : a));
   };
 
   const resetForm = () => {
@@ -54,6 +81,7 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
     setObservacao('');
     setResp({ nome: '', contato: '', email: '', bairro: '', cidade: 'FORTALEZA', uf: 'CE', tipoAgendamento: 'FAMILIAR' });
     setCriancas([{ nome: '', idade: '', genero: 'MASCULINO', pcd: false, pcdDescricao: '' }]);
+    setAcompanhantes([]);
   };
 
   const handleSubmit = () => {
@@ -79,6 +107,14 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
       };
     });
 
+    const novosAcompanhantes: Acompanhante[] = acompanhantes
+      .filter(a => a.nome.trim())
+      .map(a => ({
+        id: crypto.randomUUID(),
+        nome: a.nome.toUpperCase(),
+        parentesco: a.parentesco || undefined,
+      }));
+
     const prefixo = origem === 'lista_adicional' ? 'LISTA' : origem === 'problema_sistema' ? 'PROB' : 'MANUAL';
 
     const novoGrupo: GrupoVisita = {
@@ -94,6 +130,7 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
         uf: resp.uf.toUpperCase(),
         tipoAgendamento: resp.tipoAgendamento,
         criancas: novoCriancas,
+        acompanhantes: novosAcompanhantes.length > 0 ? novosAcompanhantes : undefined,
       },
       checkinRealizado: false,
       origem,
@@ -257,6 +294,101 @@ export default function CadastroManualDialog({ open, onOpenChange }: CadastroMan
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Acompanhantes (Adultos) */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  Acompanhantes Adultos
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  O responsável já conta como 1 adulto. Cada criança dá direito a 2 adultos no total.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addAcompanhante}
+                disabled={vagasRestantes <= 0}
+                className="gap-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Adicionar
+              </Button>
+            </div>
+
+            {/* Slot indicator */}
+            <div className={cn(
+              'rounded-lg p-3 mb-3 flex items-center gap-2 text-sm',
+              vagasRestantes > 0 ? 'bg-primary/10 text-foreground' : 'bg-destructive/10 text-destructive'
+            )}>
+              {vagasRestantes > 0 ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  <span>
+                    <strong>Vagas adultos:</strong> {1 + acompanhantes.length}/{maxAdultos} preenchidas — pode adicionar mais <strong>{vagasRestantes}</strong> acompanhante(s)
+                  </span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>
+                    <strong>Limite atingido:</strong> {maxAdultos}/{maxAdultos} vagas de adultos preenchidas para {criancas.length} criança(s)
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Visual slot dots */}
+            <div className="flex gap-1.5 mb-3">
+              {Array.from({ length: maxAdultos }).map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    'h-3 w-3 rounded-full transition-colors',
+                    i === 0 ? 'bg-primary' : // responsável
+                    i <= acompanhantes.length ? 'bg-cordao-rosa' : // acompanhantes preenchidos
+                    'bg-muted border border-border' // vagas disponíveis
+                  )}
+                  title={i === 0 ? 'Responsável' : i <= acompanhantes.length ? `Acompanhante ${i}` : 'Vaga disponível'}
+                />
+              ))}
+            </div>
+
+            {acompanhantes.length > 0 && (
+              <div className="space-y-2">
+                {acompanhantes.map((a, idx) => (
+                  <div key={idx} className="bg-cordao-rosa/10 rounded-lg p-3 flex items-center gap-3">
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Nome do Acompanhante</Label>
+                        <Input
+                          value={a.nome}
+                          onChange={e => updateAcompanhante(idx, 'nome', e.target.value)}
+                          placeholder="Nome completo"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Parentesco (opcional)</Label>
+                        <Input
+                          value={a.parentesco}
+                          onChange={e => updateAcompanhante(idx, 'parentesco', e.target.value)}
+                          placeholder="Ex: Tia, Avó..."
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => removeAcompanhante(idx)} className="text-destructive h-7 px-2">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

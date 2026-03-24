@@ -25,6 +25,12 @@ export interface Crianca {
   cordaoCor: CordaoColor;
 }
 
+export interface Acompanhante {
+  id: string;
+  nome: string;
+  parentesco?: string;
+}
+
 export interface Responsavel {
   id: string;
   protocolo: string;
@@ -37,6 +43,7 @@ export interface Responsavel {
   tipoAgendamento: string;
   nomeInstituicao?: string;
   criancas: Crianca[];
+  acompanhantes?: Acompanhante[];
 }
 
 export interface GrupoVisita {
@@ -53,9 +60,16 @@ export interface GrupoVisita {
   criadoEm: string;
 }
 
-// Business rule: each child entitles 2 adults
+// Business rule: each child entitles 2 adults (responsável + acompanhantes)
 export function calcAdultCordoes(numCriancas: number): number {
-  return Math.min(numCriancas * 2, numCriancas * 2); // 1 child = 2 adult wristbands
+  return numCriancas * 2; // 1 child = 2 adult wristbands
+}
+
+// How many companion slots are still available
+export function calcVagasAcompanhante(numCriancas: number, numAcompanhantes: number): number {
+  const maxAdultos = numCriancas * 2; // total adult wristbands
+  const ocupados = 1 + numAcompanhantes; // 1 = responsável
+  return Math.max(0, maxAdultos - ocupados);
 }
 
 export interface CheckinRegistro {
