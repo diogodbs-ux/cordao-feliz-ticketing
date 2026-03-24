@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Upload, Cake, Building, CheckCircle2, Users, Baby, Eye, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, Cake, Building, CheckCircle2, Users, Baby, Eye, Search, ChevronDown, ChevronUp, Download, FileText, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
