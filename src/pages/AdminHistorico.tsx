@@ -64,12 +64,18 @@ export default function AdminHistorico() {
     return Array.from(map.values());
   }, [checkins, grupos]);
 
-  // Geographic data
+  // Load special lists from localStorage for geo data
+  const listasInstituicoes = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('sentinela_instituicoes') || '[]'); } catch { return []; }
+  }, []);
+
+  // Geographic data (includes regular + special lists)
   const geoData = useMemo(() => {
     const bairros = new Map<string, number>();
     const cidades = new Map<string, number>();
     const estados = new Map<string, number>();
 
+    // Regular visitors
     const checkedGrupos = grupos.filter(g => g.checkinRealizado);
     checkedGrupos.forEach(g => {
       const b = g.responsavel.bairro?.toUpperCase().trim();
@@ -80,12 +86,23 @@ export default function AdminHistorico() {
       if (u) estados.set(u, (estados.get(u) || 0) + 1);
     });
 
+    // Instituições (special lists)
+    listasInstituicoes.forEach((inst: any) => {
+      if (!inst.checkinRealizado) return;
+      const b = inst.bairro?.toUpperCase().trim();
+      const c = inst.cidade?.toUpperCase().trim();
+      const u = inst.estado?.toUpperCase().trim();
+      if (b) bairros.set(b, (bairros.get(b) || 0) + 1);
+      if (c) cidades.set(c, (cidades.get(c) || 0) + 1);
+      if (u) estados.set(u, (estados.get(u) || 0) + 1);
+    });
+
     return {
       bairros: Array.from(bairros.entries()).sort((a, b) => b[1] - a[1]),
       cidades: Array.from(cidades.entries()).sort((a, b) => b[1] - a[1]),
       estados: Array.from(estados.entries()).sort((a, b) => b[1] - a[1]),
     };
-  }, [grupos]);
+  }, [grupos, listasInstituicoes]);
 
   const COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 50%, 45%)', 'hsl(45, 93%, 53%)', 'hsl(0, 78%, 56%)', 'hsl(340, 72%, 65%)', 'hsl(210, 15%, 47%)', 'hsl(215, 25%, 18%)'];
 

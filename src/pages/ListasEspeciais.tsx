@@ -322,12 +322,102 @@ export default function ListasEspeciais() {
     toast.success('Check-in da instituição registrado!');
   };
 
+  const exportCSV = () => {
+    const lines: string[] = ['Tipo,Nome,Responsável,Telefone,Data Visita,Crianças,Adultos,Check-in,Data Check-in'];
+    aniversariantes.forEach(a => {
+      const kids = a.convidados.filter(c => c.tipo === 'crianca').length;
+      const adults = a.convidados.filter(c => c.tipo === 'acompanhante').length;
+      lines.push(`Aniversário,"${a.nomeAniversariante}","${a.responsavelNome}","${a.responsavelCelular}","${a.dataVisita}",${kids},${adults},${a.checkinRealizado ? 'Sim' : 'Não'},"${a.checkinData || ''}"`);
+    });
+    instituicoes.forEach(inst => {
+      lines.push(`Instituição,"${inst.nomeInstituicao}","${inst.responsavelNome}","${inst.responsavelCelular}","${inst.dataVisita}",${inst.criancas.length},${inst.adultos.length},${inst.checkinRealizado ? 'Sim' : 'Não'},"${inst.checkinData || ''}"`);
+    });
+
+    const totalKids = aniversariantes.reduce((a, l) => a + l.convidados.filter(c => c.tipo === 'crianca').length, 0) + instituicoes.reduce((a, l) => a + l.criancas.length, 0);
+    const totalAdults = aniversariantes.reduce((a, l) => a + l.convidados.filter(c => c.tipo === 'acompanhante').length, 0) + instituicoes.reduce((a, l) => a + l.adultos.length, 0);
+    const totalCheckins = aniversariantes.filter(a => a.checkinRealizado).length + instituicoes.filter(i => i.checkinRealizado).length;
+    lines.push('');
+    lines.push(`TOTAIS,,,,,"${totalKids}","${totalAdults}","${totalCheckins} presentes",`);
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `listas_especiais_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exportado com sucesso!');
+  };
+
+  const exportPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { toast.error('Popup bloqueado. Permita popups para imprimir.'); return; }
+
+    const totalKids = aniversariantes.reduce((a, l) => a + l.convidados.filter(c => c.tipo === 'crianca').length, 0) + instituicoes.reduce((a, l) => a + l.criancas.length, 0);
+    const totalAdults = aniversariantes.reduce((a, l) => a + l.convidados.filter(c => c.tipo === 'acompanhante').length, 0) + instituicoes.reduce((a, l) => a + l.adultos.length, 0);
+    const totalCheckins = aniversariantes.filter(a => a.checkinRealizado).length + instituicoes.filter(i => i.checkinRealizado).length;
+
+    let html = `<!DOCTYPE html><html><head><title>Relatório Listas Especiais</title>
+    <style>
+      body{font-family:Arial,sans-serif;margin:20px;color:#1a1a1a}
+      h1{font-size:18px;margin-bottom:4px} h2{font-size:14px;margin:16px 0 8px;border-bottom:1px solid #ccc;padding-bottom:4px}
+      table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px}
+      th,td{border:1px solid #ddd;padding:4px 6px;text-align:left}
+      th{background:#f0f0f0;font-weight:bold}
+      .summary{display:flex;gap:24px;margin:12px 0;font-size:13px}
+      .summary span{font-weight:bold}
+      .badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:bold}
+      .presente{background:#d4edda;color:#155724} .ausente{background:#f8d7da;color:#721c24}
+      @media print{body{margin:10px}}
+    </style></head><body>
+    <h1>Relatório de Listas Especiais — Sentinela Infância</h1>
+    <p style="font-size:11px;color:#666">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+    <div class="summary">
+      <div>Aniversários: <span>${aniversariantes.length}</span></div>
+      <div>Instituições: <span>${instituicoes.length}</span></div>
+      <div>Total Crianças: <span>${totalKids}</span></div>
+      <div>Total Adultos: <span>${totalAdults}</span></div>
+      <div>Presentes: <span>${totalCheckins}</span></div>
+    </div>`;
+
+    if (aniversariantes.length > 0) {
+      html += `<h2>Aniversariantes</h2><table><tr><th>Aniversariante</th><th>Responsável</th><th>Telefone</th><th>Data Visita</th><th>Crianças</th><th>Adultos</th><th>Status</th></tr>`;
+      aniversariantes.forEach(a => {
+        const kids = a.convidados.filter(c => c.tipo === 'crianca').length;
+        const adults = a.convidados.filter(c => c.tipo === 'acompanhante').length;
+        html += `<tr><td>${a.nomeAniversariante}</td><td>${a.responsavelNome}</td><td>${a.responsavelCelular}</td><td>${a.dataVisita}</td><td>${kids}</td><td>${adults}</td><td><span class="badge ${a.checkinRealizado ? 'presente' : 'ausente'}">${a.checkinRealizado ? 'Presente' : 'Pendente'}</span></td></tr>`;
+      });
+      html += `</table>`;
+    }
+
+    if (instituicoes.length > 0) {
+      html += `<h2>Instituições</h2><table><tr><th>Instituição</th><th>Cidade/UF</th><th>Responsável</th><th>Data Visita</th><th>Crianças</th><th>Adultos</th><th>Status</th></tr>`;
+      instituicoes.forEach(inst => {
+        html += `<tr><td>${inst.nomeInstituicao}</td><td>${inst.cidade}/${inst.estado}</td><td>${inst.responsavelNome}</td><td>${inst.dataVisita}</td><td>${inst.criancas.length}</td><td>${inst.adultos.length}</td><td><span class="badge ${inst.checkinRealizado ? 'presente' : 'ausente'}">${inst.checkinRealizado ? 'Presente' : 'Pendente'}</span></td></tr>`;
+      });
+      html += `</table>`;
+    }
+
+    html += `</body></html>`;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => printWindow.print();
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Listas Especiais</h1>
           <p className="text-sm text-muted-foreground">Aniversariantes e Instituições — listas que não passam pelo site de agendamento</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={aniversariantes.length === 0 && instituicoes.length === 0}>
+            <Download className="h-3.5 w-3.5 mr-1" /> CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportPDF} disabled={aniversariantes.length === 0 && instituicoes.length === 0}>
+            <Printer className="h-3.5 w-3.5 mr-1" /> PDF
+          </Button>
         </div>
       </div>
 
