@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor, calcAdultCordoes } from '@/types';
-import { Accessibility, Mail, Phone, MapPin, Users, Baby } from 'lucide-react';
+import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor, calcAdultCordoes, calcVagasAcompanhante } from '@/types';
+import { Accessibility, Mail, Phone, MapPin, Users, Baby, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -14,7 +14,9 @@ export default function VisitanteDetailDialog({ grupo, open, onOpenChange }: Pro
 
   const r = grupo.responsavel;
   const numCriancas = r.criancas.length;
-  const numAdultos = calcAdultCordoes(numCriancas);
+  const numAcompanhantes = r.acompanhantes?.length || 0;
+  const totalAdultos = 1 + numAcompanhantes; // responsável + acompanhantes
+  const maxAdultos = calcAdultCordoes(numCriancas);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,13 +48,51 @@ export default function VisitanteDetailDialog({ grupo, open, onOpenChange }: Pro
             )}
           </div>
 
-          {/* Business rule alert */}
+          {/* Business rule - adult slots */}
           <div className="bg-primary/10 rounded-xl p-4">
             <p className="text-sm font-semibold text-foreground">Regra de Cordões Adultos</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {numCriancas} criança(s) → direito a <strong className="text-foreground">{numAdultos} cordão(ões) rosa</strong> (adultos)
+              {numCriancas} criança(s) → direito a <strong className="text-foreground">{maxAdultos} cordão(ões) rosa</strong> (adultos)
+            </p>
+            <div className="flex gap-1.5 mt-2">
+              {Array.from({ length: maxAdultos }).map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    'h-3 w-3 rounded-full',
+                    i < totalAdultos ? 'bg-cordao-rosa' : 'bg-muted border border-border'
+                  )}
+                  title={i === 0 ? 'Responsável' : i < totalAdultos ? `Acompanhante ${i}` : 'Vaga disponível'}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalAdultos}/{maxAdultos} adultos cadastrados (1 responsável + {numAcompanhantes} acompanhante(s))
             </p>
           </div>
+
+          {/* Acompanhantes */}
+          {r.acompanhantes && r.acompanhantes.length > 0 && (
+            <div>
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-3">
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
+                Acompanhantes ({r.acompanhantes.length})
+              </h3>
+              <div className="space-y-2">
+                {r.acompanhantes.map(a => (
+                  <div key={a.id} className="flex items-center gap-3 bg-cordao-rosa/10 rounded-lg p-3">
+                    <div className={cn('w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold bg-cordao-rosa text-primary-foreground')}>
+                      ROS
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{a.nome}</p>
+                      {a.parentesco && <p className="text-xs text-muted-foreground">{a.parentesco}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Crianças */}
           <div>
@@ -88,7 +128,7 @@ export default function VisitanteDetailDialog({ grupo, open, onOpenChange }: Pro
             <p className="text-sm font-medium text-foreground mb-2">Cordões a entregar:</p>
             <div className="flex flex-wrap gap-2">
               <span className={cn('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold', getCordaoTailwindBg('rosa'), getCordaoTailwindText('rosa'))}>
-                {numAdultos}x ROSA (Adultos)
+                {totalAdultos}x ROSA (Adultos)
               </span>
               {Object.entries(
                 r.criancas.reduce((acc, c) => {
