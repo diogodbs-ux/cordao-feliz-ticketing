@@ -132,8 +132,8 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Total Atendidos', value: filteredStats.totalVisitantes, icon: Users, color: 'text-primary' },
-          { label: 'Crianças', value: filteredStats.totalCriancas, icon: Baby, color: 'text-cordao-verde' },
+          { label: 'Total Atendidos', value: filteredStats.totalVisitantes + specialKids + specialAdults, icon: Users, color: 'text-primary' },
+          { label: 'Crianças', value: filteredStats.totalCriancas + specialKids, icon: Baby, color: 'text-cordao-verde' },
           { label: 'Responsáveis', value: filteredStats.totalResponsaveis, icon: Users, color: 'text-cordao-rosa' },
           { label: 'PCD Atendidos', value: filteredStats.totalPCD, icon: Accessibility, color: 'text-primary' },
           { label: 'Pendentes', value: pendentes, icon: Calendar, color: 'text-cordao-amarelo' },
