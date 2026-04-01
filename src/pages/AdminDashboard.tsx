@@ -76,14 +76,33 @@ export default function AdminDashboard() {
     atendimentos: qtd,
   }));
 
-  // Pendentes = only today's scheduled visitors not checked in
+  // Pendentes = only today's scheduled visitors not checked in (including special lists)
   const hoje = new Date().toLocaleDateString('pt-BR');
   const gruposHoje = grupos.filter(g => {
     if (g.dataAgendamento) return g.dataAgendamento === hoje;
     const created = new Date(g.criadoEm);
     return created.toLocaleDateString('pt-BR') === hoje;
   });
-  const pendentes = gruposHoje.filter(g => !g.checkinRealizado).length;
+  const pendentesGrupos = gruposHoje.filter(g => !g.checkinRealizado).length;
+
+  // Include special lists in counts
+  const aniversariantes = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('sentinela_aniversariantes') || '[]'); } catch { return []; }
+  }, [checkins]); // re-evaluate when checkins change (proxy for time passing)
+  const instituicoes = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('sentinela_instituicoes') || '[]'); } catch { return []; }
+  }, [checkins]);
+
+  const anivHoje = aniversariantes.filter((a: any) => a.dataVisita === hoje);
+  const instHoje = instituicoes.filter((i: any) => i.dataVisita === hoje);
+  const pendentesEspeciais = anivHoje.filter((a: any) => !a.checkinRealizado).length + instHoje.filter((i: any) => !i.checkinRealizado).length;
+  const pendentes = pendentesGrupos + pendentesEspeciais;
+
+  // Extra stats from special lists (checked in today)
+  const specialKids = anivHoje.filter((a: any) => a.checkinRealizado).reduce((acc: number, a: any) => acc + (a.convidados?.filter((c: any) => c.tipo === 'crianca').length || 0), 0)
+    + instHoje.filter((i: any) => i.checkinRealizado).reduce((acc: number, i: any) => acc + (i.criancas?.length || 0), 0);
+  const specialAdults = anivHoje.filter((a: any) => a.checkinRealizado).reduce((acc: number, a: any) => acc + (a.convidados?.filter((c: any) => c.tipo === 'acompanhante').length || 0), 0)
+    + instHoje.filter((i: any) => i.checkinRealizado).reduce((acc: number, i: any) => acc + (i.adultos?.length || 0), 0);
 
   return (
     <div className="p-6 space-y-6">
@@ -113,8 +132,8 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Total Atendidos', value: filteredStats.totalVisitantes, icon: Users, color: 'text-primary' },
-          { label: 'Crianças', value: filteredStats.totalCriancas, icon: Baby, color: 'text-cordao-verde' },
+          { label: 'Total Atendidos', value: filteredStats.totalVisitantes + specialKids + specialAdults, icon: Users, color: 'text-primary' },
+          { label: 'Crianças', value: filteredStats.totalCriancas + specialKids, icon: Baby, color: 'text-cordao-verde' },
           { label: 'Responsáveis', value: filteredStats.totalResponsaveis, icon: Users, color: 'text-cordao-rosa' },
           { label: 'PCD Atendidos', value: filteredStats.totalPCD, icon: Accessibility, color: 'text-primary' },
           { label: 'Pendentes', value: pendentes, icon: Calendar, color: 'text-cordao-amarelo' },
