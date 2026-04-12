@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, GrupoVisita, getOrigemLabel, calcAdultCordoes } from '@/types';
+import { getCordaoTailwindBg, getCordaoTailwindText, GrupoVisita, getOrigemLabel } from '@/types';
 import { Search, Users, CheckCircle2, Accessibility, Clock, UserPlus, Eye, Info, Cake, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CordaoPopup from '@/components/CordaoPopup';
