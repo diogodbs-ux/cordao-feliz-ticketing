@@ -322,7 +322,7 @@ export default function RecreadorPanel() {
         )}
 
         {filtrados.slice(0, 20).map((grupo, i) => {
-          const numAdultos = calcAdultCordoes(grupo.responsavel.criancas.length);
+          const numAdultos = 1 + (grupo.responsavel.acompanhantes?.length || 0);
           return (
             <motion.div
               key={grupo.id}
