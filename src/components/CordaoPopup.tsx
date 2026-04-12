@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor, calcAdultCordoes } from '@/types';
+import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor } from '@/types';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Accessibility, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,14 +14,21 @@ interface CordaoPopupProps {
 export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: CordaoPopupProps) {
   if (!grupo) return null;
 
-  const numCriancas = grupo.responsavel.criancas.length;
-  const numAdultos = calcAdultCordoes(numCriancas);
+  const numAcompanhantes = grupo.responsavel.acompanhantes?.length || 0;
+  const totalAdultos = 1 + numAcompanhantes; // responsável + acompanhantes cadastrados
 
   const membros: { nome: string; cor: CordaoColor; idade?: number; pcd?: boolean; pcdDesc?: string; tipo: string }[] = [
-    ...Array.from({ length: numAdultos }, (_, i) => ({
-      nome: i === 0 ? grupo.responsavel.nome : `Acompanhante ${i}`,
+    // Responsável (always 1)
+    {
+      nome: grupo.responsavel.nome,
       cor: 'rosa' as CordaoColor,
-      tipo: i === 0 ? 'Responsável' : 'Acompanhante',
+      tipo: 'Responsável',
+    },
+    // Only registered companions
+    ...(grupo.responsavel.acompanhantes || []).map((a, i) => ({
+      nome: a.nome || `Acompanhante ${i + 1}`,
+      cor: 'rosa' as CordaoColor,
+      tipo: a.parentesco || 'Acompanhante',
     })),
     ...grupo.responsavel.criancas.map(c => ({
       nome: c.nome,
