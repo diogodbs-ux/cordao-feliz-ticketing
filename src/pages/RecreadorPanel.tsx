@@ -3,8 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, GrupoVisita, getOrigemLabel, calcAdultCordoes } from '@/types';
-import { Search, Users, CheckCircle2, Accessibility, Clock, UserPlus, Eye, Info, Cake, Building } from 'lucide-react';
+import { getCordaoTailwindBg, getCordaoTailwindText, GrupoVisita, getOrigemLabel } from '@/types';
+import { Search, Users, CheckCircle2, Accessibility, UserPlus, Eye, Info, Cake, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CordaoPopup from '@/components/CordaoPopup';
 import CadastroManualDialog from '@/components/CadastroManualDialog';
@@ -322,7 +322,7 @@ export default function RecreadorPanel() {
         )}
 
         {filtrados.slice(0, 20).map((grupo, i) => {
-          const numAdultos = calcAdultCordoes(grupo.responsavel.criancas.length);
+          const numAdultos = 1 + (grupo.responsavel.acompanhantes?.length || 0);
           return (
             <motion.div
               key={grupo.id}
