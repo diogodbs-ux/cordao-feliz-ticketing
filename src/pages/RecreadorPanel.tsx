@@ -321,7 +321,7 @@ export default function RecreadorPanel() {
           </div>
         )}
 
-        {filtrados.slice(0, 20).map((grupo, i) => {
+        {filtrados.map((grupo, i) => {
           const numAdultos = 1 + (grupo.responsavel.acompanhantes?.length || 0);
           return (
             <motion.div
