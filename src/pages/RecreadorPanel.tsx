@@ -322,14 +322,14 @@ export default function RecreadorPanel() {
           </div>
         )}
 
-        {filtrados.map((grupo, i) => {
+        {filtrados.slice(0, visibleCount).map((grupo, i) => {
           const numAdultos = 1 + (grupo.responsavel.acompanhantes?.length || 0);
           return (
             <motion.div
               key={grupo.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
+              transition={{ delay: Math.min(i, 20) * 0.03 }}
               className="bg-card rounded-xl shadow-card p-4 hover:shadow-elevated transition-shadow"
             >
               <div className="flex items-center justify-between">
@@ -390,6 +390,16 @@ export default function RecreadorPanel() {
             </motion.div>
           );
         })}
+
+        {filtrados.length > visibleCount && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setVisibleCount(prev => prev + 30)}
+          >
+            Mostrar mais ({filtrados.length - visibleCount} restantes)
+          </Button>
+        )}
 
         {totalPendentes === 0 && busca && (
           <div className="text-center py-12 text-muted-foreground">

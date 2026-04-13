@@ -16,6 +16,7 @@ import AdminHistorico from "@/pages/AdminHistorico";
 import ListasEspeciais from "@/pages/ListasEspeciais";
 import CoordenadorPanel from "@/pages/CoordenadorPanel";
 import RecreadorPanel from "@/pages/RecreadorPanel";
+import ApresentacaoExecutiva from "@/pages/ApresentacaoExecutiva";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
