@@ -92,6 +92,7 @@ export interface AlertConfig {
   alertaPendentes: boolean;
   milestones: number[];
   limiarAltoVolume: number; // multiplier (e.g. 1.5 = 50% above avg)
+  guichesAtivos: number; // total active booths
 }
 
 export const DEFAULT_ALERT_CONFIG: AlertConfig = {
@@ -105,4 +106,5 @@ export const DEFAULT_ALERT_CONFIG: AlertConfig = {
   alertaPendentes: true,
   milestones: [50, 100, 200, 300, 400, 500],
   limiarAltoVolume: 1.5,
+  guichesAtivos: 5,
 };

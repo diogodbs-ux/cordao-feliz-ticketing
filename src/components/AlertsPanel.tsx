@@ -89,7 +89,7 @@ export default function AlertsPanel() {
       // 3. Idle booth alerts
       if (config.alertaGuicheInativo) {
         const activeGuiches = new Set(Object.keys(guicheCounts).map(Number));
-        for (let g = 1; g <= 6; g++) {
+        for (let g = 1; g <= (config.guichesAtivos || 6); g++) {
           if (!activeGuiches.has(g) && todayCheckins.length > 10) {
             list.push({
               id: `idle-${g}`,

@@ -52,7 +52,7 @@ export default function AdminConfiguracoes() {
         </h3>
 
         <div className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Capacidade Máxima Diária</Label>
               <Input
@@ -61,6 +61,17 @@ export default function AdminConfiguracoes() {
                 onChange={e => setConfig(c => ({ ...c, capacidadeMaxima: parseInt(e.target.value) || 500 }))}
               />
               <p className="text-[10px] text-muted-foreground">Número máximo de visitantes por dia</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Guichês Ativos</Label>
+              <Input
+                type="number"
+                min="1"
+                max="20"
+                value={config.guichesAtivos}
+                onChange={e => setConfig(c => ({ ...c, guichesAtivos: parseInt(e.target.value) || 5 }))}
+              />
+              <p className="text-[10px] text-muted-foreground">Quantidade de guichês em operação. Alertas de inatividade só consideram guichês ativos.</p>
             </div>
             <div className="space-y-2">
               <Label>Limiar Alto Volume (multiplicador)</Label>
