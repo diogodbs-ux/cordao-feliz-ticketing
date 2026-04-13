@@ -32,6 +32,7 @@ export default function RecreadorPanel() {
   const { user } = useAuth();
   const { grupos, marcarCheckin } = useData();
   const [busca, setBusca] = useState('');
+  const [visibleCount, setVisibleCount] = useState(30);
   const [selectedGrupo, setSelectedGrupo] = useState<GrupoVisita | null>(null);
   const [detailGrupo, setDetailGrupo] = useState<GrupoVisita | null>(null);
   const [cadastroOpen, setCadastroOpen] = useState(false);
