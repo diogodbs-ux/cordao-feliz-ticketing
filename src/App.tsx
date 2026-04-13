@@ -16,6 +16,7 @@ import AdminHistorico from "@/pages/AdminHistorico";
 import ListasEspeciais from "@/pages/ListasEspeciais";
 import CoordenadorPanel from "@/pages/CoordenadorPanel";
 import RecreadorPanel from "@/pages/RecreadorPanel";
+import ApresentacaoExecutiva from "@/pages/ApresentacaoExecutiva";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="admin/listas-especiais" element={<ProtectedRoute roles={['admin', 'coordenador']}><ListasEspeciais /></ProtectedRoute>} />
                 <Route path="coordenador" element={<ProtectedRoute roles={['coordenador', 'admin']}><CoordenadorPanel /></ProtectedRoute>} />
                 <Route path="recreador" element={<ProtectedRoute roles={['recreador', 'admin', 'observador']}><RecreadorPanel /></ProtectedRoute>} />
+                <Route path="apresentacao" element={<ProtectedRoute roles={['admin']}><ApresentacaoExecutiva /></ProtectedRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

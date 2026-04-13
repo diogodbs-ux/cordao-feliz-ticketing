@@ -4,7 +4,7 @@ import logo from '@/assets/logo-completa.png';
 import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
-  FileSpreadsheet, BarChart3, History, Cake, Building,
+  FileSpreadsheet, BarChart3, History, Cake, Building, Presentation,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +17,7 @@ const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = 
     { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
     { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
     { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
+    { label: 'Apresentação', icon: Presentation, path: '/apresentacao' },
   ],
   coordenador: [
     { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
