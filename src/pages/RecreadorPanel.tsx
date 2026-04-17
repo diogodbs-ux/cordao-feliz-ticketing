@@ -4,11 +4,13 @@ import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getCordaoTailwindBg, getCordaoTailwindText, GrupoVisita, getOrigemLabel } from '@/types';
-import { Search, Users, CheckCircle2, Accessibility, UserPlus, Eye, Info, Cake, Building } from 'lucide-react';
+import { Search, Users, CheckCircle2, Accessibility, UserPlus, Eye, Info, Cake, Building, ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CordaoPopup from '@/components/CordaoPopup';
 import CadastroManualDialog from '@/components/CadastroManualDialog';
 import VisitanteDetailDialog from '@/components/VisitanteDetailDialog';
+import QRScanner from '@/components/QRScanner';
+import { decodePayload } from '@/lib/qr';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ListaAniversariante, ListaInstituicao } from '@/types/listas';
@@ -36,6 +38,7 @@ export default function RecreadorPanel() {
   const [selectedGrupo, setSelectedGrupo] = useState<GrupoVisita | null>(null);
   const [detailGrupo, setDetailGrupo] = useState<GrupoVisita | null>(null);
   const [cadastroOpen, setCadastroOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [aniversariantes, setAniversariantes] = useState<ListaAniversariante[]>(readAniversariantes);
   const [instituicoes, setInstituicoes] = useState<ListaInstituicao[]>(readInstituicoes);
 
@@ -170,6 +173,10 @@ export default function RecreadorPanel() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setScannerOpen(true)} className="gap-2">
+            <ScanLine className="h-4 w-4" />
+            Escanear QR
+          </Button>
           <Button variant="outline" onClick={() => setCadastroOpen(true)} className="gap-2">
             <UserPlus className="h-4 w-4" />
             Cadastro Manual
@@ -442,6 +449,36 @@ export default function RecreadorPanel() {
       />
 
       <CadastroManualDialog open={cadastroOpen} onOpenChange={setCadastroOpen} />
+
+      <QRScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={(raw) => {
+          setScannerOpen(false);
+          const payload = decodePayload(raw);
+          if (!payload) {
+            toast.error('QR Code inválido');
+            return;
+          }
+          if (payload.t === 'g') {
+            const grupo = grupos.find(g => g.id === payload.id);
+            if (!grupo) {
+              toast.error('Visitante não encontrado na base de hoje');
+              return;
+            }
+            if (grupo.checkinRealizado) {
+              toast.warning(`${grupo.responsavel.nome} já fez check-in`);
+              return;
+            }
+            setSelectedGrupo(grupo);
+            toast.success(`QR lido: ${grupo.responsavel.nome}`);
+          } else if (payload.t === 'a') {
+            marcarCheckinAniv(payload.id);
+          } else if (payload.t === 'i') {
+            marcarCheckinInst(payload.id);
+          }
+        }}
+      />
     </div>
   );
 }
