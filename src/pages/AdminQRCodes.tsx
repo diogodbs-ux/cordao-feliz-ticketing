@@ -92,7 +92,6 @@ export default function AdminQRCodes() {
     }
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const pageW = 210;
-    const pageH = 297;
     const cardW = 60;
     const cardH = 75;
     const cols = 3;

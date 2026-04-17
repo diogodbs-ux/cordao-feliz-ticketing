@@ -62,8 +62,8 @@ export default function QRScanner({ open, onClose, onScan }: QRScannerProps) {
       cancelled = true;
       const inst = scannerRef.current;
       if (inst) {
-        inst.stop().catch(() => {}).finally(() => {
-          inst.clear().catch(() => {});
+        Promise.resolve(inst.stop()).catch(() => {}).finally(() => {
+          try { inst.clear(); } catch {}
         });
         scannerRef.current = null;
       }

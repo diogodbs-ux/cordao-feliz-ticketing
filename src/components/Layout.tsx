@@ -4,7 +4,7 @@ import logo from '@/assets/logo-completa.png';
 import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
-  FileSpreadsheet, BarChart3, History, Cake, Building, Presentation,
+  FileSpreadsheet, BarChart3, History, Cake, Building, Presentation, QrCode,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = 
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
     { label: 'Importar Dados', icon: ClipboardCheck, path: '/admin/importar' },
     { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
+    { label: 'QR Codes', icon: QrCode, path: '/admin/qrcodes' },
     { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
     { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
     { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
