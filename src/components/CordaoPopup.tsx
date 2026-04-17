@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor } from '@/types';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Accessibility, X } from 'lucide-react';
+import { CheckCircle2, Accessibility, X, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { imprimirCordoes, CordaoPrintItem } from '@/lib/print';
 
 interface CordaoPopupProps {
   grupo: GrupoVisita | null;
@@ -133,12 +134,32 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-border flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button onClick={onConfirm} className="gap-2 px-8">
-              <CheckCircle2 className="h-4 w-4" />
-              Confirmar Entrega e Check-in
+          <div className="p-6 border-t border-border flex justify-between items-center gap-3 flex-wrap">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const items: CordaoPrintItem[] = membros.map(m => ({
+                  nome: m.nome,
+                  cor: m.cor,
+                  detalhe: m.tipo,
+                  pcd: m.pcd,
+                  pcdDescricao: m.pcdDesc,
+                  guiche,
+                }));
+                imprimirCordoes(items, { titulo: `Cordões — ${grupo.responsavel.nome}` });
+              }}
+              className="gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              Imprimir Cordões
             </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={onClose}>Cancelar</Button>
+              <Button onClick={onConfirm} className="gap-2 px-8">
+                <CheckCircle2 className="h-4 w-4" />
+                Confirmar Entrega e Check-in
+              </Button>
+            </div>
           </div>
         </motion.div>
       </motion.div>
