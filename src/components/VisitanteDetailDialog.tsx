@@ -1,6 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor, calcAdultCordoes, calcVagasAcompanhante } from '@/types';
-import { Accessibility, Mail, Phone, MapPin, Users, Baby, UserCheck } from 'lucide-react';
+import { Accessibility, Mail, Phone, MapPin, Users, Baby, UserCheck, Printer } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { imprimirCordoes, CordaoPrintItem } from '@/lib/print';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -125,7 +127,25 @@ export default function VisitanteDetailDialog({ grupo, open, onOpenChange }: Pro
 
           {/* Resumo cordões */}
           <div className="bg-secondary/30 rounded-xl p-4">
-            <p className="text-sm font-medium text-foreground mb-2">Cordões a entregar:</p>
+            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+              <p className="text-sm font-medium text-foreground">Cordões a entregar:</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                onClick={() => {
+                  const items: CordaoPrintItem[] = [
+                    { nome: r.nome, cor: 'rosa', detalhe: 'Responsável', guiche: grupo.guiche },
+                    ...(r.acompanhantes || []).map(a => ({ nome: a.nome, cor: 'rosa' as CordaoColor, detalhe: a.parentesco || 'Acompanhante', guiche: grupo.guiche })),
+                    ...r.criancas.map(c => ({ nome: c.nome, cor: c.cordaoCor, detalhe: `${c.idade} anos`, pcd: c.pcd, pcdDescricao: c.pcdDescricao, guiche: grupo.guiche })),
+                  ];
+                  imprimirCordoes(items, { titulo: `Cordões — ${r.nome}` });
+                }}
+              >
+                <Printer className="h-3.5 w-3.5" />
+                Imprimir Cordões
+              </Button>
+            </div>
             <div className="flex flex-wrap gap-2">
               <span className={cn('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold', getCordaoTailwindBg('rosa'), getCordaoTailwindText('rosa'))}>
                 {totalAdultos}x ROSA (Adultos)
