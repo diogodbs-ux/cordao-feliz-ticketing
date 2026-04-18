@@ -10,6 +10,7 @@ import CordaoPopup from '@/components/CordaoPopup';
 import CadastroManualDialog from '@/components/CadastroManualDialog';
 import VisitanteDetailDialog from '@/components/VisitanteDetailDialog';
 import QRScanner from '@/components/QRScanner';
+import DataOperacionalPicker from '@/components/DataOperacionalPicker';
 import { decodePayload } from '@/lib/qr';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -44,7 +45,8 @@ export default function RecreadorPanel() {
 
   const isObservador = user?.role === 'observador';
   const guiche = user?.guiche || 0;
-  const hoje = getHojeDDMMYYYY();
+  const hojeReal = getHojeDDMMYYYY();
+  const [hoje, setHoje] = useState<string>(hojeReal);
 
   // Poll special lists every 3s (same as DataContext pattern)
   useEffect(() => {
@@ -172,7 +174,8 @@ export default function RecreadorPanel() {
             {guiche > 0 ? `Guichê ${String(guiche).padStart(2, '0')} — ` : ''}{user?.nome} · {hoje}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <DataOperacionalPicker value={hoje} onChange={setHoje} hojeReal={hojeReal} />
           <Button variant="outline" onClick={() => setScannerOpen(true)} className="gap-2">
             <ScanLine className="h-4 w-4" />
             Escanear QR

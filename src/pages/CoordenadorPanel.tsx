@@ -6,6 +6,7 @@ import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, calcAdul
 import { Users, Baby, Accessibility, Activity, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import DataOperacionalPicker from '@/components/DataOperacionalPicker';
 
 const CORDAO_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9',
@@ -83,7 +84,8 @@ export default function CoordenadorPanel() {
   }));
 
   // Pendentes = only today's scheduled visitors not checked in
-  const hoje = new Date().toLocaleDateString('pt-BR');
+  const hojeReal = new Date().toLocaleDateString('pt-BR');
+  const [hoje, setHoje] = useState<string>(hojeReal);
   const gruposHoje = grupos.filter(g => {
     if (g.dataAgendamento) return g.dataAgendamento === hoje;
     const created = new Date(g.criadoEm);
@@ -99,9 +101,11 @@ export default function CoordenadorPanel() {
           <h1 className="text-2xl font-bold text-foreground">Painel de Coordenação</h1>
           <p className="text-sm text-muted-foreground flex items-center gap-2">
             <Activity className="h-3 w-3 text-cordao-verde animate-pulse" />
-            Tempo real — {new Date().toLocaleDateString('pt-BR')}
+            Tempo real — {hoje}
           </p>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <DataOperacionalPicker value={hoje} onChange={setHoje} hojeReal={hojeReal} />
         <div className="flex items-center gap-1 bg-card rounded-xl shadow-card p-1">
           {PERIODOS.map(p => (
             <button
