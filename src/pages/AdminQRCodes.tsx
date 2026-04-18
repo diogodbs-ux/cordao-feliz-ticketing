@@ -163,6 +163,31 @@ export default function AdminQRCodes() {
     i: items.filter(i => i.tipo === 'i').length,
   }), [items]);
 
+  const imprimirCordoesDoDia = () => {
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const grupHoje = grupos.filter(g => {
+      if (g.dataAgendamento) return g.dataAgendamento === hoje;
+      return new Date(g.criadoEm).toLocaleDateString('pt-BR') === hoje;
+    });
+    if (!grupHoje.length) {
+      toast.error('Nenhum visitante agendado para hoje');
+      return;
+    }
+    const labels: CordaoPrintItem[] = [];
+    grupHoje.forEach(g => {
+      const r = g.responsavel;
+      labels.push({ nome: r.nome, cor: 'rosa', detalhe: 'Responsável', guiche: g.guiche });
+      (r.acompanhantes || []).forEach(a => {
+        labels.push({ nome: a.nome, cor: 'rosa', detalhe: a.parentesco || 'Acompanhante', guiche: g.guiche });
+      });
+      r.criancas.forEach(c => {
+        labels.push({ nome: c.nome, cor: c.cordaoCor, detalhe: `${c.idade} anos`, pcd: c.pcd, pcdDescricao: c.pcdDescricao, guiche: g.guiche });
+      });
+    });
+    imprimirCordoes(labels, { titulo: `Cordões do Dia — ${hoje}` });
+    toast.success(`${labels.length} cordão(ões) enviados para impressão`);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -175,10 +200,14 @@ export default function AdminQRCodes() {
             Gere e imprima QR Codes para acelerar o check-in no guichê
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={imprimirCordoesDoDia} className="gap-2">
+            <Tag className="h-4 w-4" />
+            Imprimir Cordões do Dia
+          </Button>
           <Button variant="outline" onClick={imprimirTudo} className="gap-2">
             <Printer className="h-4 w-4" />
-            Imprimir
+            Imprimir QRs
           </Button>
           <Button onClick={exportarPDF} className="gap-2">
             <Download className="h-4 w-4" />
