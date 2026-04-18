@@ -121,6 +121,7 @@ export default function CoordenadorPanel() {
               {p.label}
             </button>
           ))}
+          </div>
         </div>
       </div>
 
