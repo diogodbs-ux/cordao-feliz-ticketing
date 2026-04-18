@@ -3,9 +3,11 @@ import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { QrCode, Search, Printer, Download } from 'lucide-react';
+import { QrCode, Search, Printer, Download, Tag } from 'lucide-react';
 import { generateQRDataURL } from '@/lib/qr';
 import { ListaAniversariante, ListaInstituicao } from '@/types/listas';
+import { imprimirCordoes, CordaoPrintItem } from '@/lib/print';
+import { CordaoColor } from '@/types';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 
