@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar as CalendarIcon, FlaskConical, X } from 'lucide-react';
+import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,9 @@ interface Props {
  */
 export default function DataOperacionalPicker({ value, onChange, hojeReal, className }: Props) {
   const [open, setOpen] = useState(false);
-  const isHomolog = value !== hojeReal;
+  // Visual-only flag: indicates the picker is on a date other than today.
+  // This is NOT homologation mode — it's just historical/future navigation.
+  const isOutroDia = value !== hojeReal;
 
   const dateObj = (() => {
     try {
@@ -40,18 +42,15 @@ export default function DataOperacionalPicker({ value, onChange, hojeReal, class
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      {isHomolog && (
-        <div className="inline-flex items-center gap-1.5 bg-cordao-amarelo/20 text-foreground border border-cordao-amarelo/40 px-2.5 py-1 rounded-lg text-xs font-bold">
-          <FlaskConical className="h-3.5 w-3.5" />
-          MODO HOMOLOGAÇÃO
-          <button
-            onClick={() => onChange(hojeReal)}
-            className="ml-1 hover:opacity-70"
-            title="Voltar para hoje"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </div>
+      {isOutroDia && (
+        <button
+          onClick={() => onChange(hojeReal)}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          title="Voltar para hoje"
+        >
+          <X className="h-3 w-3" />
+          Visualizando outro dia
+        </button>
       )}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -60,7 +59,7 @@ export default function DataOperacionalPicker({ value, onChange, hojeReal, class
             size="sm"
             className={cn(
               'gap-2 h-9',
-              isHomolog && 'border-cordao-amarelo/60 bg-cordao-amarelo/10'
+              isOutroDia && 'border-primary/40 bg-primary/5'
             )}
           >
             <CalendarIcon className="h-4 w-4" />
