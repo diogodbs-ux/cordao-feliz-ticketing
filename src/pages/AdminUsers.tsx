@@ -83,8 +83,8 @@ export default function AdminUsers() {
     }
   };
 
-  const roleLabel: Record<UserRole, string> = { admin: 'Administrador', coordenador: 'Coordenador', recreador: 'Recreador', observador: 'Observador (Teste)' };
-  const roleBadge: Record<UserRole, string> = { admin: 'bg-cordao-preto text-primary-foreground', coordenador: 'bg-primary text-primary-foreground', recreador: 'bg-cordao-verde text-primary-foreground', observador: 'bg-cordao-cinza text-primary-foreground' };
+  const roleLabel: Record<UserRole, string> = { admin: 'Administrador', coordenador: 'Coordenador', supervisor: 'Supervisor', recreador: 'Recreador', recreador_espaco: 'Recreador de Espaço', observador: 'Observador (Teste)' };
+  const roleBadge: Record<UserRole, string> = { admin: 'bg-cordao-preto text-primary-foreground', coordenador: 'bg-primary text-primary-foreground', supervisor: 'bg-cordao-amarelo text-foreground', recreador: 'bg-cordao-verde text-primary-foreground', recreador_espaco: 'bg-cordao-azul text-primary-foreground', observador: 'bg-cordao-cinza text-primary-foreground' };
 
   return (
     <div className="p-6 space-y-6">

@@ -33,7 +33,9 @@ export default function AdminConfiguracoes() {
   const roleDescriptions: Record<UserRole, { label: string; desc: string; color: string }> = {
     admin: { label: 'Administrador', desc: 'Acesso total: dashboard, importação, usuários, relatórios, configurações, listas especiais e gráficos históricos.', color: 'bg-cordao-preto' },
     coordenador: { label: 'Coordenador', desc: 'Painel em tempo real, alertas operacionais, visão de todos os guichês e métricas de performance.', color: 'bg-primary' },
-    recreador: { label: 'Recreador', desc: 'Check-in de visitantes no guichê designado, cadastro manual, visualização de cordões e detalhes do visitante.', color: 'bg-cordao-verde' },
+    supervisor: { label: 'Supervisor', desc: 'Acesso ao Fechamento Operacional 17h, geração de relatórios consolidados (texto/PDF/imagem) para divulgação e visão de coordenação.', color: 'bg-cordao-amarelo' },
+    recreador: { label: 'Recreador (Guichê)', desc: 'Check-in de visitantes no guichê designado, cadastro manual, visualização de cordões e detalhes do visitante.', color: 'bg-cordao-verde' },
+    recreador_espaco: { label: 'Recreador de Espaço', desc: 'Operação dentro do parque: registra ciclos de entrada nos espaços lúdicos (piscina, escola, ceart etc.) com contagem rápida por cor de cordão.', color: 'bg-cordao-azul' },
     observador: { label: 'Observador (Teste)', desc: 'Acesso de visualização como recreador sem ocupar guichê. Check-ins são marcados como teste e não contam no relatório oficial.', color: 'bg-cordao-cinza' },
   };
 
