@@ -168,7 +168,9 @@ export default function AdminUsers() {
                 <SelectContent>
                   <SelectItem value="admin">Administrador</SelectItem>
                   <SelectItem value="coordenador">Coordenador</SelectItem>
-                  <SelectItem value="recreador">Recreador</SelectItem>
+                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="recreador">Recreador (Guichê)</SelectItem>
+                  <SelectItem value="recreador_espaco">Recreador de Espaço</SelectItem>
                   <SelectItem value="observador">Observador (Teste)</SelectItem>
                 </SelectContent>
               </Select>
