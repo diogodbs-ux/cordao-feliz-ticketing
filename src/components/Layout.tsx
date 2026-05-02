@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
   FileSpreadsheet, BarChart3, History, Cake, Building, Presentation, QrCode,
+  MapPin, FileBarChart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +15,8 @@ const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = 
     { label: 'Importar Dados', icon: ClipboardCheck, path: '/admin/importar' },
     { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
     { label: 'QR Codes', icon: QrCode, path: '/admin/qrcodes' },
+    { label: 'Espaços Lúdicos', icon: MapPin, path: '/admin/espacos' },
+    { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
     { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
     { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
     { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
@@ -22,10 +25,18 @@ const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = 
   ],
   coordenador: [
     { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
+    { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
     { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
+  ],
+  supervisor: [
+    { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
+    { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
   ],
   recreador: [
     { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
+  ],
+  recreador_espaco: [
+    { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
   ],
   observador: [
     { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
