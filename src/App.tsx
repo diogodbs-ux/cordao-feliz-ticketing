@@ -18,6 +18,9 @@ import CoordenadorPanel from "@/pages/CoordenadorPanel";
 import RecreadorPanel from "@/pages/RecreadorPanel";
 import ApresentacaoExecutiva from "@/pages/ApresentacaoExecutiva";
 import AdminQRCodes from "@/pages/AdminQRCodes";
+import AdminEspacos from "@/pages/AdminEspacos";
+import FechamentoOperacional from "@/pages/FechamentoOperacional";
+import RecreadorEspacoPanel from "@/pages/RecreadorEspacoPanel";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +37,8 @@ function HomeRedirect() {
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
   if (user.role === 'coordenador') return <Navigate to="/coordenador" replace />;
+  if (user.role === 'supervisor') return <Navigate to="/fechamento" replace />;
+  if (user.role === 'recreador_espaco') return <Navigate to="/espaco" replace />;
   return <Navigate to="/recreador" replace />;
 }
 
@@ -60,6 +65,9 @@ const App = () => (
                 <Route path="recreador" element={<ProtectedRoute roles={['recreador', 'admin', 'observador']}><RecreadorPanel /></ProtectedRoute>} />
                 <Route path="apresentacao" element={<ProtectedRoute roles={['admin']}><ApresentacaoExecutiva /></ProtectedRoute>} />
                 <Route path="admin/qrcodes" element={<ProtectedRoute roles={['admin']}><AdminQRCodes /></ProtectedRoute>} />
+                <Route path="admin/espacos" element={<ProtectedRoute roles={['admin']}><AdminEspacos /></ProtectedRoute>} />
+                <Route path="fechamento" element={<ProtectedRoute roles={['admin', 'coordenador', 'supervisor']}><FechamentoOperacional /></ProtectedRoute>} />
+                <Route path="espaco" element={<ProtectedRoute roles={['admin', 'recreador_espaco']}><RecreadorEspacoPanel /></ProtectedRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
