@@ -19,6 +19,8 @@ function loadConfig(): AlertConfig {
   } catch { return DEFAULT_ALERT_CONFIG; }
 }
 
+const MESES_LBL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
 export default function AdminConfiguracoes() {
   const [config, setConfig] = useState<AlertConfig>(loadConfig);
   const [milestonesStr, setMilestonesStr] = useState(config.milestones.join(', '));
@@ -30,6 +32,39 @@ export default function AdminConfiguracoes() {
     setConfig(toSave);
     toast.success('Configurações salvas com sucesso!');
   };
+
+  // ---- Metas ----
+  const anoCorrente = new Date().getFullYear();
+  const [anoMeta, setAnoMeta] = useState<number>(anoCorrente);
+  const metaExistente = useMemo(() => getMetaDoAno(anoMeta), [anoMeta]);
+  const [metaTotal, setMetaTotal] = useState<string>(metaExistente?.metaTotal?.toString() || '');
+  const [metaMensal, setMetaMensal] = useState<Record<number, string>>(
+    () => Object.fromEntries(MESES_LBL.map((_, i) => [i + 1, metaExistente?.metaMensal?.[i + 1]?.toString() || '']))
+  );
+
+  useEffect(() => {
+    const m = getMetaDoAno(anoMeta);
+    setMetaTotal(m?.metaTotal?.toString() || '');
+    setMetaMensal(Object.fromEntries(MESES_LBL.map((_, i) => [i + 1, m?.metaMensal?.[i + 1]?.toString() || ''])));
+  }, [anoMeta]);
+
+  const salvarMeta = () => {
+    const total = parseInt(metaTotal) || 0;
+    if (total <= 0) { toast.error('Informe a meta anual total (> 0)'); return; }
+    const mensal: Partial<Record<number, number>> = {};
+    Object.entries(metaMensal).forEach(([k, v]) => {
+      const n = parseInt(v);
+      if (!isNaN(n) && n > 0) mensal[parseInt(k)] = n;
+    });
+    const meta: MetaAnual = {
+      ano: anoMeta, metaTotal: total,
+      metaMensal: Object.keys(mensal).length ? mensal : undefined,
+      atualizadoEm: new Date().toISOString(),
+    };
+    upsertMeta(meta);
+    toast.success(`Meta de ${anoMeta} salva!`);
+  };
+
 
   const roleDescriptions: Record<UserRole, { label: string; desc: string; color: string }> = {
     admin: { label: 'Administrador', desc: 'Acesso total: dashboard, importação, usuários, relatórios, configurações, listas especiais e gráficos históricos.', color: 'bg-cordao-preto' },
