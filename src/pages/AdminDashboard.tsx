@@ -3,9 +3,12 @@ import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
 import AlertsPanel from '@/components/AlertsPanel';
 import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, getOrigemLabel, calcAdultCordoes } from '@/types';
-import { Users, Baby, Accessibility, BarChart3, Calendar } from 'lucide-react';
+import { Users, Baby, Accessibility, BarChart3, Calendar, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { getMetaDoAno } from '@/types/metas';
+import { agregadoMensalDoAno, totalAnual } from '@/lib/consolidado';
+import { Link } from 'react-router-dom';
 
 const CORDAO_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9',
