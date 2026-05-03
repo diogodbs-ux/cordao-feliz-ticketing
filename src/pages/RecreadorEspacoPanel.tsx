@@ -214,6 +214,37 @@ export default function RecreadorEspacoPanel() {
             </div>
           </div>
 
+          {/* Rastreio por protocolo */}
+          <div className="border-t border-border pt-4 space-y-2">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1.5">
+              <Tag className="h-3 w-3" /> Rastreio (opcional) — Adicione protocolos dos grupos que entraram
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Digite ou escaneie o protocolo..."
+                value={protocoloInput}
+                onChange={e => setProtocoloInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); adicionarProtocolo(); } }}
+              />
+              <Button variant="outline" onClick={adicionarProtocolo} disabled={!protocoloInput.trim()}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {(cicloAtual.protocolos || []).length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {cicloAtual.protocolos!.map(p => (
+                  <span key={p.protocolo} className="inline-flex items-center gap-1 bg-secondary rounded-md px-2 py-1 text-xs">
+                    <span className="font-mono-data">{p.protocolo}</span>
+                    {p.responsavelNome && <span className="text-muted-foreground">· {p.responsavelNome}</span>}
+                    <button onClick={() => removerProtocolo(p.protocolo)} className="ml-1 text-muted-foreground hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={cancelar} className="gap-2">
               <RotateCcw className="h-4 w-4" /> Descartar
