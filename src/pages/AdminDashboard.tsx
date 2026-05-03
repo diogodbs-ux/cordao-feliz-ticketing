@@ -161,6 +161,31 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* Meta Anual */}
+      <Link to="/admin/consolidado" className="block bg-card rounded-xl shadow-card p-6 hover:shadow-elevated transition-shadow">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary" />
+            Meta {anoAtual} {!metaTotal && <span className="text-xs font-normal text-muted-foreground">— não definida</span>}
+          </h3>
+          <span className="text-xs text-muted-foreground">
+            {metaTotal > 0
+              ? `${realizadoAno.toLocaleString('pt-BR')} / ${metaTotal.toLocaleString('pt-BR')} visitantes`
+              : 'Configure em Configurações → Metas Anuais'}
+          </span>
+        </div>
+        <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
+          <div
+            className={cn('h-full rounded-full transition-all', progressoMeta >= 100 ? 'bg-cordao-verde' : 'bg-primary')}
+            style={{ width: `${progressoMeta}%` }}
+          />
+        </div>
+        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+          <span>{metaTotal > 0 ? `${progressoMeta.toFixed(1)}% atingido` : 'Defina sua meta para acompanhar progresso'}</span>
+          <span>{metaTotal > 0 && `Faltam ${Math.max(0, metaTotal - realizadoAno).toLocaleString('pt-BR')}`}</span>
+        </div>
+      </Link>
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-card rounded-xl shadow-card p-6">
