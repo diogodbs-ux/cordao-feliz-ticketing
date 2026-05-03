@@ -76,6 +76,7 @@ export default function RecreadorEspacoPanel() {
     const finalizado: CicloEspaco = { ...cicloAtual, fim: new Date().toISOString() };
     persistCiclos([...ciclos, finalizado]);
     setCicloAtual(null);
+    setProtocoloInput('');
     toast.success('Ciclo registrado!');
   };
 
