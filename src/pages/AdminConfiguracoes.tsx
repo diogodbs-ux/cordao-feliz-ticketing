@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AlertConfig, DEFAULT_ALERT_CONFIG } from '@/types/listas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Bell, Shield, Save } from 'lucide-react';
+import { Settings, Bell, Shield, Save, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
+import { MetaAnual, getMetaDoAno, upsertMeta } from '@/types/metas';
 
 const STORAGE_KEY = 'sentinela_alert_config';
 
