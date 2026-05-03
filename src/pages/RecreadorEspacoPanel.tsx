@@ -82,7 +82,32 @@ export default function RecreadorEspacoPanel() {
   const cancelar = () => {
     if (confirm('Descartar este ciclo? A contagem será perdida.')) {
       setCicloAtual(null);
+      setProtocoloInput('');
     }
+  };
+
+  const adicionarProtocolo = () => {
+    if (!cicloAtual) return;
+    const p = protocoloInput.trim();
+    if (!p) return;
+    if (cicloAtual.protocolos?.some(x => x.protocolo.toLowerCase() === p.toLowerCase())) {
+      toast.info('Protocolo já registrado neste ciclo.'); return;
+    }
+    const grupo = grupos.find(g => g.responsavel.protocolo?.toLowerCase() === p.toLowerCase());
+    const visita: VisitaProtocolo = {
+      protocolo: p,
+      responsavelNome: grupo?.responsavel.nome,
+      numCriancas: grupo?.responsavel.criancas.length,
+      registradoEm: new Date().toISOString(),
+    };
+    setCicloAtual({ ...cicloAtual, protocolos: [...(cicloAtual.protocolos || []), visita] });
+    setProtocoloInput('');
+    toast.success(grupo ? `Grupo "${grupo.responsavel.nome}" adicionado` : `Protocolo ${p} registrado`);
+  };
+
+  const removerProtocolo = (proto: string) => {
+    if (!cicloAtual) return;
+    setCicloAtual({ ...cicloAtual, protocolos: (cicloAtual.protocolos || []).filter(x => x.protocolo !== proto) });
   };
 
   const hojeReal = new Date().toLocaleDateString('pt-BR');
