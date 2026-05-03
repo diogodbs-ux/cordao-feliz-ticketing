@@ -18,10 +18,12 @@ const CORES_CRIANCA: CordaoColor[] = ['azul', 'verde', 'amarelo', 'vermelho'];
 
 export default function RecreadorEspacoPanel() {
   const { user } = useAuth();
+  const { grupos } = useData();
   const [espacos, setEspacos] = useState<EspacoLudico[]>([]);
   const [ciclos, setCiclos] = useState<CicloEspaco[]>([]);
   const [espacoId, setEspacoId] = useState<string>('');
   const [cicloAtual, setCicloAtual] = useState<CicloEspaco | null>(null);
+  const [protocoloInput, setProtocoloInput] = useState('');
 
   useEffect(() => {
     setEspacos(readEspacos().filter(e => e.ativo));
