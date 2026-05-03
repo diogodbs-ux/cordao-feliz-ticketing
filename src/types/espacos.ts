@@ -11,6 +11,14 @@ export interface EspacoLudico {
   criadoEm: string;
 }
 
+export interface VisitaProtocolo {
+  protocolo: string;
+  responsavelNome?: string;
+  numCriancas?: number;
+  numAdultos?: number;
+  registradoEm: string; // ISO
+}
+
 export interface CicloEspaco {
   id: string;
   espacoId: string;
@@ -24,6 +32,34 @@ export interface CicloEspaco {
   totalCriancas: number;
   totalAdultos: number;
   observacao?: string;
+  // Rastreio semi-individual: protocolos dos grupos que entraram neste ciclo
+  protocolos?: VisitaProtocolo[];
+}
+
+// Jornada agregada de um protocolo: por quais espaços passou e quando.
+export interface JornadaProtocolo {
+  protocolo: string;
+  responsavelNome?: string;
+  visitas: { espacoId: string; espacoNome: string; quando: string }[];
+}
+
+export function buildJornadas(ciclos: CicloEspaco[]): Map<string, JornadaProtocolo> {
+  const map = new Map<string, JornadaProtocolo>();
+  ciclos.forEach(c => {
+    (c.protocolos || []).forEach(p => {
+      if (!p.protocolo) return;
+      const key = p.protocolo.trim();
+      if (!map.has(key)) {
+        map.set(key, { protocolo: key, responsavelNome: p.responsavelNome, visitas: [] });
+      }
+      const j = map.get(key)!;
+      if (p.responsavelNome && !j.responsavelNome) j.responsavelNome = p.responsavelNome;
+      j.visitas.push({ espacoId: c.espacoId, espacoNome: c.espacoNome, quando: p.registradoEm });
+    });
+  });
+  // ordenar visitas por tempo
+  map.forEach(j => j.visitas.sort((a, b) => a.quando.localeCompare(b.quando)));
+  return map;
 }
 
 const STORAGE_ESPACOS = 'sentinela_espacos';
