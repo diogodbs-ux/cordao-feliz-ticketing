@@ -107,6 +107,16 @@ export default function AdminDashboard() {
   const specialAdults = anivHoje.filter((a: any) => a.checkinRealizado).reduce((acc: number, a: any) => acc + (a.convidados?.filter((c: any) => c.tipo === 'acompanhante').length || 0), 0)
     + instHoje.filter((i: any) => i.checkinRealizado).reduce((acc: number, i: any) => acc + (i.adultos?.length || 0), 0);
 
+  // Meta anual e progresso
+  const anoAtual = new Date().getFullYear();
+  const metaAtual = useMemo(() => getMetaDoAno(anoAtual), [anoAtual, checkins]);
+  const realizadoAno = useMemo(() => {
+    const meses = agregadoMensalDoAno(anoAtual, grupos, checkins);
+    return totalAnual(meses).visitantes;
+  }, [anoAtual, grupos, checkins]);
+  const metaTotal = metaAtual?.metaTotal || 0;
+  const progressoMeta = metaTotal > 0 ? Math.min(100, (realizadoAno / metaTotal) * 100) : 0;
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
