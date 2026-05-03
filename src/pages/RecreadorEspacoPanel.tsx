@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EspacoLudico, CicloEspaco, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
+import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
 import { CordaoColor, getCordaoLabel } from '@/types';
-import { Plus, Minus, Play, Square, History, MapPin, RotateCcw } from 'lucide-react';
+import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -16,10 +18,12 @@ const CORES_CRIANCA: CordaoColor[] = ['azul', 'verde', 'amarelo', 'vermelho'];
 
 export default function RecreadorEspacoPanel() {
   const { user } = useAuth();
+  const { grupos } = useData();
   const [espacos, setEspacos] = useState<EspacoLudico[]>([]);
   const [ciclos, setCiclos] = useState<CicloEspaco[]>([]);
   const [espacoId, setEspacoId] = useState<string>('');
   const [cicloAtual, setCicloAtual] = useState<CicloEspaco | null>(null);
+  const [protocoloInput, setProtocoloInput] = useState('');
 
   useEffect(() => {
     setEspacos(readEspacos().filter(e => e.ativo));
@@ -72,13 +76,39 @@ export default function RecreadorEspacoPanel() {
     const finalizado: CicloEspaco = { ...cicloAtual, fim: new Date().toISOString() };
     persistCiclos([...ciclos, finalizado]);
     setCicloAtual(null);
+    setProtocoloInput('');
     toast.success('Ciclo registrado!');
   };
 
   const cancelar = () => {
     if (confirm('Descartar este ciclo? A contagem será perdida.')) {
       setCicloAtual(null);
+      setProtocoloInput('');
     }
+  };
+
+  const adicionarProtocolo = () => {
+    if (!cicloAtual) return;
+    const p = protocoloInput.trim();
+    if (!p) return;
+    if (cicloAtual.protocolos?.some(x => x.protocolo.toLowerCase() === p.toLowerCase())) {
+      toast.info('Protocolo já registrado neste ciclo.'); return;
+    }
+    const grupo = grupos.find(g => g.responsavel.protocolo?.toLowerCase() === p.toLowerCase());
+    const visita: VisitaProtocolo = {
+      protocolo: p,
+      responsavelNome: grupo?.responsavel.nome,
+      numCriancas: grupo?.responsavel.criancas.length,
+      registradoEm: new Date().toISOString(),
+    };
+    setCicloAtual({ ...cicloAtual, protocolos: [...(cicloAtual.protocolos || []), visita] });
+    setProtocoloInput('');
+    toast.success(grupo ? `Grupo "${grupo.responsavel.nome}" adicionado` : `Protocolo ${p} registrado`);
+  };
+
+  const removerProtocolo = (proto: string) => {
+    if (!cicloAtual) return;
+    setCicloAtual({ ...cicloAtual, protocolos: (cicloAtual.protocolos || []).filter(x => x.protocolo !== proto) });
   };
 
   const hojeReal = new Date().toLocaleDateString('pt-BR');
@@ -182,6 +212,37 @@ export default function RecreadorEspacoPanel() {
                 {cicloAtual.totalCriancas + cicloAtual.totalAdultos}
               </p>
             </div>
+          </div>
+
+          {/* Rastreio por protocolo */}
+          <div className="border-t border-border pt-4 space-y-2">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1.5">
+              <Tag className="h-3 w-3" /> Rastreio (opcional) — Adicione protocolos dos grupos que entraram
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Digite ou escaneie o protocolo..."
+                value={protocoloInput}
+                onChange={e => setProtocoloInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); adicionarProtocolo(); } }}
+              />
+              <Button variant="outline" onClick={adicionarProtocolo} disabled={!protocoloInput.trim()}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {(cicloAtual.protocolos || []).length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {cicloAtual.protocolos!.map(p => (
+                  <span key={p.protocolo} className="inline-flex items-center gap-1 bg-secondary rounded-md px-2 py-1 text-xs">
+                    <span className="font-mono-data">{p.protocolo}</span>
+                    {p.responsavelNome && <span className="text-muted-foreground">· {p.responsavelNome}</span>}
+                    <button onClick={() => removerProtocolo(p.protocolo)} className="ml-1 text-muted-foreground hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">

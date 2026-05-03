@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AlertConfig, DEFAULT_ALERT_CONFIG } from '@/types/listas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Bell, Shield, Save } from 'lucide-react';
+import { Settings, Bell, Shield, Save, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
+import { MetaAnual, getMetaDoAno, upsertMeta } from '@/types/metas';
 
 const STORAGE_KEY = 'sentinela_alert_config';
 
@@ -17,6 +18,8 @@ function loadConfig(): AlertConfig {
     return stored ? { ...DEFAULT_ALERT_CONFIG, ...JSON.parse(stored) } : DEFAULT_ALERT_CONFIG;
   } catch { return DEFAULT_ALERT_CONFIG; }
 }
+
+const MESES_LBL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 export default function AdminConfiguracoes() {
   const [config, setConfig] = useState<AlertConfig>(loadConfig);
@@ -29,6 +32,39 @@ export default function AdminConfiguracoes() {
     setConfig(toSave);
     toast.success('Configurações salvas com sucesso!');
   };
+
+  // ---- Metas ----
+  const anoCorrente = new Date().getFullYear();
+  const [anoMeta, setAnoMeta] = useState<number>(anoCorrente);
+  const metaExistente = useMemo(() => getMetaDoAno(anoMeta), [anoMeta]);
+  const [metaTotal, setMetaTotal] = useState<string>(metaExistente?.metaTotal?.toString() || '');
+  const [metaMensal, setMetaMensal] = useState<Record<number, string>>(
+    () => Object.fromEntries(MESES_LBL.map((_, i) => [i + 1, metaExistente?.metaMensal?.[i + 1]?.toString() || '']))
+  );
+
+  useEffect(() => {
+    const m = getMetaDoAno(anoMeta);
+    setMetaTotal(m?.metaTotal?.toString() || '');
+    setMetaMensal(Object.fromEntries(MESES_LBL.map((_, i) => [i + 1, m?.metaMensal?.[i + 1]?.toString() || ''])));
+  }, [anoMeta]);
+
+  const salvarMeta = () => {
+    const total = parseInt(metaTotal) || 0;
+    if (total <= 0) { toast.error('Informe a meta anual total (> 0)'); return; }
+    const mensal: Partial<Record<number, number>> = {};
+    Object.entries(metaMensal).forEach(([k, v]) => {
+      const n = parseInt(v);
+      if (!isNaN(n) && n > 0) mensal[parseInt(k)] = n;
+    });
+    const meta: MetaAnual = {
+      ano: anoMeta, metaTotal: total,
+      metaMensal: Object.keys(mensal).length ? mensal : undefined,
+      atualizadoEm: new Date().toISOString(),
+    };
+    upsertMeta(meta);
+    toast.success(`Meta de ${anoMeta} salva!`);
+  };
+
 
   const roleDescriptions: Record<UserRole, { label: string; desc: string; color: string }> = {
     admin: { label: 'Administrador', desc: 'Acesso total: dashboard, importação, usuários, relatórios, configurações, listas especiais e gráficos históricos.', color: 'bg-cordao-preto' },
@@ -44,6 +80,53 @@ export default function AdminConfiguracoes() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
         <p className="text-sm text-muted-foreground">Ajustes de alertas e definição de perfis do sistema</p>
+      </div>
+
+      {/* Metas Anuais */}
+      <div className="bg-card rounded-xl shadow-card p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Target className="h-4 w-4 text-primary" />
+          Metas Anuais (aparecem no Dashboard e no Consolidado)
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label>Ano</Label>
+            <Input type="number" value={anoMeta} onChange={e => setAnoMeta(parseInt(e.target.value) || anoCorrente)} />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label>Meta Anual Total (visitantes)</Label>
+            <Input
+              type="number"
+              placeholder="Ex: 100000"
+              value={metaTotal}
+              onChange={e => setMetaTotal(e.target.value)}
+            />
+            <p className="text-[10px] text-muted-foreground">Total de visitantes (crianças + adultos) esperados no ano.</p>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Metas Mensais (opcional)</p>
+          <p className="text-[10px] text-muted-foreground mb-3">Se em branco, o sistema distribui a meta anual igualmente nos 12 meses.</p>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            {MESES_LBL.map((lbl, i) => (
+              <div key={lbl} className="space-y-1">
+                <Label className="text-[10px]">{lbl}</Label>
+                <Input
+                  type="number"
+                  placeholder="—"
+                  value={metaMensal[i + 1] || ''}
+                  onChange={e => setMetaMensal(s => ({ ...s, [i + 1]: e.target.value }))}
+                  className="text-sm"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Button onClick={salvarMeta} className="gap-2 mt-4">
+          <Save className="h-4 w-4" /> Salvar Meta de {anoMeta}
+        </Button>
       </div>
 
       {/* Alert Configuration */}
