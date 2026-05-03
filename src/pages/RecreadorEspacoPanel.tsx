@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EspacoLudico, CicloEspaco, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
+import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
 import { CordaoColor, getCordaoLabel } from '@/types';
-import { Plus, Minus, Play, Square, History, MapPin, RotateCcw } from 'lucide-react';
+import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
