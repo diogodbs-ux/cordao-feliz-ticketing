@@ -82,6 +82,53 @@ export default function AdminConfiguracoes() {
         <p className="text-sm text-muted-foreground">Ajustes de alertas e definição de perfis do sistema</p>
       </div>
 
+      {/* Metas Anuais */}
+      <div className="bg-card rounded-xl shadow-card p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Target className="h-4 w-4 text-primary" />
+          Metas Anuais (aparecem no Dashboard e no Consolidado)
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label>Ano</Label>
+            <Input type="number" value={anoMeta} onChange={e => setAnoMeta(parseInt(e.target.value) || anoCorrente)} />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label>Meta Anual Total (visitantes)</Label>
+            <Input
+              type="number"
+              placeholder="Ex: 100000"
+              value={metaTotal}
+              onChange={e => setMetaTotal(e.target.value)}
+            />
+            <p className="text-[10px] text-muted-foreground">Total de visitantes (crianças + adultos) esperados no ano.</p>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Metas Mensais (opcional)</p>
+          <p className="text-[10px] text-muted-foreground mb-3">Se em branco, o sistema distribui a meta anual igualmente nos 12 meses.</p>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            {MESES_LBL.map((lbl, i) => (
+              <div key={lbl} className="space-y-1">
+                <Label className="text-[10px]">{lbl}</Label>
+                <Input
+                  type="number"
+                  placeholder="—"
+                  value={metaMensal[i + 1] || ''}
+                  onChange={e => setMetaMensal(s => ({ ...s, [i + 1]: e.target.value }))}
+                  className="text-sm"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Button onClick={salvarMeta} className="gap-2 mt-4">
+          <Save className="h-4 w-4" /> Salvar Meta de {anoMeta}
+        </Button>
+      </div>
+
       {/* Alert Configuration */}
       <div className="bg-card rounded-xl shadow-card p-6">
         <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
