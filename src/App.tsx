@@ -23,6 +23,8 @@ import AdminQRCodes from "@/pages/AdminQRCodes";
 import AdminEspacos from "@/pages/AdminEspacos";
 import FechamentoOperacional from "@/pages/FechamentoOperacional";
 import RecreadorEspacoPanel from "@/pages/RecreadorEspacoPanel";
+import AdminCordoes from "@/pages/AdminCordoes";
+import JornadaCordoes from "@/pages/JornadaCordoes";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +74,8 @@ const App = () => (
                 <Route path="admin/espacos" element={<ProtectedRoute roles={['admin']}><AdminEspacos /></ProtectedRoute>} />
                 <Route path="fechamento" element={<ProtectedRoute roles={['admin', 'coordenador', 'supervisor']}><FechamentoOperacional /></ProtectedRoute>} />
                 <Route path="espaco" element={<ProtectedRoute roles={['admin', 'recreador_espaco']}><RecreadorEspacoPanel /></ProtectedRoute>} />
+                <Route path="admin/cordoes" element={<ProtectedRoute roles={['admin']}><AdminCordoes /></ProtectedRoute>} />
+                <Route path="coordenador/jornadas" element={<ProtectedRoute roles={['admin', 'coordenador', 'supervisor']}><JornadaCordoes /></ProtectedRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
