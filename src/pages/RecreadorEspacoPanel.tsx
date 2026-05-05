@@ -25,6 +25,8 @@ export default function RecreadorEspacoPanel() {
   const [espacoId, setEspacoId] = useState<string>('');
   const [cicloAtual, setCicloAtual] = useState<CicloEspaco | null>(null);
   const [protocoloInput, setProtocoloInput] = useState('');
+  const [codigoInput, setCodigoInput] = useState('');
+  const [codigosCiclo, setCodigosCiclo] = useState<{ codigo: string; cor: CordaoColor; nome?: string }[]>([]);
 
   useEffect(() => {
     setEspacos(readEspacos().filter(e => e.ativo));
@@ -76,16 +78,61 @@ export default function RecreadorEspacoPanel() {
     }
     const finalizado: CicloEspaco = { ...cicloAtual, fim: new Date().toISOString() };
     persistCiclos([...ciclos, finalizado]);
+    // Marca saída de todos os cordões registrados neste ciclo
+    const saidas = fecharSaidasDoCiclo(cicloAtual.id);
     setCicloAtual(null);
     setProtocoloInput('');
-    toast.success('Ciclo registrado!');
+    setCodigoInput('');
+    setCodigosCiclo([]);
+    toast.success(`Ciclo registrado!${saidas > 0 ? ` ${saidas} cordão(ões) com saída marcada.` : ''}`);
   };
 
   const cancelar = () => {
     if (confirm('Descartar este ciclo? A contagem será perdida.')) {
       setCicloAtual(null);
       setProtocoloInput('');
+      setCodigoInput('');
+      setCodigosCiclo([]);
     }
+  };
+
+  const escanearCodigo = () => {
+    if (!cicloAtual) return;
+    const raw = codigoInput.trim();
+    if (!raw) return;
+    const parsed = parseCodigo(raw);
+    if (!parsed) { toast.error(`Código inválido: ${raw}`); return; }
+    const code = formatCodigo(parsed.cor, parsed.numero);
+    if (codigosCiclo.some(c => c.codigo === code)) {
+      toast.info(`${code} já registrado neste ciclo.`);
+      setCodigoInput('');
+      return;
+    }
+    const r = registrarEntradaEspaco(code, {
+      cicloId: cicloAtual.id,
+      espacoId: cicloAtual.espacoId,
+      espacoNome: cicloAtual.espacoNome,
+    });
+    if (r.ok === false) { toast.error(r.erro); return; }
+    const cord = getCordaoByCodigo(code);
+    setCodigosCiclo(prev => [...prev, { codigo: code, cor: parsed.cor, nome: cord?.membroNome }]);
+    // Auto-incrementa contagem por cor
+    const next = { ...cicloAtual };
+    if (parsed.cor === 'rosa' || parsed.cor === 'cinza' || parsed.cor === 'preto') {
+      next.totalAdultos = next.totalAdultos + 1;
+    } else {
+      const v = (next.porCor[parsed.cor] || 0) + 1;
+      next.porCor = { ...next.porCor, [parsed.cor]: v };
+      next.totalCriancas = CORES_CRIANCA.reduce((a, c) => a + (next.porCor[c] || 0), 0);
+    }
+    setCicloAtual(next);
+    setCodigoInput('');
+    toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
+  };
+
+  const removerCodigo = (code: string) => {
+    setCodigosCiclo(prev => prev.filter(c => c.codigo !== code));
+    // Nota: não desfaz a entrada já persistida no cordão para manter histórico íntegro
   };
 
   const adicionarProtocolo = () => {
