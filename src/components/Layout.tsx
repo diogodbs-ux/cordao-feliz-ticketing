@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
   FileSpreadsheet, BarChart3, History, Cake, Building, Presentation, QrCode,
-  MapPin, FileBarChart, Target,
+  MapPin, FileBarChart, Target, Tag, Route as RouteIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,7 @@ const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = 
     { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
     { label: 'QR Codes', icon: QrCode, path: '/admin/qrcodes' },
     { label: 'Espaços Lúdicos', icon: MapPin, path: '/admin/espacos' },
+    { label: 'Cordões Numerados', icon: Tag, path: '/admin/cordoes' },
     { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
     { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
     { label: 'Consolidado Anual', icon: Target, path: '/admin/consolidado' },
@@ -27,6 +28,7 @@ const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = 
   coordenador: [
     { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
     { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
+    { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
     { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
     { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
   ],
