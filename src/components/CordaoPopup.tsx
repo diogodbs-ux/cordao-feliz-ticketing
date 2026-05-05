@@ -88,8 +88,7 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
           membroNome: m.nome,
           membroTipo: m.membroTipo,
         });
-        if (!r.ok) erros.push(r.erro);
-        // r is narrowed; nothing else to do on success
+        if (r.ok === false) erros.push(r.erro);
       });
       if (erros.length > 0) {
         toast.error(erros[0]);
