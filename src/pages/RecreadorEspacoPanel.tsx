@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
 import { CordaoColor, getCordaoLabel } from '@/types';
-import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X } from 'lucide-react';
+import { registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo } from '@/types/cordoes';
+import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
