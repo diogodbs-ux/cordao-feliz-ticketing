@@ -262,7 +262,46 @@ export default function RecreadorEspacoPanel() {
             </div>
           </div>
 
-          {/* Rastreio por protocolo */}
+          {/* Rastreio individual por código de cordão (preferencial) */}
+          <div className="border-t border-border pt-4 space-y-2">
+            <p className="text-xs uppercase tracking-wider text-primary font-bold flex items-center gap-1.5">
+              <ScanLine className="h-3 w-3" /> Rastreio por cordão — escaneie/digite cada código
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="AZ-0001, VD-0042..."
+                value={codigoInput}
+                onChange={e => setCodigoInput(e.target.value.toUpperCase())}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); escanearCodigo(); } }}
+                className="font-mono-data"
+              />
+              <Button onClick={escanearCodigo} disabled={!codigoInput.trim()} className="gap-1.5">
+                <ScanLine className="h-4 w-4" /> Ler
+              </Button>
+            </div>
+            {codigosCiclo.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {codigosCiclo.map(c => (
+                  <span key={c.codigo} className="inline-flex items-center gap-1 bg-secondary rounded-md px-2 py-1 text-xs">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: COR_HEX[c.cor] }}
+                    />
+                    <span className="font-mono-data font-bold">{c.codigo}</span>
+                    {c.nome && <span className="text-muted-foreground">· {c.nome}</span>}
+                    <button onClick={() => removerCodigo(c.codigo)} className="ml-1 text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+                <span className="inline-flex items-center text-[10px] text-muted-foreground px-1">
+                  {codigosCiclo.length} cordão(ões)
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Rastreio por protocolo (legado / fallback) */}
           <div className="border-t border-border pt-4 space-y-2">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1.5">
               <Tag className="h-3 w-3" /> Rastreio (opcional) — Adicione protocolos dos grupos que entraram
