@@ -22,6 +22,13 @@ interface QRItem {
   qr: string;
 }
 
+function toISO(d: Date) { return d.toISOString().slice(0, 10); }
+function brToISO(br: string): string | null {
+  const m = br.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
 export default function AdminQRCodes() {
   const { grupos } = useData();
   const [busca, setBusca] = useState('');
@@ -29,6 +36,10 @@ export default function AdminQRCodes() {
   const [aniversariantes, setAniversariantes] = useState<ListaAniversariante[]>([]);
   const [instituicoes, setInstituicoes] = useState<ListaInstituicao[]>([]);
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'g' | 'a' | 'i'>('todos');
+  const hojeISO = toISO(new Date());
+  const [dataDe, setDataDe] = useState<string>(hojeISO);
+  const [dataAte, setDataAte] = useState<string>(hojeISO);
+  const [semData, setSemData] = useState(false);
 
   useEffect(() => {
     try { setAniversariantes(JSON.parse(localStorage.getItem(STORAGE_ANIVERSARIANTES) || '[]')); } catch {}
