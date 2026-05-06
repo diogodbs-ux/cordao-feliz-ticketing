@@ -111,26 +111,6 @@ export default function AdminQRCodes() {
     return r;
   }, [items, filtroTipo, busca, dataDe, dataAte, semData]);
 
-      const generated: QRItem[] = [];
-      for (const it of all) {
-        const qr = await generateQRDataURL({ v: 1, t: it.tipo, id: it.id }, 220);
-        if (cancelled) return;
-        generated.push({ ...it, qr });
-      }
-      if (!cancelled) setItems(generated);
-    })();
-    return () => { cancelled = true; };
-  }, [grupos, aniversariantes, instituicoes]);
-
-  const filtrados = useMemo(() => {
-    let r = items;
-    if (filtroTipo !== 'todos') r = r.filter(i => i.tipo === filtroTipo);
-    if (busca.trim()) {
-      const t = busca.toLowerCase();
-      r = r.filter(i => i.titulo.toLowerCase().includes(t) || i.subtitulo.toLowerCase().includes(t));
-    }
-    return r;
-  }, [items, filtroTipo, busca]);
 
   const exportarPDF = async () => {
     if (!filtrados.length) {
