@@ -20,6 +20,14 @@ interface QRItem {
   titulo: string;
   subtitulo: string;
   qr: string;
+  dataISO?: string; // YYYY-MM-DD para filtro
+}
+
+function toISO(d: Date) { return d.toISOString().slice(0, 10); }
+function brToISO(br: string): string | null {
+  const m = br.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  return `${m[3]}-${m[2]}-${m[1]}`;
 }
 
 export default function AdminQRCodes() {
@@ -29,6 +37,10 @@ export default function AdminQRCodes() {
   const [aniversariantes, setAniversariantes] = useState<ListaAniversariante[]>([]);
   const [instituicoes, setInstituicoes] = useState<ListaInstituicao[]>([]);
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'g' | 'a' | 'i'>('todos');
+  const hojeISO = toISO(new Date());
+  const [dataDe, setDataDe] = useState<string>(hojeISO);
+  const [dataAte, setDataAte] = useState<string>(hojeISO);
+  const [semData, setSemData] = useState(false);
 
   useEffect(() => {
     try { setAniversariantes(JSON.parse(localStorage.getItem(STORAGE_ANIVERSARIANTES) || '[]')); } catch {}
@@ -39,14 +51,16 @@ export default function AdminQRCodes() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const all: { tipo: 'g' | 'a' | 'i'; id: string; titulo: string; subtitulo: string }[] = [];
+      const all: { tipo: 'g' | 'a' | 'i'; id: string; titulo: string; subtitulo: string; dataISO?: string }[] = [];
 
       grupos.forEach(g => {
+        const data = brToISO(g.dataAgendamento || '') || toISO(new Date(g.criadoEm));
         all.push({
           tipo: 'g',
           id: g.id,
           titulo: g.responsavel.nome,
           subtitulo: `${g.responsavel.criancas.length} criança(s) · ${g.dataAgendamento || ''}`,
+          dataISO: data,
         });
       });
       aniversariantes.forEach(a => {
@@ -55,6 +69,7 @@ export default function AdminQRCodes() {
           id: a.id,
           titulo: `🎂 ${a.nomeAniversariante}`,
           subtitulo: `Resp: ${a.responsavelNome} · ${a.dataVisita}`,
+          dataISO: brToISO(a.dataVisita) || undefined,
         });
       });
       instituicoes.forEach(i => {
@@ -63,6 +78,7 @@ export default function AdminQRCodes() {
           id: i.id,
           titulo: `🏫 ${i.nomeInstituicao}`,
           subtitulo: `Resp: ${i.responsavelNome} · ${i.dataVisita}`,
+          dataISO: brToISO(i.dataVisita) || undefined,
         });
       });
 
@@ -80,12 +96,21 @@ export default function AdminQRCodes() {
   const filtrados = useMemo(() => {
     let r = items;
     if (filtroTipo !== 'todos') r = r.filter(i => i.tipo === filtroTipo);
+    if (!semData && (dataDe || dataAte)) {
+      r = r.filter(i => {
+        if (!i.dataISO) return false;
+        if (dataDe && i.dataISO < dataDe) return false;
+        if (dataAte && i.dataISO > dataAte) return false;
+        return true;
+      });
+    }
     if (busca.trim()) {
       const t = busca.toLowerCase();
       r = r.filter(i => i.titulo.toLowerCase().includes(t) || i.subtitulo.toLowerCase().includes(t));
     }
     return r;
-  }, [items, filtroTipo, busca]);
+  }, [items, filtroTipo, busca, dataDe, dataAte, semData]);
+
 
   const exportarPDF = async () => {
     if (!filtrados.length) {
@@ -216,22 +241,46 @@ export default function AdminQRCodes() {
         </div>
       </div>
 
+      <div className="bg-card border border-border rounded-xl p-4 flex flex-wrap items-end gap-3">
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">De</label>
+          <Input type="date" value={dataDe} onChange={e => setDataDe(e.target.value)} disabled={semData} className="h-9 w-[160px]" />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Até</label>
+          <Input type="date" value={dataAte} onChange={e => setDataAte(e.target.value)} disabled={semData} className="h-9 w-[160px]" />
+        </div>
+        <div className="flex gap-1.5">
+          <Button size="sm" variant="outline" onClick={() => { const t = toISO(new Date()); setDataDe(t); setDataAte(t); setSemData(false); }}>Hoje</Button>
+          <Button size="sm" variant="outline" onClick={() => {
+            const d = new Date(); d.setDate(d.getDate() - 7);
+            setDataDe(toISO(d)); setDataAte(toISO(new Date())); setSemData(false);
+          }}>7 dias</Button>
+          <Button size="sm" variant={semData ? 'default' : 'outline'} onClick={() => setSemData(s => !s)}>
+            {semData ? 'Mostrando todos' : 'Ver todos'}
+          </Button>
+        </div>
+        <div className="ml-auto text-xs text-muted-foreground">
+          {filtrados.length} de {items.length} QR Code(s)
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <button onClick={() => setFiltroTipo('todos')} className={`text-left p-3 rounded-lg border transition ${filtroTipo === 'todos' ? 'bg-primary/10 border-primary' : 'bg-card border-border'}`}>
           <p className="text-xs text-muted-foreground">Todos</p>
-          <p className="text-2xl font-bold">{items.length}</p>
+          <p className="text-2xl font-bold">{filtrados.length}</p>
         </button>
         <button onClick={() => setFiltroTipo('g')} className={`text-left p-3 rounded-lg border transition ${filtroTipo === 'g' ? 'bg-primary/10 border-primary' : 'bg-card border-border'}`}>
           <p className="text-xs text-muted-foreground">Agendamentos</p>
-          <p className="text-2xl font-bold">{counts.g}</p>
+          <p className="text-2xl font-bold">{filtrados.filter(i => i.tipo === 'g').length}</p>
         </button>
         <button onClick={() => setFiltroTipo('a')} className={`text-left p-3 rounded-lg border transition ${filtroTipo === 'a' ? 'bg-primary/10 border-primary' : 'bg-card border-border'}`}>
           <p className="text-xs text-muted-foreground">Aniversários</p>
-          <p className="text-2xl font-bold">{counts.a}</p>
+          <p className="text-2xl font-bold">{filtrados.filter(i => i.tipo === 'a').length}</p>
         </button>
         <button onClick={() => setFiltroTipo('i')} className={`text-left p-3 rounded-lg border transition ${filtroTipo === 'i' ? 'bg-primary/10 border-primary' : 'bg-card border-border'}`}>
           <p className="text-xs text-muted-foreground">Instituições</p>
-          <p className="text-2xl font-bold">{counts.i}</p>
+          <p className="text-2xl font-bold">{filtrados.filter(i => i.tipo === 'i').length}</p>
         </button>
       </div>
 

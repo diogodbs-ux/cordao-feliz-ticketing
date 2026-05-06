@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
 import { CordaoColor, getCordaoLabel } from '@/types';
-import { registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo } from '@/types/cordoes';
+import { registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes } from '@/types/cordoes';
 import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -27,11 +27,30 @@ export default function RecreadorEspacoPanel() {
   const [protocoloInput, setProtocoloInput] = useState('');
   const [codigoInput, setCodigoInput] = useState('');
   const [codigosCiclo, setCodigosCiclo] = useState<{ codigo: string; cor: CordaoColor; nome?: string }[]>([]);
+  const [cordoesDisponiveis, setCordoesDisponiveis] = useState<{ codigo: string; nome?: string }[]>([]);
+  const codigoInputRef = useRef<HTMLInputElement>(null);
+  const [erroCodigo, setErroCodigo] = useState<string | null>(null);
 
   useEffect(() => {
     setEspacos(readEspacos().filter(e => e.ativo));
     setCiclos(readCiclos());
   }, []);
+
+  // Cordões já entregues hoje (autocomplete) — recarrega quando ciclo muda
+  useEffect(() => {
+    const carregar = () => {
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      const list = readCordoes()
+        .filter(c => c.status === 'entregue' && c.vinculadoEm
+          && new Date(c.vinculadoEm).toLocaleDateString('pt-BR') === hoje)
+        .map(c => ({ codigo: c.codigo, nome: c.membroNome }));
+      setCordoesDisponiveis(list);
+    };
+    carregar();
+    const id = setInterval(carregar, 8000);
+    window.addEventListener('storage', carregar);
+    return () => { clearInterval(id); window.removeEventListener('storage', carregar); };
+  }, [cicloAtual?.id]);
 
   const espaco = espacos.find(e => e.id === espacoId);
 
@@ -100,12 +119,19 @@ export default function RecreadorEspacoPanel() {
     if (!cicloAtual) return;
     const raw = codigoInput.trim();
     if (!raw) return;
+    setErroCodigo(null);
     const parsed = parseCodigo(raw);
-    if (!parsed) { toast.error(`Código inválido: ${raw}`); return; }
+    if (!parsed) {
+      setErroCodigo(`Código inválido: ${raw}`);
+      toast.error(`Código inválido: ${raw}`);
+      return;
+    }
     const code = formatCodigo(parsed.cor, parsed.numero);
     if (codigosCiclo.some(c => c.codigo === code)) {
+      setErroCodigo(`${code} já registrado neste ciclo.`);
       toast.info(`${code} já registrado neste ciclo.`);
       setCodigoInput('');
+      setTimeout(() => codigoInputRef.current?.focus(), 50);
       return;
     }
     const r = registrarEntradaEspaco(code, {
@@ -113,7 +139,11 @@ export default function RecreadorEspacoPanel() {
       espacoId: cicloAtual.espacoId,
       espacoNome: cicloAtual.espacoNome,
     });
-    if (r.ok === false) { toast.error(r.erro); return; }
+    if (r.ok === false) {
+      setErroCodigo(r.erro);
+      toast.error(r.erro);
+      return;
+    }
     const cord = getCordaoByCodigo(code);
     setCodigosCiclo(prev => [...prev, { codigo: code, cor: parsed.cor, nome: cord?.membroNome }]);
     // Auto-incrementa contagem por cor
@@ -128,6 +158,8 @@ export default function RecreadorEspacoPanel() {
     setCicloAtual(next);
     setCodigoInput('');
     toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
+    // Auto-foco no próximo
+    setTimeout(() => codigoInputRef.current?.focus(), 60);
   };
 
   const removerCodigo = (code: string) => {
@@ -269,16 +301,33 @@ export default function RecreadorEspacoPanel() {
             </p>
             <div className="flex gap-2">
               <Input
-                placeholder="AZ-0001, VD-0042..."
+                ref={codigoInputRef}
+                list="cordoes-disponiveis-hoje"
+                placeholder="AZ-0001, VD-0042... (digite/escaneie)"
                 value={codigoInput}
-                onChange={e => setCodigoInput(e.target.value.toUpperCase())}
+                onChange={e => { setCodigoInput(e.target.value.toUpperCase()); setErroCodigo(null); }}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); escanearCodigo(); } }}
-                className="font-mono-data"
+                className={cn('font-mono-data', erroCodigo && 'border-cordao-vermelho focus-visible:ring-cordao-vermelho')}
+                autoFocus
               />
+              <datalist id="cordoes-disponiveis-hoje">
+                {cordoesDisponiveis
+                  .filter(c => !codigosCiclo.some(x => x.codigo === c.codigo))
+                  .slice(0, 200)
+                  .map(c => (
+                    <option key={c.codigo} value={c.codigo}>{c.nome ? `${c.codigo} — ${c.nome}` : c.codigo}</option>
+                  ))}
+              </datalist>
               <Button onClick={escanearCodigo} disabled={!codigoInput.trim()} className="gap-1.5">
                 <ScanLine className="h-4 w-4" /> Ler
               </Button>
             </div>
+            {erroCodigo && (
+              <p className="text-[11px] text-cordao-vermelho font-medium">⚠ {erroCodigo}</p>
+            )}
+            <p className="text-[10px] text-muted-foreground">
+              {cordoesDisponiveis.length} cordão(ões) entregue(s) hoje · sugestões automáticas no campo
+            </p>
             {codigosCiclo.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {codigosCiclo.map(c => (

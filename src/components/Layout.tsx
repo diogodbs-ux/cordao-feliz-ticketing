@@ -8,6 +8,7 @@ import {
   MapPin, FileBarChart, Target, Tag, Route as RouteIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import OfflineBadge from '@/components/OfflineBadge';
 
 const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = {
   admin: [
@@ -68,6 +69,7 @@ export default function Layout() {
               <p className="text-[10px] text-muted-foreground truncate">Cidade Mais Infância</p>
             </div>
           </div>
+          <div className="mt-3"><OfflineBadge /></div>
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
