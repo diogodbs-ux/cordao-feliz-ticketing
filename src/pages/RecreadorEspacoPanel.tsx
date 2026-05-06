@@ -301,16 +301,33 @@ export default function RecreadorEspacoPanel() {
             </p>
             <div className="flex gap-2">
               <Input
-                placeholder="AZ-0001, VD-0042..."
+                ref={codigoInputRef}
+                list="cordoes-disponiveis-hoje"
+                placeholder="AZ-0001, VD-0042... (digite/escaneie)"
                 value={codigoInput}
-                onChange={e => setCodigoInput(e.target.value.toUpperCase())}
+                onChange={e => { setCodigoInput(e.target.value.toUpperCase()); setErroCodigo(null); }}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); escanearCodigo(); } }}
-                className="font-mono-data"
+                className={cn('font-mono-data', erroCodigo && 'border-cordao-vermelho focus-visible:ring-cordao-vermelho')}
+                autoFocus
               />
+              <datalist id="cordoes-disponiveis-hoje">
+                {cordoesDisponiveis
+                  .filter(c => !codigosCiclo.some(x => x.codigo === c.codigo))
+                  .slice(0, 200)
+                  .map(c => (
+                    <option key={c.codigo} value={c.codigo}>{c.nome ? `${c.codigo} — ${c.nome}` : c.codigo}</option>
+                  ))}
+              </datalist>
               <Button onClick={escanearCodigo} disabled={!codigoInput.trim()} className="gap-1.5">
                 <ScanLine className="h-4 w-4" /> Ler
               </Button>
             </div>
+            {erroCodigo && (
+              <p className="text-[11px] text-cordao-vermelho font-medium">⚠ {erroCodigo}</p>
+            )}
+            <p className="text-[10px] text-muted-foreground">
+              {cordoesDisponiveis.length} cordão(ões) entregue(s) hoje · sugestões automáticas no campo
+            </p>
             {codigosCiclo.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {codigosCiclo.map(c => (
