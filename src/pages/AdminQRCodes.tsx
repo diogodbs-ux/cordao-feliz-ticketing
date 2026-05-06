@@ -241,22 +241,46 @@ export default function AdminQRCodes() {
         </div>
       </div>
 
+      <div className="bg-card border border-border rounded-xl p-4 flex flex-wrap items-end gap-3">
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">De</label>
+          <Input type="date" value={dataDe} onChange={e => setDataDe(e.target.value)} disabled={semData} className="h-9 w-[160px]" />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Até</label>
+          <Input type="date" value={dataAte} onChange={e => setDataAte(e.target.value)} disabled={semData} className="h-9 w-[160px]" />
+        </div>
+        <div className="flex gap-1.5">
+          <Button size="sm" variant="outline" onClick={() => { const t = toISO(new Date()); setDataDe(t); setDataAte(t); setSemData(false); }}>Hoje</Button>
+          <Button size="sm" variant="outline" onClick={() => {
+            const d = new Date(); d.setDate(d.getDate() - 7);
+            setDataDe(toISO(d)); setDataAte(toISO(new Date())); setSemData(false);
+          }}>7 dias</Button>
+          <Button size="sm" variant={semData ? 'default' : 'outline'} onClick={() => setSemData(s => !s)}>
+            {semData ? 'Mostrando todos' : 'Ver todos'}
+          </Button>
+        </div>
+        <div className="ml-auto text-xs text-muted-foreground">
+          {filtrados.length} de {items.length} QR Code(s)
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <button onClick={() => setFiltroTipo('todos')} className={`text-left p-3 rounded-lg border transition ${filtroTipo === 'todos' ? 'bg-primary/10 border-primary' : 'bg-card border-border'}`}>
           <p className="text-xs text-muted-foreground">Todos</p>
-          <p className="text-2xl font-bold">{items.length}</p>
+          <p className="text-2xl font-bold">{filtrados.length}</p>
         </button>
         <button onClick={() => setFiltroTipo('g')} className={`text-left p-3 rounded-lg border transition ${filtroTipo === 'g' ? 'bg-primary/10 border-primary' : 'bg-card border-border'}`}>
           <p className="text-xs text-muted-foreground">Agendamentos</p>
-          <p className="text-2xl font-bold">{counts.g}</p>
+          <p className="text-2xl font-bold">{filtrados.filter(i => i.tipo === 'g').length}</p>
         </button>
         <button onClick={() => setFiltroTipo('a')} className={`text-left p-3 rounded-lg border transition ${filtroTipo === 'a' ? 'bg-primary/10 border-primary' : 'bg-card border-border'}`}>
           <p className="text-xs text-muted-foreground">Aniversários</p>
-          <p className="text-2xl font-bold">{counts.a}</p>
+          <p className="text-2xl font-bold">{filtrados.filter(i => i.tipo === 'a').length}</p>
         </button>
         <button onClick={() => setFiltroTipo('i')} className={`text-left p-3 rounded-lg border transition ${filtroTipo === 'i' ? 'bg-primary/10 border-primary' : 'bg-card border-border'}`}>
           <p className="text-xs text-muted-foreground">Instituições</p>
-          <p className="text-2xl font-bold">{counts.i}</p>
+          <p className="text-2xl font-bold">{filtrados.filter(i => i.tipo === 'i').length}</p>
         </button>
       </div>
 
