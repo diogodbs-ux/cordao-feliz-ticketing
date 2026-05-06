@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
 import { CordaoColor, getCordaoLabel } from '@/types';
-import { registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo } from '@/types/cordoes';
+import { registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes } from '@/types/cordoes';
 import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -27,11 +27,30 @@ export default function RecreadorEspacoPanel() {
   const [protocoloInput, setProtocoloInput] = useState('');
   const [codigoInput, setCodigoInput] = useState('');
   const [codigosCiclo, setCodigosCiclo] = useState<{ codigo: string; cor: CordaoColor; nome?: string }[]>([]);
+  const [cordoesDisponiveis, setCordoesDisponiveis] = useState<{ codigo: string; nome?: string }[]>([]);
+  const codigoInputRef = useRef<HTMLInputElement>(null);
+  const [erroCodigo, setErroCodigo] = useState<string | null>(null);
 
   useEffect(() => {
     setEspacos(readEspacos().filter(e => e.ativo));
     setCiclos(readCiclos());
   }, []);
+
+  // Cordões já entregues hoje (autocomplete) — recarrega quando ciclo muda
+  useEffect(() => {
+    const carregar = () => {
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      const list = readCordoes()
+        .filter(c => c.status === 'entregue' && c.vinculadoEm
+          && new Date(c.vinculadoEm).toLocaleDateString('pt-BR') === hoje)
+        .map(c => ({ codigo: c.codigo, nome: c.membroNome }));
+      setCordoesDisponiveis(list);
+    };
+    carregar();
+    const id = setInterval(carregar, 8000);
+    window.addEventListener('storage', carregar);
+    return () => { clearInterval(id); window.removeEventListener('storage', carregar); };
+  }, [cicloAtual?.id]);
 
   const espaco = espacos.find(e => e.id === espacoId);
 
@@ -100,12 +119,19 @@ export default function RecreadorEspacoPanel() {
     if (!cicloAtual) return;
     const raw = codigoInput.trim();
     if (!raw) return;
+    setErroCodigo(null);
     const parsed = parseCodigo(raw);
-    if (!parsed) { toast.error(`Código inválido: ${raw}`); return; }
+    if (!parsed) {
+      setErroCodigo(`Código inválido: ${raw}`);
+      toast.error(`Código inválido: ${raw}`);
+      return;
+    }
     const code = formatCodigo(parsed.cor, parsed.numero);
     if (codigosCiclo.some(c => c.codigo === code)) {
+      setErroCodigo(`${code} já registrado neste ciclo.`);
       toast.info(`${code} já registrado neste ciclo.`);
       setCodigoInput('');
+      setTimeout(() => codigoInputRef.current?.focus(), 50);
       return;
     }
     const r = registrarEntradaEspaco(code, {
@@ -113,7 +139,11 @@ export default function RecreadorEspacoPanel() {
       espacoId: cicloAtual.espacoId,
       espacoNome: cicloAtual.espacoNome,
     });
-    if (r.ok === false) { toast.error(r.erro); return; }
+    if (r.ok === false) {
+      setErroCodigo(r.erro);
+      toast.error(r.erro);
+      return;
+    }
     const cord = getCordaoByCodigo(code);
     setCodigosCiclo(prev => [...prev, { codigo: code, cor: parsed.cor, nome: cord?.membroNome }]);
     // Auto-incrementa contagem por cor
@@ -128,6 +158,8 @@ export default function RecreadorEspacoPanel() {
     setCicloAtual(next);
     setCodigoInput('');
     toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
+    // Auto-foco no próximo
+    setTimeout(() => codigoInputRef.current?.focus(), 60);
   };
 
   const removerCodigo = (code: string) => {
