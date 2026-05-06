@@ -20,6 +20,7 @@ interface QRItem {
   titulo: string;
   subtitulo: string;
   qr: string;
+  dataISO?: string; // YYYY-MM-DD para filtro
 }
 
 function toISO(d: Date) { return d.toISOString().slice(0, 10); }
@@ -50,14 +51,16 @@ export default function AdminQRCodes() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const all: { tipo: 'g' | 'a' | 'i'; id: string; titulo: string; subtitulo: string }[] = [];
+      const all: { tipo: 'g' | 'a' | 'i'; id: string; titulo: string; subtitulo: string; dataISO?: string }[] = [];
 
       grupos.forEach(g => {
+        const data = brToISO(g.dataAgendamento || '') || toISO(new Date(g.criadoEm));
         all.push({
           tipo: 'g',
           id: g.id,
           titulo: g.responsavel.nome,
           subtitulo: `${g.responsavel.criancas.length} criança(s) · ${g.dataAgendamento || ''}`,
+          dataISO: data,
         });
       });
       aniversariantes.forEach(a => {
@@ -66,6 +69,7 @@ export default function AdminQRCodes() {
           id: a.id,
           titulo: `🎂 ${a.nomeAniversariante}`,
           subtitulo: `Resp: ${a.responsavelNome} · ${a.dataVisita}`,
+          dataISO: brToISO(a.dataVisita) || undefined,
         });
       });
       instituicoes.forEach(i => {
@@ -74,8 +78,38 @@ export default function AdminQRCodes() {
           id: i.id,
           titulo: `🏫 ${i.nomeInstituicao}`,
           subtitulo: `Resp: ${i.responsavelNome} · ${i.dataVisita}`,
+          dataISO: brToISO(i.dataVisita) || undefined,
         });
       });
+
+      const generated: QRItem[] = [];
+      for (const it of all) {
+        const qr = await generateQRDataURL({ v: 1, t: it.tipo, id: it.id }, 220);
+        if (cancelled) return;
+        generated.push({ ...it, qr });
+      }
+      if (!cancelled) setItems(generated);
+    })();
+    return () => { cancelled = true; };
+  }, [grupos, aniversariantes, instituicoes]);
+
+  const filtrados = useMemo(() => {
+    let r = items;
+    if (filtroTipo !== 'todos') r = r.filter(i => i.tipo === filtroTipo);
+    if (!semData && (dataDe || dataAte)) {
+      r = r.filter(i => {
+        if (!i.dataISO) return false;
+        if (dataDe && i.dataISO < dataDe) return false;
+        if (dataAte && i.dataISO > dataAte) return false;
+        return true;
+      });
+    }
+    if (busca.trim()) {
+      const t = busca.toLowerCase();
+      r = r.filter(i => i.titulo.toLowerCase().includes(t) || i.subtitulo.toLowerCase().includes(t));
+    }
+    return r;
+  }, [items, filtroTipo, busca, dataDe, dataAte, semData]);
 
       const generated: QRItem[] = [];
       for (const it of all) {
