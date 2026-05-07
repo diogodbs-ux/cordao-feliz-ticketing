@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Calendar, Clock, Users, Baby, Accessibility, Printer, BarChart3 } from 'lucide-react';
+import { Download, FileText, Calendar, Clock, Users, Baby, Accessibility, FileDown, BarChart3 } from 'lucide-react';
 import { getCordaoLabel, CordaoColor, calcAdultCordoes, PeriodoFiltro, filtrarPorPeriodo, getCordaoTailwindBg, getCordaoTailwindText } from '@/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { gerarRelatorioFinalPDF } from '@/lib/relatorioPdf';
 
 const CORDAO_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9', verde: '#3CB371', amarelo: '#F5C518',
@@ -154,8 +155,43 @@ export default function AdminRelatorios() {
     toast.success('Relatório CSV exportado com sucesso!');
   };
 
-  const printReport = () => {
-    window.print();
+  const exportPDFProfissional = async () => {
+    try {
+      await gerarRelatorioFinalPDF({
+        periodoLabel: PERIODOS.find(p => p.value === periodo)?.label || '',
+        dataLabel: hoje,
+        totalVisitantes: reportStats.totalVisitantes,
+        totalCriancas: reportStats.totalCriancas,
+        totalAdultos: reportStats.totalAdultos,
+        totalResponsaveis: reportStats.totalResponsaveis,
+        totalPCD: reportStats.totalPCD,
+        totalCordoes: reportStats.totalCordoes,
+        primeiroCheckin: reportStats.primeiroCheckin,
+        ultimoCheckin: reportStats.ultimoCheckin,
+        tempoOperacao: reportStats.tempoOperacao,
+        avgPerGuiche: reportStats.avgPerGuiche,
+        pendentes,
+        porCor: reportStats.porCor,
+        porGuiche: reportStats.porGuiche,
+        hourly: reportStats.hourly,
+        checkins: filteredCheckins.slice(-200).reverse().map(c => {
+          const grupo = grupos.find(g => g.id === c.grupoVisitaId);
+          return {
+            responsavel: c.responsavelNome,
+            bairroCidade: grupo ? `${grupo.responsavel.bairro}, ${grupo.responsavel.cidade}` : '—',
+            criancas: c.totalCriancas,
+            guiche: c.guiche,
+            atendente: c.atendidoPor,
+            horario: new Date(c.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            cordoes: c.cordoes.map(co => `${co.quantidade}x ${co.cor}`).join(', '),
+          };
+        }),
+      });
+      toast.success('Relatório PDF gerado com sucesso!');
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Falha ao gerar PDF: ' + (e?.message || 'erro desconhecido'));
+    }
   };
 
   const exportSummaryTxt = () => {
@@ -236,9 +272,9 @@ export default function AdminRelatorios() {
               </button>
             ))}
           </div>
-          <Button variant="outline" onClick={printReport} className="gap-2">
-            <Printer className="h-4 w-4" />
-            Imprimir
+          <Button onClick={exportPDFProfissional} className="gap-2" disabled={filteredCheckins.length === 0}>
+            <FileDown className="h-4 w-4" />
+            PDF Profissional
           </Button>
           <Button variant="outline" onClick={exportSummaryTxt} className="gap-2">
             <FileText className="h-4 w-4" />

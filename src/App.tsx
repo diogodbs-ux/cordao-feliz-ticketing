@@ -25,6 +25,7 @@ import FechamentoOperacional from "@/pages/FechamentoOperacional";
 import RecreadorEspacoPanel from "@/pages/RecreadorEspacoPanel";
 import AdminCordoes from "@/pages/AdminCordoes";
 import JornadaCordoes from "@/pages/JornadaCordoes";
+import AdminPermissoes from "@/pages/AdminPermissoes";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +77,7 @@ const App = () => (
                 <Route path="espaco" element={<ProtectedRoute roles={['admin', 'recreador_espaco']}><RecreadorEspacoPanel /></ProtectedRoute>} />
                 <Route path="admin/cordoes" element={<ProtectedRoute roles={['admin']}><AdminCordoes /></ProtectedRoute>} />
                 <Route path="coordenador/jornadas" element={<ProtectedRoute roles={['admin', 'coordenador', 'supervisor']}><JornadaCordoes /></ProtectedRoute>} />
+                <Route path="admin/permissoes" element={<ProtectedRoute roles={['admin']}><AdminPermissoes /></ProtectedRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import JsBarcode from 'jsbarcode';
+import logoUrl from '@/assets/logo-completa.png';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import {
   CordaoUnidade, LoteCordao, gerarLote, readCordoes, readLotes,
   formatCodigo, prefixoCor,
 } from '@/types/cordoes';
 import { CordaoColor, getCordaoLabel, getCordaoTailwindBg, getCordaoTailwindText } from '@/types';
-import { Printer, Plus, Tag, Layers, Search, Download } from 'lucide-react';
+import { Printer, Plus, Tag, Layers, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -216,13 +216,12 @@ export default function AdminCordoes() {
   );
 }
 
-// ---- impressão (folha A4 com etiquetas + barcode) ----
+// ---- impressão (folha A4 com etiquetas + barcode + logo) ----
 function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
   if (itens.length === 0) {
     toast.error('Nenhum cordão para imprimir.');
     return;
   }
-  // Renderiza barcodes em um SVG para cada item e injeta numa janela nova
   const w = window.open('', '_blank', 'width=900,height=700');
   if (!w) { toast.error('Permita pop-ups para imprimir.'); return; }
 
@@ -232,17 +231,21 @@ function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
   };
 
   const cards = itens.map(it => {
-    // gera SVG do barcode em string
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     JsBarcode(svg, it.codigo, {
       format: 'CODE128', width: 1.6, height: 38, displayValue: false, margin: 0,
     });
     const svgStr = new XMLSerializer().serializeToString(svg);
+    const txtColor = it.cor === 'amarelo' ? '#000' : '#fff';
     return `
       <div class="card">
-        <div class="bar" style="background:${corHex[it.cor]};color:${it.cor === 'amarelo' ? '#000' : '#fff'}">${it.cor.toUpperCase()}</div>
+        <div class="bar" style="background:${corHex[it.cor]};color:${txtColor}">
+          <img src="${logoUrl}" class="bar-logo" alt="" />
+          <span>${it.cor.toUpperCase()}</span>
+        </div>
         <div class="bc">${svgStr}</div>
         <div class="code">${it.codigo}</div>
+        <div class="foot">CIDADE MAIS INFÂNCIA</div>
       </div>
     `;
   }).join('');
@@ -252,24 +255,37 @@ function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
     <style>
       @page { size: A4; margin: 8mm; }
       body { font-family: -apple-system, system-ui, sans-serif; margin:0; padding:0; }
-      .header { padding: 6px 4px 10px; border-bottom: 1px solid #ddd; margin-bottom: 8px; }
-      .header h1 { font-size: 13px; margin: 0; }
-      .header p { font-size: 10px; color: #666; margin: 2px 0 0; }
+      .header { display:flex; align-items:center; gap:12px; padding: 6px 4px 10px; border-bottom: 1px solid #ddd; margin-bottom: 8px; }
+      .header img.brand { height: 36px; width: auto; }
+      .header .meta h1 { font-size: 13px; margin: 0; }
+      .header .meta p { font-size: 10px; color: #666; margin: 2px 0 0; }
       .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
       .card { border: 1px dashed #999; border-radius: 4px; overflow: hidden; page-break-inside: avoid; }
-      .bar { font-size: 10px; font-weight: 800; text-align: center; padding: 3px 0; letter-spacing: 1px; }
-      .bc { display: flex; justify-content: center; padding: 4px 4px 0; }
+      .bar { display:flex; align-items:center; justify-content:center; gap:6px; font-size: 10px; font-weight: 800; padding: 4px 6px; letter-spacing: 1px; }
+      .bar-logo { height: 14px; width: auto; background: rgba(255,255,255,0.9); padding: 1px 3px; border-radius: 2px; }
+      .bc { display: flex; justify-content: center; padding: 6px 4px 0; }
       .bc svg { width: 90%; height: 38px; }
-      .code { text-align: center; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; padding: 2px 0 6px; }
+      .code { text-align: center; font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; padding: 2px 0 4px; }
+      .foot { text-align:center; font-size: 8px; color:#888; letter-spacing:1px; padding: 0 0 5px; }
       @media print { .no-print { display:none; } }
     </style>
     </head><body>
       <div class="header">
-        <h1>${titulo}</h1>
-        <p>${itens.length} cordões · gerado em ${new Date().toLocaleString('pt-BR')}</p>
+        <img src="${logoUrl}" class="brand" alt="Cidade Mais Infância" />
+        <div class="meta">
+          <h1>${titulo}</h1>
+          <p>Cidade Mais Infância · ${itens.length} cordões · gerado em ${new Date().toLocaleString('pt-BR')}</p>
+        </div>
       </div>
       <div class="grid">${cards}</div>
-      <script>window.onload = () => { setTimeout(() => window.print(), 300); };</script>
+      <script>
+        // Aguarda imagens (logo) carregarem antes de imprimir
+        window.onload = () => {
+          const imgs = Array.from(document.images);
+          Promise.all(imgs.map(img => img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))
+            .then(() => setTimeout(() => window.print(), 200));
+        };
+      </script>
     </body></html>
   `);
   w.document.close();
