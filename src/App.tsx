@@ -25,6 +25,7 @@ import FechamentoOperacional from "@/pages/FechamentoOperacional";
 import RecreadorEspacoPanel from "@/pages/RecreadorEspacoPanel";
 import AdminCordoes from "@/pages/AdminCordoes";
 import JornadaCordoes from "@/pages/JornadaCordoes";
+import AdminPermissoes from "@/pages/AdminPermissoes";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
