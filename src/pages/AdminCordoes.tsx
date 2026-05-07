@@ -1,17 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import JsBarcode from 'jsbarcode';
+import logoUrl from '@/assets/logo-completa.png';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import {
   CordaoUnidade, LoteCordao, gerarLote, readCordoes, readLotes,
   formatCodigo, prefixoCor,
 } from '@/types/cordoes';
 import { CordaoColor, getCordaoLabel, getCordaoTailwindBg, getCordaoTailwindText } from '@/types';
-import { Printer, Plus, Tag, Layers, Search, Download } from 'lucide-react';
+import { Printer, Plus, Tag, Layers, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
