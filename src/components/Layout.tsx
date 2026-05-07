@@ -41,10 +41,31 @@ export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [permsVersion, setPermsVersion] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setPermsVersion(v => v + 1);
+    window.addEventListener('sentinela:permissoes-changed', handler);
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener('sentinela:permissoes-changed', handler);
+      window.removeEventListener('storage', handler);
+    };
+  }, []);
 
   if (!user) return null;
 
-  const navItems = NAV_ITEMS[user.role] || [];
+  const allowed = readPermissoes()[user.role] || [];
+  // Mantém ordem original de ALL_NAV; usa o primeiro label encontrado para cada path permitido
+  const seen = new Set<string>();
+  const navItems = ALL_NAV.filter(item => {
+    if (!allowed.includes(item.path)) return false;
+    const key = item.path;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  void permsVersion;
 
   return (
     <div className="min-h-screen flex bg-background">
