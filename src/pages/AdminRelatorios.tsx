@@ -272,9 +272,9 @@ export default function AdminRelatorios() {
               </button>
             ))}
           </div>
-          <Button variant="outline" onClick={printReport} className="gap-2">
-            <Printer className="h-4 w-4" />
-            Imprimir
+          <Button onClick={exportPDFProfissional} className="gap-2" disabled={filteredCheckins.length === 0}>
+            <FileDown className="h-4 w-4" />
+            PDF Profissional
           </Button>
           <Button variant="outline" onClick={exportSummaryTxt} className="gap-2">
             <FileText className="h-4 w-4" />
