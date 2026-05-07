@@ -1,53 +1,41 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import logo from '@/assets/logo-completa.png';
 import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
-  FileSpreadsheet, BarChart3, History, Cake, Building, Presentation, QrCode,
-  MapPin, FileBarChart, Target, Tag, Route as RouteIcon,
+  BarChart3, History, Cake, Presentation, QrCode,
+  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBadge from '@/components/OfflineBadge';
+import { readPermissoes } from '@/lib/permissoes';
 
-const NAV_ITEMS: Record<string, { label: string; icon: any; path: string }[]> = {
-  admin: [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-    { label: 'Importar Dados', icon: ClipboardCheck, path: '/admin/importar' },
-    { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
-    { label: 'QR Codes', icon: QrCode, path: '/admin/qrcodes' },
-    { label: 'Espaços Lúdicos', icon: MapPin, path: '/admin/espacos' },
-    { label: 'Cordões Numerados', icon: Tag, path: '/admin/cordoes' },
-    { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
-    { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
-    { label: 'Consolidado Anual', icon: Target, path: '/admin/consolidado' },
-    { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
-    { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
-    { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
-    { label: 'Apresentação', icon: Presentation, path: '/apresentacao' },
-  ],
-  coordenador: [
-    { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
-    { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
-    { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
-    { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
-    { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
-  ],
-  supervisor: [
-    { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
-    { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
-    { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
-  ],
-  recreador: [
-    { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
-  ],
-  recreador_espaco: [
-    { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
-  ],
-  observador: [
-    { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
-  ],
-};
+type NavItem = { label: string; icon: any; path: string };
+
+const ALL_NAV: NavItem[] = [
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
+  { label: 'Importar Dados', icon: ClipboardCheck, path: '/admin/importar' },
+  { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
+  { label: 'QR Codes', icon: QrCode, path: '/admin/qrcodes' },
+  { label: 'Espaços Lúdicos (Admin)', icon: MapPin, path: '/admin/espacos' },
+  { label: 'Cordões Numerados', icon: Tag, path: '/admin/cordoes' },
+  { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
+  { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
+  { label: 'Consolidado Anual', icon: Target, path: '/admin/consolidado' },
+  { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
+  { label: 'Permissões', icon: Shield, path: '/admin/permissoes' },
+  { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
+  { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
+  { label: 'Apresentação', icon: Presentation, path: '/apresentacao' },
+  { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
+  { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
+  { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
+  { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
+  { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
+  { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
+];
 
 export default function Layout() {
   const { user, logout } = useAuth();
