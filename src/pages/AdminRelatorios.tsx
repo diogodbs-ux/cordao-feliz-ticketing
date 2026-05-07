@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Calendar, Clock, Users, Baby, Accessibility, Printer, BarChart3 } from 'lucide-react';
+import { Download, FileText, Calendar, Clock, Users, Baby, Accessibility, FileDown, BarChart3 } from 'lucide-react';
 import { getCordaoLabel, CordaoColor, calcAdultCordoes, PeriodoFiltro, filtrarPorPeriodo, getCordaoTailwindBg, getCordaoTailwindText } from '@/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { gerarRelatorioFinalPDF } from '@/lib/relatorioPdf';
 
 const CORDAO_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9', verde: '#3CB371', amarelo: '#F5C518',
