@@ -155,8 +155,43 @@ export default function AdminRelatorios() {
     toast.success('Relatório CSV exportado com sucesso!');
   };
 
-  const printReport = () => {
-    window.print();
+  const exportPDFProfissional = async () => {
+    try {
+      await gerarRelatorioFinalPDF({
+        periodoLabel: PERIODOS.find(p => p.value === periodo)?.label || '',
+        dataLabel: hoje,
+        totalVisitantes: reportStats.totalVisitantes,
+        totalCriancas: reportStats.totalCriancas,
+        totalAdultos: reportStats.totalAdultos,
+        totalResponsaveis: reportStats.totalResponsaveis,
+        totalPCD: reportStats.totalPCD,
+        totalCordoes: reportStats.totalCordoes,
+        primeiroCheckin: reportStats.primeiroCheckin,
+        ultimoCheckin: reportStats.ultimoCheckin,
+        tempoOperacao: reportStats.tempoOperacao,
+        avgPerGuiche: reportStats.avgPerGuiche,
+        pendentes,
+        porCor: reportStats.porCor,
+        porGuiche: reportStats.porGuiche,
+        hourly: reportStats.hourly,
+        checkins: filteredCheckins.slice(-200).reverse().map(c => {
+          const grupo = grupos.find(g => g.id === c.grupoVisitaId);
+          return {
+            responsavel: c.responsavelNome,
+            bairroCidade: grupo ? `${grupo.responsavel.bairro}, ${grupo.responsavel.cidade}` : '—',
+            criancas: c.totalCriancas,
+            guiche: c.guiche,
+            atendente: c.atendidoPor,
+            horario: new Date(c.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            cordoes: c.cordoes.map(co => `${co.quantidade}x ${co.cor}`).join(', '),
+          };
+        }),
+      });
+      toast.success('Relatório PDF gerado com sucesso!');
+    } catch (e: any) {
+      console.error(e);
+      toast.error('Falha ao gerar PDF: ' + (e?.message || 'erro desconhecido'));
+    }
   };
 
   const exportSummaryTxt = () => {
