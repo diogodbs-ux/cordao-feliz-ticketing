@@ -254,7 +254,9 @@ function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
     <html><head><title>${titulo}</title>
     <style>
       @page { size: A4; margin: 8mm; }
-      body { font-family: -apple-system, system-ui, sans-serif; margin:0; padding:0; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+      body { font-family: -apple-system, system-ui, sans-serif; margin:0; padding:0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .bar { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       .header { display:flex; align-items:center; gap:12px; padding: 6px 4px 10px; border-bottom: 1px solid #ddd; margin-bottom: 8px; }
       .header img.brand { height: 36px; width: auto; }
       .header .meta h1 { font-size: 13px; margin: 0; }
