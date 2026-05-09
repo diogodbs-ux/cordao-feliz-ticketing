@@ -45,7 +45,7 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
   if (!grupo) return null;
 
   const totalMembros = membros.length;
-  const vinculados = membros.filter(m => m.codigoCordao).length;
+  const vinculados = membros.filter(m => m.codigoCordao && getCordaoByCodigo(m.codigoCordao)).length;
   const codigosEmUso = new Set(membros.map(m => m.codigoCordao).filter(Boolean));
 
   const sugestoesPorCor = useMemo(() => {
@@ -100,9 +100,9 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
   const handleConfirmar = () => {
     // Se vinculação foi habilitada, exigir todos os códigos
     if (vincularAtivo) {
-      const faltando = membros.filter(m => !m.codigoCordao);
+      const faltando = membros.filter(m => !m.codigoCordao || !getCordaoByCodigo(m.codigoCordao));
       if (faltando.length > 0) {
-        toast.error(`Faltam ${faltando.length} cordão(ões) para vincular. Escaneie ou digite os códigos.`);
+        toast.error(`Faltam ${faltando.length} cordão(ões) válidos. Use somente códigos gerados no estoque.`);
         return;
       }
       // Persistir vínculo
