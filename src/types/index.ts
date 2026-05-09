@@ -7,6 +7,8 @@ export interface User {
   senha: string;
   role: UserRole;
   guiche?: number;
+  permissoesExtras?: string[];
+  permissoesBloqueadas?: string[];
   ativo: boolean;
   criadoEm: string;
 }

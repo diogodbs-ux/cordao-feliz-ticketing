@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { CheckCircle2, Accessibility, X, Printer, Tag, ScanLine, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { imprimirCordoes, CordaoPrintItem } from '@/lib/print';
-import { vincularCordao, parseCodigo, formatCodigo } from '@/types/cordoes';
+import { CordaoUnidade, vincularCordao, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes } from '@/types/cordoes';
 import { toast } from 'sonner';
 
 interface CordaoPopupProps {
@@ -32,14 +32,29 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
   const [membros, setMembros] = useState<MembroEntrega[]>(() => buildMembros(grupo));
   const [vincularAtivo, setVincularAtivo] = useState(false);
+  const [cordoesBase, setCordoesBase] = useState<CordaoUnidade[]>(() => readCordoes());
 
   // Reset when group changes (defensive)
-  useMemo(() => { setMembros(buildMembros(grupo)); setVincularAtivo(false); }, [grupo?.id]);
+  useEffect(() => { setMembros(buildMembros(grupo)); setVincularAtivo(false); setCordoesBase(readCordoes()); }, [grupo?.id]);
+  useEffect(() => {
+    const refresh = () => setCordoesBase(readCordoes());
+    window.addEventListener('storage', refresh);
+    return () => window.removeEventListener('storage', refresh);
+  }, []);
 
   if (!grupo) return null;
 
   const totalMembros = membros.length;
-  const vinculados = membros.filter(m => m.codigoCordao).length;
+  const vinculados = membros.filter(m => m.codigoCordao && getCordaoByCodigo(m.codigoCordao)).length;
+  const codigosEmUso = new Set(membros.map(m => m.codigoCordao).filter(Boolean));
+
+  const sugestoesPorCor = useMemo(() => {
+    const acc: Record<CordaoColor, CordaoUnidade[]> = { azul: [], verde: [], amarelo: [], vermelho: [], rosa: [], cinza: [], preto: [] };
+    cordoesBase
+      .filter(c => c.status === 'disponivel' || c.protocolo === (grupo.responsavel.protocolo || grupo.id))
+      .forEach(c => acc[c.cor].push(c));
+    return acc;
+  }, [cordoesBase, grupo.id, grupo.responsavel.protocolo]);
 
   const focarProximo = (currentKey: string) => {
     const idx = membros.findIndex(m => m.key === currentKey);
@@ -60,6 +75,17 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
     }
     const code = formatCodigo(parsed.cor, parsed.numero);
     const membro = membros.find(m => m.key === key)!;
+    const existente = getCordaoByCodigo(code);
+    if (!existente) {
+      toast.error(`Cordão ${code} não existe no estoque. Gere/imprima o lote em Admin → Cordões Numerados.`);
+      setMembros(prev => prev.map(m => m.key === key ? { ...m, codigoCordao: '' } : m));
+      return;
+    }
+    if (existente.status === 'entregue' && existente.protocolo && existente.protocolo !== (grupo.responsavel.protocolo || grupo.id)) {
+      toast.error(`Cordão ${code} já está entregue ao protocolo ${existente.protocolo}.`);
+      setMembros(prev => prev.map(m => m.key === key ? { ...m, codigoCordao: '' } : m));
+      return;
+    }
     if (parsed.cor !== membro.cor) {
       toast.warning(`Atenção: cordão ${code} é da cor ${parsed.cor.toUpperCase()}, mas ${membro.nome} deveria receber ${membro.cor.toUpperCase()}.`);
     }
@@ -74,9 +100,9 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
   const handleConfirmar = () => {
     // Se vinculação foi habilitada, exigir todos os códigos
     if (vincularAtivo) {
-      const faltando = membros.filter(m => !m.codigoCordao);
+      const faltando = membros.filter(m => !m.codigoCordao || !getCordaoByCodigo(m.codigoCordao));
       if (faltando.length > 0) {
-        toast.error(`Faltam ${faltando.length} cordão(ões) para vincular. Escaneie ou digite os códigos.`);
+        toast.error(`Faltam ${faltando.length} cordão(ões) válidos. Use somente códigos gerados no estoque.`);
         return;
       }
       // Persistir vínculo
@@ -184,9 +210,14 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
                       <div className="pt-2">
                         <Input
                           ref={el => { inputsRef.current[m.key] = el; }}
+                          list={`cordoes-${m.key}`}
                           placeholder={`${m.cor.slice(0, 2).toUpperCase()}-0000`}
                           value={m.codigoCordao || ''}
                           onChange={e => setMembros(prev => prev.map(x => x.key === m.key ? { ...x, codigoCordao: e.target.value.toUpperCase() } : x))}
+                          onBlur={e => {
+                            const v = e.target.value.trim();
+                            if (v) lerCodigo(m.key, v);
+                          }}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -195,13 +226,29 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
                             }
                           }}
                           className={cn('h-9 text-sm font-mono-data',
-                            m.codigoCordao ? 'border-cordao-verde bg-cordao-verde/5' : 'border-primary/40'
+                            m.codigoCordao && getCordaoByCodigo(m.codigoCordao) ? 'border-cordao-verde bg-cordao-verde/5' : 'border-primary/40'
                           )}
                           autoFocus={i === 0}
                         />
-                        {m.codigoCordao && (
+                        <datalist id={`cordoes-${m.key}`}>
+                          {(sugestoesPorCor[m.cor] || [])
+                            .filter(c => !codigosEmUso.has(c.codigo) || c.codigo === m.codigoCordao)
+                            .slice(0, 80)
+                            .map(c => (
+                              <option key={c.codigo} value={c.codigo}>{c.membroNome ? `${c.codigo} — ${c.membroNome}` : c.codigo}</option>
+                            ))}
+                        </datalist>
+                        {m.codigoCordao && getCordaoByCodigo(m.codigoCordao) ? (
                           <p className="text-[10px] text-cordao-verde font-semibold mt-1 flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" /> vinculado
+                          </p>
+                        ) : m.codigoCordao ? (
+                          <p className="text-[10px] text-cordao-vermelho font-semibold mt-1 flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3" /> código não encontrado
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {sugestoesPorCor[m.cor]?.length || 0} disponível(is) desta cor
                           </p>
                         )}
                       </div>

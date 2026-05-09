@@ -5,15 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Pencil, Trash2, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { ALL_MENU_ITEMS, readPermissoes } from '@/lib/permissoes';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [form, setForm] = useState({ nome: '', email: '', senha: '', role: 'recreador' as UserRole, guiche: '' });
+  const [form, setForm] = useState({ nome: '', email: '', senha: '', role: 'recreador' as UserRole, guiche: '', permissoesExtras: [] as string[], permissoesBloqueadas: [] as string[] });
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('sentinela_users') || '[]');
@@ -27,14 +29,23 @@ export default function AdminUsers() {
 
   const openCreate = () => {
     setEditingUser(null);
-    setForm({ nome: '', email: '', senha: '', role: 'recreador', guiche: '' });
+    setForm({ nome: '', email: '', senha: '', role: 'recreador', guiche: '', permissoesExtras: [], permissoesBloqueadas: [] });
     setDialogOpen(true);
   };
 
   const openEdit = (u: User) => {
     setEditingUser(u);
-    setForm({ nome: u.nome, email: u.email, senha: u.senha, role: u.role, guiche: u.guiche?.toString() || '' });
+    setForm({ nome: u.nome, email: u.email, senha: u.senha, role: u.role, guiche: u.guiche?.toString() || '', permissoesExtras: u.permissoesExtras || [], permissoesBloqueadas: u.permissoesBloqueadas || [] });
     setDialogOpen(true);
+  };
+
+  const toggleUserPermission = (path: string) => {
+    const base = new Set(readPermissoes()[form.role] || []);
+    const enabled = form.permissoesExtras.includes(path) || (base.has(path) && !form.permissoesBloqueadas.includes(path));
+    setForm(f => enabled
+      ? { ...f, permissoesExtras: f.permissoesExtras.filter(p => p !== path), permissoesBloqueadas: Array.from(new Set([...f.permissoesBloqueadas, path])) }
+      : { ...f, permissoesExtras: Array.from(new Set([...f.permissoesExtras, path])), permissoesBloqueadas: f.permissoesBloqueadas.filter(p => p !== path) }
+    );
   };
 
   const handleSubmit = () => {
@@ -46,7 +57,7 @@ export default function AdminUsers() {
     if (editingUser) {
       const updated = users.map(u =>
         u.id === editingUser.id
-          ? { ...u, nome: form.nome, email: form.email, senha: form.senha, role: form.role, guiche: form.guiche ? parseInt(form.guiche) : undefined }
+          ? { ...u, nome: form.nome, email: form.email, senha: form.senha, role: form.role, guiche: form.guiche ? parseInt(form.guiche) : undefined, permissoesExtras: form.permissoesExtras, permissoesBloqueadas: form.permissoesBloqueadas }
           : u
       );
       save(updated);
@@ -63,6 +74,8 @@ export default function AdminUsers() {
         senha: form.senha,
         role: form.role,
         guiche: form.guiche ? parseInt(form.guiche) : undefined,
+        permissoesExtras: form.permissoesExtras,
+        permissoesBloqueadas: form.permissoesBloqueadas,
         ativo: true,
         criadoEm: new Date().toISOString(),
       };
@@ -123,6 +136,11 @@ export default function AdminUsers() {
                   <span className={cn('inline-flex px-2 py-0.5 rounded-full text-xs font-bold', roleBadge[u.role])}>
                     {roleLabel[u.role]}
                   </span>
+                  {((u.permissoesExtras?.length || 0) + (u.permissoesBloqueadas?.length || 0)) > 0 && (
+                    <p className="text-[10px] text-primary mt-1 flex items-center gap-1">
+                      <Shield className="h-3 w-3" /> permissões individuais
+                    </p>
+                  )}
                 </td>
                 <td className="px-5 py-3">
                   <span className="text-sm font-mono-data text-muted-foreground">{u.guiche || '—'}</span>
@@ -163,7 +181,7 @@ export default function AdminUsers() {
             </div>
             <div className="space-y-2">
               <Label>Perfil</Label>
-              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v as UserRole }))}>
+              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v as UserRole, permissoesExtras: [], permissoesBloqueadas: [] }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Administrador</SelectItem>
@@ -175,6 +193,29 @@ export default function AdminUsers() {
                 </SelectContent>
               </Select>
             </div>
+            {form.role !== 'admin' && (
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <div>
+                  <Label className="flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Permissões individuais</Label>
+                  <p className="text-[11px] text-muted-foreground mt-1">Sobrescreve apenas este colaborador, sem alterar o perfil inteiro.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-auto pr-1">
+                  {ALL_MENU_ITEMS.map(item => {
+                    const base = (readPermissoes()[form.role] || []).includes(item.path);
+                    const checked = form.permissoesExtras.includes(item.path) || (base && !form.permissoesBloqueadas.includes(item.path));
+                    return (
+                      <label key={item.path} className="flex items-start gap-2 rounded-md bg-secondary/40 p-2 text-xs cursor-pointer">
+                        <Checkbox checked={checked} onCheckedChange={() => toggleUserPermission(item.path)} />
+                        <span className="min-w-0">
+                          <span className="block font-medium text-foreground">{item.label}</span>
+                          <span className="block text-[10px] text-muted-foreground font-mono-data truncate">{base ? 'perfil' : 'extra'} · {item.path}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {form.role === 'observador' && (
               <div className="bg-secondary/50 rounded-lg p-3">
                 <p className="text-xs text-muted-foreground">

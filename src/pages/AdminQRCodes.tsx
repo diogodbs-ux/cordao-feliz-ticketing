@@ -24,6 +24,11 @@ interface QRItem {
 }
 
 function toISO(d: Date) { return d.toISOString().slice(0, 10); }
+function safeDateISO(raw?: string) {
+  if (!raw) return toISO(new Date());
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? toISO(new Date()) : toISO(d);
+}
 function brToISO(br: string): string | null {
   const m = br.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (!m) return null;
@@ -54,7 +59,7 @@ export default function AdminQRCodes() {
       const all: { tipo: 'g' | 'a' | 'i'; id: string; titulo: string; subtitulo: string; dataISO?: string }[] = [];
 
       grupos.forEach(g => {
-        const data = brToISO(g.dataAgendamento || '') || toISO(new Date(g.criadoEm));
+        const data = brToISO(g.dataAgendamento || '') || safeDateISO(g.criadoEm);
         all.push({
           tipo: 'g',
           id: g.id,

@@ -27,6 +27,7 @@ import AdminCordoes from "@/pages/AdminCordoes";
 import JornadaCordoes from "@/pages/JornadaCordoes";
 import AdminPermissoes from "@/pages/AdminPermissoes";
 import NotFound from "@/pages/NotFound";
+import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
 
 const queryClient = new QueryClient();
 
@@ -37,14 +38,21 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
   return <>{children}</>;
 }
 
+function PermissionRoute({ children, path, roles }: { children: React.ReactNode; path: string; roles?: string[] }) {
+  const { user, isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  void roles;
+  if (!user || !hasUserMenuAccess(user, path)) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function HomeRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
+  const allowed = getAllowedPathsForUser(user);
+  const firstAllowed = ALL_MENU_ITEMS.find(item => allowed.includes(item.path))?.path;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
-  if (user.role === 'coordenador') return <Navigate to="/coordenador" replace />;
-  if (user.role === 'supervisor') return <Navigate to="/fechamento" replace />;
-  if (user.role === 'recreador_espaco') return <Navigate to="/espaco" replace />;
-  return <Navigate to="/recreador" replace />;
+  return <Navigate to={firstAllowed || '/login'} replace />;
 }
 
 const App = () => (
@@ -59,24 +67,24 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route index element={<HomeRedirect />} />
-                <Route path="admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                <Route path="admin/importar" element={<ProtectedRoute roles={['admin']}><AdminImport /></ProtectedRoute>} />
-                <Route path="admin/usuarios" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
-                <Route path="admin/relatorios" element={<ProtectedRoute roles={['admin']}><AdminRelatorios /></ProtectedRoute>} />
-                <Route path="admin/configuracoes" element={<ProtectedRoute roles={['admin']}><AdminConfiguracoes /></ProtectedRoute>} />
-                <Route path="admin/historico" element={<ProtectedRoute roles={['admin']}><AdminHistorico /></ProtectedRoute>} />
-                <Route path="admin/consolidado" element={<ProtectedRoute roles={['admin']}><AdminConsolidado /></ProtectedRoute>} />
-                <Route path="coordenador/espacos" element={<ProtectedRoute roles={['admin', 'coordenador', 'supervisor']}><CoordenadorEspacos /></ProtectedRoute>} />
-                <Route path="admin/listas-especiais" element={<ProtectedRoute roles={['admin', 'coordenador']}><ListasEspeciais /></ProtectedRoute>} />
-                <Route path="coordenador" element={<ProtectedRoute roles={['coordenador', 'admin']}><CoordenadorPanel /></ProtectedRoute>} />
-                <Route path="recreador" element={<ProtectedRoute roles={['recreador', 'admin', 'observador']}><RecreadorPanel /></ProtectedRoute>} />
-                <Route path="apresentacao" element={<ProtectedRoute roles={['admin']}><ApresentacaoExecutiva /></ProtectedRoute>} />
-                <Route path="admin/qrcodes" element={<ProtectedRoute roles={['admin']}><AdminQRCodes /></ProtectedRoute>} />
-                <Route path="admin/espacos" element={<ProtectedRoute roles={['admin']}><AdminEspacos /></ProtectedRoute>} />
-                <Route path="fechamento" element={<ProtectedRoute roles={['admin', 'coordenador', 'supervisor']}><FechamentoOperacional /></ProtectedRoute>} />
-                <Route path="espaco" element={<ProtectedRoute roles={['admin', 'recreador_espaco']}><RecreadorEspacoPanel /></ProtectedRoute>} />
-                <Route path="admin/cordoes" element={<ProtectedRoute roles={['admin']}><AdminCordoes /></ProtectedRoute>} />
-                <Route path="coordenador/jornadas" element={<ProtectedRoute roles={['admin', 'coordenador', 'supervisor']}><JornadaCordoes /></ProtectedRoute>} />
+                <Route path="admin" element={<PermissionRoute path="/admin" roles={['admin']}><AdminDashboard /></PermissionRoute>} />
+                <Route path="admin/importar" element={<PermissionRoute path="/admin/importar" roles={['admin']}><AdminImport /></PermissionRoute>} />
+                <Route path="admin/usuarios" element={<PermissionRoute path="/admin/usuarios" roles={['admin']}><AdminUsers /></PermissionRoute>} />
+                <Route path="admin/relatorios" element={<PermissionRoute path="/admin/relatorios" roles={['admin', 'supervisor']}><AdminRelatorios /></PermissionRoute>} />
+                <Route path="admin/configuracoes" element={<PermissionRoute path="/admin/configuracoes" roles={['admin']}><AdminConfiguracoes /></PermissionRoute>} />
+                <Route path="admin/historico" element={<PermissionRoute path="/admin/historico" roles={['admin']}><AdminHistorico /></PermissionRoute>} />
+                <Route path="admin/consolidado" element={<PermissionRoute path="/admin/consolidado" roles={['admin']}><AdminConsolidado /></PermissionRoute>} />
+                <Route path="coordenador/espacos" element={<PermissionRoute path="/coordenador/espacos" roles={['admin', 'coordenador', 'supervisor']}><CoordenadorEspacos /></PermissionRoute>} />
+                <Route path="admin/listas-especiais" element={<PermissionRoute path="/admin/listas-especiais" roles={['admin', 'coordenador']}><ListasEspeciais /></PermissionRoute>} />
+                <Route path="coordenador" element={<PermissionRoute path="/coordenador" roles={['coordenador', 'admin', 'supervisor']}><CoordenadorPanel /></PermissionRoute>} />
+                <Route path="recreador" element={<PermissionRoute path="/recreador" roles={['recreador', 'admin', 'observador']}><RecreadorPanel /></PermissionRoute>} />
+                <Route path="apresentacao" element={<PermissionRoute path="/apresentacao" roles={['admin']}><ApresentacaoExecutiva /></PermissionRoute>} />
+                <Route path="admin/qrcodes" element={<PermissionRoute path="/admin/qrcodes" roles={['admin']}><AdminQRCodes /></PermissionRoute>} />
+                <Route path="admin/espacos" element={<PermissionRoute path="/admin/espacos" roles={['admin']}><AdminEspacos /></PermissionRoute>} />
+                <Route path="fechamento" element={<PermissionRoute path="/fechamento" roles={['admin', 'coordenador', 'supervisor']}><FechamentoOperacional /></PermissionRoute>} />
+                <Route path="espaco" element={<PermissionRoute path="/espaco" roles={['admin', 'recreador_espaco']}><RecreadorEspacoPanel /></PermissionRoute>} />
+                <Route path="admin/cordoes" element={<PermissionRoute path="/admin/cordoes" roles={['admin']}><AdminCordoes /></PermissionRoute>} />
+                <Route path="coordenador/jornadas" element={<PermissionRoute path="/coordenador/jornadas" roles={['admin', 'coordenador', 'supervisor']}><JornadaCordoes /></PermissionRoute>} />
                 <Route path="admin/permissoes" element={<ProtectedRoute roles={['admin']}><AdminPermissoes /></ProtectedRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
