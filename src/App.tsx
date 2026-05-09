@@ -27,7 +27,7 @@ import AdminCordoes from "@/pages/AdminCordoes";
 import JornadaCordoes from "@/pages/JornadaCordoes";
 import AdminPermissoes from "@/pages/AdminPermissoes";
 import NotFound from "@/pages/NotFound";
-import { hasUserMenuAccess } from "@/lib/permissoes";
+import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
 
 const queryClient = new QueryClient();
 
@@ -49,11 +49,10 @@ function PermissionRoute({ children, path, roles }: { children: React.ReactNode;
 function HomeRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
+  const allowed = getAllowedPathsForUser(user);
+  const firstAllowed = ALL_MENU_ITEMS.find(item => allowed.includes(item.path))?.path;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
-  if (user.role === 'coordenador') return <Navigate to="/coordenador" replace />;
-  if (user.role === 'supervisor') return <Navigate to="/fechamento" replace />;
-  if (user.role === 'recreador_espaco') return <Navigate to="/espaco" replace />;
-  return <Navigate to="/recreador" replace />;
+  return <Navigate to={firstAllowed || '/login'} replace />;
 }
 
 const App = () => (
