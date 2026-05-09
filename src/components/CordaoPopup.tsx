@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { CheckCircle2, Accessibility, X, Printer, Tag, ScanLine, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { imprimirCordoes, CordaoPrintItem } from '@/lib/print';
-import { vincularCordao, parseCodigo, formatCodigo } from '@/types/cordoes';
+import { CordaoUnidade, vincularCordao, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes } from '@/types/cordoes';
 import { toast } from 'sonner';
 
 interface CordaoPopupProps {
@@ -32,14 +32,29 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
   const [membros, setMembros] = useState<MembroEntrega[]>(() => buildMembros(grupo));
   const [vincularAtivo, setVincularAtivo] = useState(false);
+  const [cordoesBase, setCordoesBase] = useState<CordaoUnidade[]>(() => readCordoes());
 
   // Reset when group changes (defensive)
-  useMemo(() => { setMembros(buildMembros(grupo)); setVincularAtivo(false); }, [grupo?.id]);
+  useEffect(() => { setMembros(buildMembros(grupo)); setVincularAtivo(false); setCordoesBase(readCordoes()); }, [grupo?.id]);
+  useEffect(() => {
+    const refresh = () => setCordoesBase(readCordoes());
+    window.addEventListener('storage', refresh);
+    return () => window.removeEventListener('storage', refresh);
+  }, []);
 
   if (!grupo) return null;
 
   const totalMembros = membros.length;
   const vinculados = membros.filter(m => m.codigoCordao).length;
+  const codigosEmUso = new Set(membros.map(m => m.codigoCordao).filter(Boolean));
+
+  const sugestoesPorCor = useMemo(() => {
+    const acc: Record<CordaoColor, CordaoUnidade[]> = { azul: [], verde: [], amarelo: [], vermelho: [], rosa: [], cinza: [], preto: [] };
+    cordoesBase
+      .filter(c => c.status === 'disponivel' || c.protocolo === (grupo.responsavel.protocolo || grupo.id))
+      .forEach(c => acc[c.cor].push(c));
+    return acc;
+  }, [cordoesBase, grupo.id, grupo.responsavel.protocolo]);
 
   const focarProximo = (currentKey: string) => {
     const idx = membros.findIndex(m => m.key === currentKey);
@@ -60,6 +75,17 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
     }
     const code = formatCodigo(parsed.cor, parsed.numero);
     const membro = membros.find(m => m.key === key)!;
+    const existente = getCordaoByCodigo(code);
+    if (!existente) {
+      toast.error(`Cordão ${code} não existe no estoque. Gere/imprima o lote em Admin → Cordões Numerados.`);
+      setMembros(prev => prev.map(m => m.key === key ? { ...m, codigoCordao: '' } : m));
+      return;
+    }
+    if (existente.status === 'entregue' && existente.protocolo && existente.protocolo !== (grupo.responsavel.protocolo || grupo.id)) {
+      toast.error(`Cordão ${code} já está entregue ao protocolo ${existente.protocolo}.`);
+      setMembros(prev => prev.map(m => m.key === key ? { ...m, codigoCordao: '' } : m));
+      return;
+    }
     if (parsed.cor !== membro.cor) {
       toast.warning(`Atenção: cordão ${code} é da cor ${parsed.cor.toUpperCase()}, mas ${membro.nome} deveria receber ${membro.cor.toUpperCase()}.`);
     }
