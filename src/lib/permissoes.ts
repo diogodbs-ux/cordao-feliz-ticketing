@@ -57,9 +57,8 @@ export function readPermissoes(): PermissoesMap {
     const parsed = JSON.parse(raw) as Partial<PermissoesMap>;
     const merged = { ...DEFAULT_PERMISSOES } as PermissoesMap;
     (Object.keys(DEFAULT_PERMISSOES) as UserRole[]).forEach(role => {
-      const saved = parsed[role] || [];
-      const defaults = role === 'admin' ? ALL_MENU_ITEMS.map(i => i.path) : DEFAULT_PERMISSOES[role];
-      merged[role] = Array.from(new Set([...defaults, ...saved]));
+      if (role === 'admin') merged[role] = ALL_MENU_ITEMS.map(i => i.path);
+      else merged[role] = parsed[role] || DEFAULT_PERMISSOES[role];
     });
     return merged;
   } catch {
