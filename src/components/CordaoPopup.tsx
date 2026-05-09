@@ -210,9 +210,14 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
                       <div className="pt-2">
                         <Input
                           ref={el => { inputsRef.current[m.key] = el; }}
+                          list={`cordoes-${m.key}`}
                           placeholder={`${m.cor.slice(0, 2).toUpperCase()}-0000`}
                           value={m.codigoCordao || ''}
                           onChange={e => setMembros(prev => prev.map(x => x.key === m.key ? { ...x, codigoCordao: e.target.value.toUpperCase() } : x))}
+                          onBlur={e => {
+                            const v = e.target.value.trim();
+                            if (v) lerCodigo(m.key, v);
+                          }}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -221,13 +226,29 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
                             }
                           }}
                           className={cn('h-9 text-sm font-mono-data',
-                            m.codigoCordao ? 'border-cordao-verde bg-cordao-verde/5' : 'border-primary/40'
+                            m.codigoCordao && getCordaoByCodigo(m.codigoCordao) ? 'border-cordao-verde bg-cordao-verde/5' : 'border-primary/40'
                           )}
                           autoFocus={i === 0}
                         />
-                        {m.codigoCordao && (
+                        <datalist id={`cordoes-${m.key}`}>
+                          {(sugestoesPorCor[m.cor] || [])
+                            .filter(c => !codigosEmUso.has(c.codigo) || c.codigo === m.codigoCordao)
+                            .slice(0, 80)
+                            .map(c => (
+                              <option key={c.codigo} value={c.codigo}>{c.membroNome ? `${c.codigo} — ${c.membroNome}` : c.codigo}</option>
+                            ))}
+                        </datalist>
+                        {m.codigoCordao && getCordaoByCodigo(m.codigoCordao) ? (
                           <p className="text-[10px] text-cordao-verde font-semibold mt-1 flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" /> vinculado
+                          </p>
+                        ) : m.codigoCordao ? (
+                          <p className="text-[10px] text-cordao-vermelho font-semibold mt-1 flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3" /> código não encontrado
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {sugestoesPorCor[m.cor]?.length || 0} disponível(is) desta cor
                           </p>
                         )}
                       </div>
