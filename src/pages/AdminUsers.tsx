@@ -5,15 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Plus, Pencil, Trash2, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { ALL_MENU_ITEMS, readPermissoes } from '@/lib/permissoes';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [form, setForm] = useState({ nome: '', email: '', senha: '', role: 'recreador' as UserRole, guiche: '' });
+  const [form, setForm] = useState({ nome: '', email: '', senha: '', role: 'recreador' as UserRole, guiche: '', permissoesExtras: [] as string[], permissoesBloqueadas: [] as string[] });
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('sentinela_users') || '[]');
@@ -27,14 +29,23 @@ export default function AdminUsers() {
 
   const openCreate = () => {
     setEditingUser(null);
-    setForm({ nome: '', email: '', senha: '', role: 'recreador', guiche: '' });
+    setForm({ nome: '', email: '', senha: '', role: 'recreador', guiche: '', permissoesExtras: [], permissoesBloqueadas: [] });
     setDialogOpen(true);
   };
 
   const openEdit = (u: User) => {
     setEditingUser(u);
-    setForm({ nome: u.nome, email: u.email, senha: u.senha, role: u.role, guiche: u.guiche?.toString() || '' });
+    setForm({ nome: u.nome, email: u.email, senha: u.senha, role: u.role, guiche: u.guiche?.toString() || '', permissoesExtras: u.permissoesExtras || [], permissoesBloqueadas: u.permissoesBloqueadas || [] });
     setDialogOpen(true);
+  };
+
+  const toggleUserPermission = (path: string) => {
+    const base = new Set(readPermissoes()[form.role] || []);
+    const enabled = form.permissoesExtras.includes(path) || (base.has(path) && !form.permissoesBloqueadas.includes(path));
+    setForm(f => enabled
+      ? { ...f, permissoesExtras: f.permissoesExtras.filter(p => p !== path), permissoesBloqueadas: Array.from(new Set([...f.permissoesBloqueadas, path])) }
+      : { ...f, permissoesExtras: Array.from(new Set([...f.permissoesExtras, path])), permissoesBloqueadas: f.permissoesBloqueadas.filter(p => p !== path) }
+    );
   };
 
   const handleSubmit = () => {
