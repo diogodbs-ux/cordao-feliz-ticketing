@@ -181,7 +181,7 @@ export default function AdminUsers() {
             </div>
             <div className="space-y-2">
               <Label>Perfil</Label>
-              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v as UserRole }))}>
+              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v as UserRole, permissoesExtras: [], permissoesBloqueadas: [] }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Administrador</SelectItem>
@@ -193,6 +193,29 @@ export default function AdminUsers() {
                 </SelectContent>
               </Select>
             </div>
+            {form.role !== 'admin' && (
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <div>
+                  <Label className="flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Permissões individuais</Label>
+                  <p className="text-[11px] text-muted-foreground mt-1">Sobrescreve apenas este colaborador, sem alterar o perfil inteiro.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-auto pr-1">
+                  {ALL_MENU_ITEMS.map(item => {
+                    const base = (readPermissoes()[form.role] || []).includes(item.path);
+                    const checked = form.permissoesExtras.includes(item.path) || (base && !form.permissoesBloqueadas.includes(item.path));
+                    return (
+                      <label key={item.path} className="flex items-start gap-2 rounded-md bg-secondary/40 p-2 text-xs cursor-pointer">
+                        <Checkbox checked={checked} onCheckedChange={() => toggleUserPermission(item.path)} />
+                        <span className="min-w-0">
+                          <span className="block font-medium text-foreground">{item.label}</span>
+                          <span className="block text-[10px] text-muted-foreground font-mono-data truncate">{base ? 'perfil' : 'extra'} · {item.path}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {form.role === 'observador' && (
               <div className="bg-secondary/50 rounded-lg p-3">
                 <p className="text-xs text-muted-foreground">
