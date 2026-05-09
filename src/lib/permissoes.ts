@@ -1,6 +1,6 @@
 // Matriz de permissões por papel (role) -> rotas/menus permitidos.
 // Persistida em localStorage. Pode ser editada pelo Admin.
-import { UserRole } from '@/types';
+import { User, UserRole } from '@/types';
 
 const STORAGE_KEY = 'sentinela_permissoes_v1';
 
@@ -21,6 +21,7 @@ export const ALL_MENU_ITEMS: MenuItemDef[] = [
   { path: '/admin/historico', label: 'Histórico & Geo' },
   { path: '/admin/consolidado', label: 'Consolidado Anual' },
   { path: '/admin/relatorios', label: 'Relatórios' },
+  { path: '/admin/permissoes', label: 'Permissões' },
   { path: '/admin/usuarios', label: 'Usuários' },
   { path: '/admin/configuracoes', label: 'Configurações' },
   { path: '/apresentacao', label: 'Apresentação Executiva' },
@@ -54,8 +55,13 @@ export function readPermissoes(): PermissoesMap {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PERMISSOES;
     const parsed = JSON.parse(raw) as Partial<PermissoesMap>;
-    // Merge to ensure all roles exist
-    return { ...DEFAULT_PERMISSOES, ...parsed };
+    const merged = { ...DEFAULT_PERMISSOES } as PermissoesMap;
+    (Object.keys(DEFAULT_PERMISSOES) as UserRole[]).forEach(role => {
+      const saved = parsed[role] || [];
+      const defaults = role === 'admin' ? ALL_MENU_ITEMS.map(i => i.path) : DEFAULT_PERMISSOES[role];
+      merged[role] = Array.from(new Set([...defaults, ...saved]));
+    });
+    return merged;
   } catch {
     return DEFAULT_PERMISSOES;
   }
@@ -70,6 +76,19 @@ export function writePermissoes(p: PermissoesMap) {
 export function hasMenuAccess(role: UserRole, path: string): boolean {
   const perms = readPermissoes();
   return (perms[role] || []).includes(path);
+}
+
+export function getAllowedPathsForUser(user: User): string[] {
+  if (user.role === 'admin') return ALL_MENU_ITEMS.map(i => i.path);
+  const base = new Set(readPermissoes()[user.role] || []);
+  (user.permissoesExtras || []).forEach(path => base.add(path));
+  (user.permissoesBloqueadas || []).forEach(path => base.delete(path));
+  return Array.from(base);
+}
+
+export function hasUserMenuAccess(user: User, path: string): boolean {
+  if (user.role === 'admin') return true;
+  return getAllowedPathsForUser(user).includes(path);
 }
 
 export function resetPermissoes() {
