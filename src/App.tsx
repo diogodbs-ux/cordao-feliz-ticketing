@@ -41,7 +41,8 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
 function PermissionRoute({ children, path, roles }: { children: React.ReactNode; path: string; roles?: string[] }) {
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!user || (roles && !roles.includes(user.role)) || !hasUserMenuAccess(user, path)) return <Navigate to="/" replace />;
+  void roles;
+  if (!user || !hasUserMenuAccess(user, path)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
