@@ -57,7 +57,7 @@ export default function AdminUsers() {
     if (editingUser) {
       const updated = users.map(u =>
         u.id === editingUser.id
-          ? { ...u, nome: form.nome, email: form.email, senha: form.senha, role: form.role, guiche: form.guiche ? parseInt(form.guiche) : undefined }
+          ? { ...u, nome: form.nome, email: form.email, senha: form.senha, role: form.role, guiche: form.guiche ? parseInt(form.guiche) : undefined, permissoesExtras: form.permissoesExtras, permissoesBloqueadas: form.permissoesBloqueadas }
           : u
       );
       save(updated);
@@ -74,6 +74,8 @@ export default function AdminUsers() {
         senha: form.senha,
         role: form.role,
         guiche: form.guiche ? parseInt(form.guiche) : undefined,
+        permissoesExtras: form.permissoesExtras,
+        permissoesBloqueadas: form.permissoesBloqueadas,
         ativo: true,
         criadoEm: new Date().toISOString(),
       };
@@ -134,6 +136,11 @@ export default function AdminUsers() {
                   <span className={cn('inline-flex px-2 py-0.5 rounded-full text-xs font-bold', roleBadge[u.role])}>
                     {roleLabel[u.role]}
                   </span>
+                  {((u.permissoesExtras?.length || 0) + (u.permissoesBloqueadas?.length || 0)) > 0 && (
+                    <p className="text-[10px] text-primary mt-1 flex items-center gap-1">
+                      <Shield className="h-3 w-3" /> permissões individuais
+                    </p>
+                  )}
                 </td>
                 <td className="px-5 py-3">
                   <span className="text-sm font-mono-data text-muted-foreground">{u.guiche || '—'}</span>
