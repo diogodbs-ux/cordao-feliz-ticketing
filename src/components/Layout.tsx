@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBadge from '@/components/OfflineBadge';
-import { readPermissoes } from '@/lib/permissoes';
+import { getAllowedPathsForUser } from '@/lib/permissoes';
 
 type NavItem = { label: string; icon: any; path: string };
 
@@ -55,7 +55,7 @@ export default function Layout() {
 
   if (!user) return null;
 
-  const allowed = readPermissoes()[user.role] || [];
+  const allowed = getAllowedPathsForUser(user);
   // Mantém ordem original de ALL_NAV; usa o primeiro label encontrado para cada path permitido
   const seen = new Set<string>();
   const navItems = ALL_NAV.filter(item => {
