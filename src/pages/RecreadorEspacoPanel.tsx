@@ -4,10 +4,10 @@ import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
+import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos, subscribeEspacosChange } from '@/types/espacos';
 import { CordaoColor, getCordaoLabel } from '@/types';
-import { registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes } from '@/types/cordoes';
-import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine, Trash2 } from 'lucide-react';
+import { CordaoUnidade, registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes, subscribeCordoesChange } from '@/types/cordoes';
+import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine, Trash2, Clock, Users, Baby, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -27,13 +27,36 @@ export default function RecreadorEspacoPanel() {
   const [protocoloInput, setProtocoloInput] = useState('');
   const [codigoInput, setCodigoInput] = useState('');
   const [codigosCiclo, setCodigosCiclo] = useState<{ codigo: string; cor: CordaoColor; nome?: string }[]>([]);
-  const [cordoesDisponiveis, setCordoesDisponiveis] = useState<{ codigo: string; nome?: string }[]>([]);
+  const [cordoesBase, setCordoesBase] = useState<CordaoUnidade[]>([]);
+  const [cordoesDisponiveis, setCordoesDisponiveis] = useState<{ codigo: string; nome?: string; protocolo?: string; cor: CordaoColor; tipo?: string }[]>([]);
   const codigoInputRef = useRef<HTMLInputElement>(null);
   const [erroCodigo, setErroCodigo] = useState<string | null>(null);
+  const [agora, setAgora] = useState(() => Date.now());
 
   useEffect(() => {
-    setEspacos(readEspacos().filter(e => e.ativo));
-    setCiclos(readCiclos());
+    const carregar = () => {
+      const ativos = readEspacos().filter(e => e.ativo);
+      const todosCiclos = readCiclos();
+      setEspacos(ativos);
+      setCiclos(todosCiclos);
+      setCordoesBase(readCordoes());
+      if (!cicloAtual && user) {
+        const ativo = todosCiclos.find(c => !c.fim && c.recreadorId === user.id);
+        if (ativo) {
+          setCicloAtual(ativo);
+          setEspacoId(ativo.espacoId);
+        }
+      }
+    };
+    carregar();
+    const offEspacos = subscribeEspacosChange(carregar);
+    const offCordoes = subscribeCordoesChange(carregar);
+    return () => { offEspacos(); offCordoes(); };
+  }, [cicloAtual, user]);
+
+  useEffect(() => {
+    const id = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   // Cordões já entregues hoje (autocomplete) — recarrega quando ciclo muda
