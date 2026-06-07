@@ -87,6 +87,14 @@ export default function RecreadorEspacoPanel() {
   const duracaoCicloSeg = cicloAtual ? Math.max(0, Math.floor((agora - new Date(cicloAtual.inicio).getTime()) / 1000)) : 0;
   const duracaoLabel = `${String(Math.floor(duracaoCicloSeg / 60)).padStart(2, '0')}:${String(duracaoCicloSeg % 60).padStart(2, '0')}`;
 
+  useEffect(() => {
+    if (!cicloAtual) { setCodigosCiclo([]); return; }
+    const registrados = cordoesBase
+      .filter(c => (c.visitas || []).some(v => v.cicloId === cicloAtual.id))
+      .map(c => ({ codigo: c.codigo, cor: c.cor, nome: c.membroNome }));
+    setCodigosCiclo(registrados);
+  }, [cicloAtual?.id, cordoesBase]);
+
   const persistCiclos = (next: CicloEspaco[]) => {
     writeCiclos(next);
     setCiclos(next);
@@ -170,6 +178,19 @@ export default function RecreadorEspacoPanel() {
       return;
     }
     const code = formatCodigo(parsed.cor, parsed.numero);
+    const existente = getCordaoByCodigo(code);
+    if (!existente) {
+      const msg = `Cordão ${code} não cadastrado no estoque. Gere o lote em Admin → Cordões Numerados.`;
+      setErroCodigo(msg);
+      toast.error(msg);
+      return;
+    }
+    if (existente.status !== 'entregue' || !existente.protocolo) {
+      const msg = `Cordão ${code} ainda não foi entregue no guichê.`;
+      setErroCodigo(msg);
+      toast.error(msg);
+      return;
+    }
     if (codigosCiclo.some(c => c.codigo === code)) {
       setErroCodigo(`${code} já registrado neste ciclo.`);
       toast.info(`${code} já registrado neste ciclo.`);
@@ -187,7 +208,7 @@ export default function RecreadorEspacoPanel() {
       toast.error(r.erro);
       return;
     }
-    const cord = getCordaoByCodigo(code);
+    const cord = getCordaoByCodigo(code) || existente;
     setCodigosCiclo(prev => [...prev, { codigo: code, cor: parsed.cor, nome: cord?.membroNome }]);
     // Auto-incrementa contagem por cor
     const next = { ...cicloAtual };
@@ -198,7 +219,7 @@ export default function RecreadorEspacoPanel() {
       next.porCor = { ...next.porCor, [parsed.cor]: v };
       next.totalCriancas = CORES_CRIANCA.reduce((a, c) => a + (next.porCor[c] || 0), 0);
     }
-    setCicloAtual(next);
+    salvarCicloAtual(next);
     setCodigoInput('');
     toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
     // Auto-foco no próximo
@@ -224,7 +245,7 @@ export default function RecreadorEspacoPanel() {
       numCriancas: grupo?.responsavel.criancas.length,
       registradoEm: new Date().toISOString(),
     };
-    setCicloAtual({ ...cicloAtual, protocolos: [...(cicloAtual.protocolos || []), visita] });
+    salvarCicloAtual({ ...cicloAtual, protocolos: [...(cicloAtual.protocolos || []), visita] });
     setProtocoloInput('');
     toast.success(grupo ? `Grupo "${grupo.responsavel.nome}" adicionado` : `Protocolo ${p} registrado`);
   };

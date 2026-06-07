@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CordaoUnidade, readCordoes, parseCodigo, formatCodigo, cordoesPorProtocolo } from '@/types/cordoes';
+import { CordaoUnidade, readCordoes, parseCodigo, formatCodigo, cordoesPorProtocolo, subscribeCordoesChange } from '@/types/cordoes';
 import { CordaoColor, getCordaoTailwindBg, getCordaoTailwindText } from '@/types';
 import { Search, MapPin, Clock, User, Hash, ArrowRight, Download, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,11 @@ export default function JornadaCordoes() {
   const [filtroCor, setFiltroCor] = useState<'todas' | CordaoColor>('todas');
   const [semFiltroData, setSemFiltroData] = useState(false);
 
-  useEffect(() => { setTodos(readCordoes()); }, []);
+  useEffect(() => {
+    const refresh = () => setTodos(readCordoes());
+    refresh();
+    return subscribeCordoesChange(refresh);
+  }, []);
 
   const resultados = useMemo(() => {
     let base = todos;

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   CordaoUnidade, LoteCordao, gerarLote, readCordoes, readLotes,
-  formatCodigo, prefixoCor,
+  formatCodigo, prefixoCor, subscribeCordoesChange,
 } from '@/types/cordoes';
 import { CordaoColor, getCordaoLabel, getCordaoTailwindBg, getCordaoTailwindText } from '@/types';
 import { Printer, Plus, Tag, Layers, Search } from 'lucide-react';
@@ -29,7 +29,10 @@ export default function AdminCordoes() {
   const [busca, setBusca] = useState('');
 
   const refresh = () => { setCordoes(readCordoes()); setLotes(readLotes()); };
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    return subscribeCordoesChange(refresh);
+  }, []);
 
   const stats = useMemo(() => {
     const acc: Record<CordaoColor, { total: number; entregues: number; disponiveis: number }> = {} as any;
