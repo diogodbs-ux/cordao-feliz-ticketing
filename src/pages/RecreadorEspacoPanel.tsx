@@ -59,27 +59,46 @@ export default function RecreadorEspacoPanel() {
     return () => clearInterval(id);
   }, []);
 
-  // Cordões já entregues hoje (autocomplete) — recarrega quando ciclo muda
-  useEffect(() => {
-    const carregar = () => {
-      const hoje = new Date().toLocaleDateString('pt-BR');
-      const list = readCordoes()
-        .filter(c => c.status === 'entregue' && c.vinculadoEm
-          && new Date(c.vinculadoEm).toLocaleDateString('pt-BR') === hoje)
-        .map(c => ({ codigo: c.codigo, nome: c.membroNome }));
-      setCordoesDisponiveis(list);
-    };
-    carregar();
-    const id = setInterval(carregar, 8000);
-    window.addEventListener('storage', carregar);
-    return () => { clearInterval(id); window.removeEventListener('storage', carregar); };
-  }, [cicloAtual?.id]);
-
   const espaco = espacos.find(e => e.id === espacoId);
+
+  const cordoesEntregues = useMemo(() => {
+    const entregues = cordoesBase.filter(c => c.status === 'entregue' && c.protocolo);
+    return entregues.map(c => ({
+      codigo: c.codigo,
+      nome: c.membroNome,
+      protocolo: c.protocolo,
+      cor: c.cor,
+      tipo: c.membroTipo,
+    }));
+  }, [cordoesBase]);
+
+  useEffect(() => {
+    setCordoesDisponiveis(cordoesEntregues);
+  }, [cordoesEntregues]);
+
+  const sugestoesCodigo = useMemo(() => {
+    const q = codigoInput.trim().toLowerCase();
+    return cordoesDisponiveis
+      .filter(c => !codigosCiclo.some(x => x.codigo === c.codigo))
+      .filter(c => !q || c.codigo.toLowerCase().includes(q) || (c.nome || '').toLowerCase().includes(q) || (c.protocolo || '').toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [codigoInput, cordoesDisponiveis, codigosCiclo]);
+
+  const duracaoCicloSeg = cicloAtual ? Math.max(0, Math.floor((agora - new Date(cicloAtual.inicio).getTime()) / 1000)) : 0;
+  const duracaoLabel = `${String(Math.floor(duracaoCicloSeg / 60)).padStart(2, '0')}:${String(duracaoCicloSeg % 60).padStart(2, '0')}`;
 
   const persistCiclos = (next: CicloEspaco[]) => {
     writeCiclos(next);
     setCiclos(next);
+  };
+
+  const salvarCicloAtual = (ciclo: CicloEspaco) => {
+    const fresh = readCiclos();
+    const next = fresh.some(c => c.id === ciclo.id)
+      ? fresh.map(c => c.id === ciclo.id ? ciclo : c)
+      : [...fresh, ciclo];
+    persistCiclos(next);
+    setCicloAtual(ciclo);
   };
 
   const iniciarCiclo = () => {
@@ -95,7 +114,7 @@ export default function RecreadorEspacoPanel() {
       totalCriancas: 0,
       totalAdultos: 0,
     };
-    setCicloAtual(novo);
+    salvarCicloAtual(novo);
     toast.success(`Ciclo iniciado em ${espaco.nome}`);
   };
 
@@ -110,7 +129,7 @@ export default function RecreadorEspacoPanel() {
       next.totalCriancas = CORES_CRIANCA.reduce((a, c) => a + (next.porCor[c] || 0), 0)
         + (next.porCor.rosa || 0) * 0; // rosa não é criança
     }
-    setCicloAtual(next);
+    salvarCicloAtual(next);
   };
 
   const finalizar = () => {
@@ -119,7 +138,7 @@ export default function RecreadorEspacoPanel() {
       if (!confirm('Ciclo está vazio. Finalizar mesmo assim?')) return;
     }
     const finalizado: CicloEspaco = { ...cicloAtual, fim: new Date().toISOString() };
-    persistCiclos([...ciclos, finalizado]);
+    persistCiclos(readCiclos().map(c => c.id === cicloAtual.id ? finalizado : c));
     // Marca saída de todos os cordões registrados neste ciclo
     const saidas = fecharSaidasDoCiclo(cicloAtual.id);
     setCicloAtual(null);
@@ -131,6 +150,7 @@ export default function RecreadorEspacoPanel() {
 
   const cancelar = () => {
     if (confirm('Descartar este ciclo? A contagem será perdida.')) {
+      persistCiclos(readCiclos().filter(c => c.id !== cicloAtual?.id));
       setCicloAtual(null);
       setProtocoloInput('');
       setCodigoInput('');
