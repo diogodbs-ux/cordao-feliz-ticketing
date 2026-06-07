@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CordaoUnidade, readCordoes, parseCodigo, formatCodigo, cordoesPorProtocolo } from '@/types/cordoes';
+import { CordaoUnidade, readCordoes, parseCodigo, formatCodigo, cordoesPorProtocolo, subscribeCordoesChange } from '@/types/cordoes';
 import { CordaoColor, getCordaoTailwindBg, getCordaoTailwindText } from '@/types';
 import { Search, MapPin, Clock, User, Hash, ArrowRight, Download, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,18 +11,22 @@ import { toast } from 'sonner';
 
 const CORES: CordaoColor[] = ['azul', 'verde', 'amarelo', 'vermelho', 'rosa', 'cinza', 'preto'];
 
-function toISO(d: Date) { return d.toISOString().slice(0, 10); }
+function toISO(d: Date) { return d.toLocaleDateString("en-CA"); }
 
 export default function JornadaCordoes() {
   const [todos, setTodos] = useState<CordaoUnidade[]>([]);
   const [busca, setBusca] = useState('');
-  const hojeISO = toISO(new Date());
+  const hojeISO = new Date().toLocaleDateString("en-CA");
   const [dataDe, setDataDe] = useState<string>(hojeISO);
   const [dataAte, setDataAte] = useState<string>(hojeISO);
   const [filtroCor, setFiltroCor] = useState<'todas' | CordaoColor>('todas');
-  const [semFiltroData, setSemFiltroData] = useState(false);
+  const [semFiltroData, setSemFiltroData] = useState(true);
 
-  useEffect(() => { setTodos(readCordoes()); }, []);
+  useEffect(() => {
+    const refresh = () => setTodos(readCordoes());
+    refresh();
+    return subscribeCordoesChange(refresh);
+  }, []);
 
   const resultados = useMemo(() => {
     let base = todos;
@@ -56,9 +60,9 @@ export default function JornadaCordoes() {
     if (!semFiltroData && (dataDe || dataAte)) {
       base = base.filter(c => {
         const visitas = c.visitas || [];
-        const vinc = c.vinculadoEm ? c.vinculadoEm.slice(0, 10) : null;
+        const vinc = c.vinculadoEm ? new Date(c.vinculadoEm).toLocaleDateString("en-CA") : null;
         const datasISO = [
-          ...visitas.map(v => v.entrada.slice(0, 10)),
+          ...visitas.map(v => new Date(v.entrada).toLocaleDateString("en-CA")),
           ...(vinc ? [vinc] : []),
         ];
         if (datasISO.length === 0) return false;
@@ -67,8 +71,13 @@ export default function JornadaCordoes() {
     }
 
     if (!q) {
-      base = [...base].filter(c => (c.visitas?.length || 0) > 0)
-        .sort((a, b) => (b.visitas?.length || 0) - (a.visitas?.length || 0));
+      base = [...base]
+        .filter(c => (c.visitas?.length || 0) > 0)
+        .sort((a, b) => {
+          const ultimaB = b.visitas?.[b.visitas.length - 1]?.entrada || b.vinculadoEm || '';
+          const ultimaA = a.visitas?.[a.visitas.length - 1]?.entrada || a.vinculadoEm || '';
+          return ultimaB.localeCompare(ultimaA);
+        });
     }
     return base.slice(0, 200);
   }, [busca, todos, dataDe, dataAte, filtroCor, semFiltroData]);
@@ -202,7 +211,7 @@ export default function JornadaCordoes() {
         <div className="bg-card rounded-xl shadow-card p-12 text-center">
           <MapPin className="h-10 w-10 mx-auto text-muted-foreground opacity-30 mb-3" />
           <p className="text-sm text-muted-foreground">
-            {busca ? 'Nenhum cordão encontrado para os filtros aplicados.' : 'Ainda não há cordões com visitas registradas.'}
+            {busca || !semFiltroData ? 'Nenhum cordão encontrado para os filtros aplicados.' : 'Ainda não há cordões com visitas registradas. O percurso aparece depois que o recreador escaneia/digita cordões entregues em Meu Espaço.'}
           </p>
         </div>
       ) : (

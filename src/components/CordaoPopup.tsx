@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { CheckCircle2, Accessibility, X, Printer, Tag, ScanLine, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { imprimirCordoes, CordaoPrintItem } from '@/lib/print';
-import { CordaoUnidade, vincularCordao, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes } from '@/types/cordoes';
+import { CordaoUnidade, vincularCordao, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes, subscribeCordoesChange } from '@/types/cordoes';
 import { toast } from 'sonner';
 
 interface CordaoPopupProps {
@@ -38,8 +38,10 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
   useEffect(() => { setMembros(buildMembros(grupo)); setVincularAtivo(false); setCordoesBase(readCordoes()); }, [grupo?.id]);
   useEffect(() => {
     const refresh = () => setCordoesBase(readCordoes());
-    window.addEventListener('storage', refresh);
-    return () => window.removeEventListener('storage', refresh);
+    refresh();
+    const unsubscribe = subscribeCordoesChange(refresh);
+    const id = setInterval(refresh, 1500);
+    return () => { unsubscribe(); clearInterval(id); };
   }, []);
 
   if (!grupo) return null;
@@ -81,8 +83,8 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
       setMembros(prev => prev.map(m => m.key === key ? { ...m, codigoCordao: '' } : m));
       return;
     }
-    if (existente.status === 'entregue' && existente.protocolo && existente.protocolo !== (grupo.responsavel.protocolo || grupo.id)) {
-      toast.error(`Cordão ${code} já está entregue ao protocolo ${existente.protocolo}.`);
+    if (existente.protocolo && existente.protocolo !== (grupo.responsavel.protocolo || grupo.id)) {
+      toast.error(`Cordão ${code} pertence ao protocolo ${existente.protocolo}. Use esse protocolo para localizar o responsável correto.`);
       setMembros(prev => prev.map(m => m.key === key ? { ...m, codigoCordao: '' } : m));
       return;
     }
@@ -113,6 +115,7 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
           grupoId: grupo.id,
           membroNome: m.nome,
           membroTipo: m.membroTipo,
+          membroIdade: m.idade,
         });
         if (r.ok === false) erros.push(r.erro);
       });

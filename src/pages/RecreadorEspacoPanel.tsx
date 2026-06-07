@@ -4,10 +4,10 @@ import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos } from '@/types/espacos';
+import { EspacoLudico, CicloEspaco, VisitaProtocolo, readEspacos, readCiclos, writeCiclos, subscribeEspacosChange } from '@/types/espacos';
 import { CordaoColor, getCordaoLabel } from '@/types';
-import { registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes } from '@/types/cordoes';
-import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine, Trash2 } from 'lucide-react';
+import { CordaoUnidade, registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes, subscribeCordoesChange } from '@/types/cordoes';
+import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine, Trash2, Clock, Users, Baby, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -27,36 +27,86 @@ export default function RecreadorEspacoPanel() {
   const [protocoloInput, setProtocoloInput] = useState('');
   const [codigoInput, setCodigoInput] = useState('');
   const [codigosCiclo, setCodigosCiclo] = useState<{ codigo: string; cor: CordaoColor; nome?: string }[]>([]);
-  const [cordoesDisponiveis, setCordoesDisponiveis] = useState<{ codigo: string; nome?: string }[]>([]);
+  const [cordoesBase, setCordoesBase] = useState<CordaoUnidade[]>([]);
+  const [cordoesDisponiveis, setCordoesDisponiveis] = useState<{ codigo: string; nome?: string; protocolo?: string; cor: CordaoColor; tipo?: string }[]>([]);
   const codigoInputRef = useRef<HTMLInputElement>(null);
   const [erroCodigo, setErroCodigo] = useState<string | null>(null);
+  const [agora, setAgora] = useState(() => Date.now());
 
-  useEffect(() => {
-    setEspacos(readEspacos().filter(e => e.ativo));
-    setCiclos(readCiclos());
-  }, []);
-
-  // Cordões já entregues hoje (autocomplete) — recarrega quando ciclo muda
   useEffect(() => {
     const carregar = () => {
-      const hoje = new Date().toLocaleDateString('pt-BR');
-      const list = readCordoes()
-        .filter(c => c.status === 'entregue' && c.vinculadoEm
-          && new Date(c.vinculadoEm).toLocaleDateString('pt-BR') === hoje)
-        .map(c => ({ codigo: c.codigo, nome: c.membroNome }));
-      setCordoesDisponiveis(list);
+      const ativos = readEspacos().filter(e => e.ativo);
+      const todosCiclos = readCiclos();
+      setEspacos(ativos);
+      setCiclos(todosCiclos);
+      setCordoesBase(readCordoes());
+      if (!cicloAtual && user) {
+        const ativo = todosCiclos.find(c => !c.fim && c.recreadorId === user.id);
+        if (ativo) {
+          setCicloAtual(ativo);
+          setEspacoId(ativo.espacoId);
+        }
+      }
     };
     carregar();
-    const id = setInterval(carregar, 8000);
-    window.addEventListener('storage', carregar);
-    return () => { clearInterval(id); window.removeEventListener('storage', carregar); };
-  }, [cicloAtual?.id]);
+    const offEspacos = subscribeEspacosChange(carregar);
+    const offCordoes = subscribeCordoesChange(carregar);
+    return () => { offEspacos(); offCordoes(); };
+  }, [cicloAtual, user]);
+
+  useEffect(() => {
+    const id = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const espaco = espacos.find(e => e.id === espacoId);
+
+  const cordoesEntregues = useMemo(() => {
+    const entregues = cordoesBase.filter(c => c.status === 'entregue' && c.protocolo);
+    return entregues.map(c => ({
+      codigo: c.codigo,
+      nome: c.membroNome,
+      protocolo: c.protocolo,
+      cor: c.cor,
+      tipo: c.membroTipo,
+    }));
+  }, [cordoesBase]);
+
+  useEffect(() => {
+    setCordoesDisponiveis(cordoesEntregues);
+  }, [cordoesEntregues]);
+
+  const sugestoesCodigo = useMemo(() => {
+    const q = codigoInput.trim().toLowerCase();
+    return cordoesDisponiveis
+      .filter(c => !codigosCiclo.some(x => x.codigo === c.codigo))
+      .filter(c => !q || c.codigo.toLowerCase().includes(q) || (c.nome || '').toLowerCase().includes(q) || (c.protocolo || '').toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [codigoInput, cordoesDisponiveis, codigosCiclo]);
+
+  const duracaoCicloSeg = cicloAtual ? Math.max(0, Math.floor((agora - new Date(cicloAtual.inicio).getTime()) / 1000)) : 0;
+  const duracaoLabel = `${String(Math.floor(duracaoCicloSeg / 60)).padStart(2, '0')}:${String(duracaoCicloSeg % 60).padStart(2, '0')}`;
+
+  useEffect(() => {
+    if (!cicloAtual) { setCodigosCiclo([]); return; }
+    const registrados = cordoesBase
+      .filter(c => (c.visitas || []).some(v => v.cicloId === cicloAtual.id))
+      .map(c => ({ codigo: c.codigo, cor: c.cor, nome: c.membroNome }));
+    setCodigosCiclo(registrados);
+  }, [cicloAtual?.id, cordoesBase]);
 
   const persistCiclos = (next: CicloEspaco[]) => {
     writeCiclos(next);
     setCiclos(next);
+  };
+
+  const salvarCicloAtual = (ciclo: CicloEspaco) => {
+    const fresh = readCiclos();
+    const next = fresh.some(c => c.id === ciclo.id)
+      ? fresh.map(c => c.id === ciclo.id ? ciclo : c)
+      : [...fresh, ciclo];
+    persistCiclos(next);
+    setCicloAtual(ciclo);
   };
 
   const iniciarCiclo = () => {
@@ -72,7 +122,7 @@ export default function RecreadorEspacoPanel() {
       totalCriancas: 0,
       totalAdultos: 0,
     };
-    setCicloAtual(novo);
+    salvarCicloAtual(novo);
     toast.success(`Ciclo iniciado em ${espaco.nome}`);
   };
 
@@ -87,7 +137,7 @@ export default function RecreadorEspacoPanel() {
       next.totalCriancas = CORES_CRIANCA.reduce((a, c) => a + (next.porCor[c] || 0), 0)
         + (next.porCor.rosa || 0) * 0; // rosa não é criança
     }
-    setCicloAtual(next);
+    salvarCicloAtual(next);
   };
 
   const finalizar = () => {
@@ -96,7 +146,7 @@ export default function RecreadorEspacoPanel() {
       if (!confirm('Ciclo está vazio. Finalizar mesmo assim?')) return;
     }
     const finalizado: CicloEspaco = { ...cicloAtual, fim: new Date().toISOString() };
-    persistCiclos([...ciclos, finalizado]);
+    persistCiclos(readCiclos().map(c => c.id === cicloAtual.id ? finalizado : c));
     // Marca saída de todos os cordões registrados neste ciclo
     const saidas = fecharSaidasDoCiclo(cicloAtual.id);
     setCicloAtual(null);
@@ -108,6 +158,7 @@ export default function RecreadorEspacoPanel() {
 
   const cancelar = () => {
     if (confirm('Descartar este ciclo? A contagem será perdida.')) {
+      persistCiclos(readCiclos().filter(c => c.id !== cicloAtual?.id));
       setCicloAtual(null);
       setProtocoloInput('');
       setCodigoInput('');
@@ -127,6 +178,19 @@ export default function RecreadorEspacoPanel() {
       return;
     }
     const code = formatCodigo(parsed.cor, parsed.numero);
+    const existente = getCordaoByCodigo(code);
+    if (!existente) {
+      const msg = `Cordão ${code} não cadastrado no estoque. Gere o lote em Admin → Cordões Numerados.`;
+      setErroCodigo(msg);
+      toast.error(msg);
+      return;
+    }
+    if (existente.status !== 'entregue' || !existente.protocolo) {
+      const msg = `Cordão ${code} ainda não foi entregue no guichê.`;
+      setErroCodigo(msg);
+      toast.error(msg);
+      return;
+    }
     if (codigosCiclo.some(c => c.codigo === code)) {
       setErroCodigo(`${code} já registrado neste ciclo.`);
       toast.info(`${code} já registrado neste ciclo.`);
@@ -144,7 +208,7 @@ export default function RecreadorEspacoPanel() {
       toast.error(r.erro);
       return;
     }
-    const cord = getCordaoByCodigo(code);
+    const cord = getCordaoByCodigo(code) || existente;
     setCodigosCiclo(prev => [...prev, { codigo: code, cor: parsed.cor, nome: cord?.membroNome }]);
     // Auto-incrementa contagem por cor
     const next = { ...cicloAtual };
@@ -155,7 +219,7 @@ export default function RecreadorEspacoPanel() {
       next.porCor = { ...next.porCor, [parsed.cor]: v };
       next.totalCriancas = CORES_CRIANCA.reduce((a, c) => a + (next.porCor[c] || 0), 0);
     }
-    setCicloAtual(next);
+    salvarCicloAtual(next);
     setCodigoInput('');
     toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
     // Auto-foco no próximo
@@ -181,14 +245,14 @@ export default function RecreadorEspacoPanel() {
       numCriancas: grupo?.responsavel.criancas.length,
       registradoEm: new Date().toISOString(),
     };
-    setCicloAtual({ ...cicloAtual, protocolos: [...(cicloAtual.protocolos || []), visita] });
+    salvarCicloAtual({ ...cicloAtual, protocolos: [...(cicloAtual.protocolos || []), visita] });
     setProtocoloInput('');
     toast.success(grupo ? `Grupo "${grupo.responsavel.nome}" adicionado` : `Protocolo ${p} registrado`);
   };
 
   const removerProtocolo = (proto: string) => {
     if (!cicloAtual) return;
-    setCicloAtual({ ...cicloAtual, protocolos: (cicloAtual.protocolos || []).filter(x => x.protocolo !== proto) });
+    salvarCicloAtual({ ...cicloAtual, protocolos: (cicloAtual.protocolos || []).filter(x => x.protocolo !== proto) });
   };
 
   const hojeReal = new Date().toLocaleDateString('pt-BR');
@@ -202,6 +266,30 @@ export default function RecreadorEspacoPanel() {
     ciclosHoje.forEach(c => { acc.criancas += c.totalCriancas; acc.adultos += c.totalAdultos; });
     return acc;
   }, [ciclosHoje]);
+
+  const painelEspacos = useMemo(() => espacos.map(e => {
+    const cs = ciclos.filter(c => c.espacoId === e.id && new Date(c.inicio).toLocaleDateString('pt-BR') === hojeReal);
+    const visitas = cordoesBase.flatMap(c => (c.visitas || [])
+      .filter(v => v.espacoId === e.id && new Date(v.entrada).toLocaleDateString('pt-BR') === hojeReal)
+      .map(v => ({ cordao: c, visita: v })));
+    const idades = { '0-3': 0, '4-6': 0, '7-9': 0, '10-12': 0 };
+    visitas.forEach(({ cordao }) => {
+      const idade = cordao.membroIdade;
+      if (idade === undefined || cordao.membroTipo !== 'crianca') return;
+      if (idade <= 3) idades['0-3']++;
+      else if (idade <= 6) idades['4-6']++;
+      else if (idade <= 9) idades['7-9']++;
+      else idades['10-12']++;
+    });
+    return {
+      espaco: e,
+      ciclos: cs.length,
+      criancas: cs.reduce((a, c) => a + c.totalCriancas, 0),
+      adultos: cs.reduce((a, c) => a + c.totalAdultos, 0),
+      rastreados: visitas.length,
+      idades,
+    };
+  }).sort((a, b) => b.criancas - a.criancas || b.ciclos - a.ciclos), [espacos, ciclos, cordoesBase, hojeReal]);
 
   if (espacos.length === 0) {
     return (
@@ -250,7 +338,7 @@ export default function RecreadorEspacoPanel() {
         </div>
       ) : (
         <div className="bg-card rounded-2xl shadow-elevated p-6 space-y-5 border-2 border-primary/40">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-xs uppercase tracking-wider text-cordao-verde font-bold flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-cordao-verde animate-pulse" /> Ciclo em andamento
@@ -261,9 +349,15 @@ export default function RecreadorEspacoPanel() {
                 {espaco?.capacidadeCiclo && ` · Cap.: ${espaco.capacidadeCiclo}`}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-4xl font-bold font-mono-data text-primary">{cicloAtual.totalCriancas}</p>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">crianças</p>
+            <div className="flex items-center gap-3 ml-auto">
+              <div className="rounded-xl bg-secondary/50 border border-border px-4 py-2 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-center gap-1"><Clock className="h-3 w-3" /> tempo</p>
+                <p className="text-2xl font-bold font-mono-data text-foreground">{duracaoLabel}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-4xl font-bold font-mono-data text-primary">{cicloAtual.totalCriancas}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">crianças</p>
+              </div>
             </div>
           </div>
 
@@ -299,6 +393,7 @@ export default function RecreadorEspacoPanel() {
             <p className="text-xs uppercase tracking-wider text-primary font-bold flex items-center gap-1.5">
               <ScanLine className="h-3 w-3" /> Rastreio por cordão — escaneie/digite cada código
             </p>
+            <p className="text-[10px] text-muted-foreground">O cordão precisa estar vinculado no Check-in; digite código, nome ou protocolo para aparecer abaixo.</p>
             <div className="flex gap-2">
               <Input
                 ref={codigoInputRef}
@@ -326,8 +421,23 @@ export default function RecreadorEspacoPanel() {
               <p className="text-[11px] text-cordao-vermelho font-medium">⚠ {erroCodigo}</p>
             )}
             <p className="text-[10px] text-muted-foreground">
-              {cordoesDisponiveis.length} cordão(ões) entregue(s) hoje · sugestões automáticas no campo
+              {cordoesDisponiveis.length} cordão(ões) entregue(s) no estoque · {sugestoesCodigo.length} sugestão(ões)
             </p>
+            {codigoInput.trim() && sugestoesCodigo.length > 0 && (
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {sugestoesCodigo.map(c => (
+                  <button
+                    key={c.codigo}
+                    type="button"
+                    onClick={() => { setCodigoInput(c.codigo); setErroCodigo(null); setTimeout(() => codigoInputRef.current?.focus(), 30); }}
+                    className="text-left rounded-lg border border-border bg-secondary/40 px-3 py-2 hover:bg-secondary transition-colors"
+                  >
+                    <span className="font-mono-data text-xs font-bold text-foreground">{c.codigo}</span>
+                    <span className="text-xs text-muted-foreground"> · {c.nome || 'sem nome'}{c.protocolo ? ` · ${c.protocolo}` : ''}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {codigosCiclo.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {codigosCiclo.map(c => (
@@ -422,6 +532,48 @@ export default function RecreadorEspacoPanel() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Indicadores por espaço */}
+      <div className="bg-card rounded-xl shadow-card p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          Operação por espaço — hoje
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+          <Stat label="Espaços ativos" value={espacos.length} />
+          <Stat label="Ciclos" value={painelEspacos.reduce((a, p) => a + p.ciclos, 0)} />
+          <Stat label="Crianças" value={painelEspacos.reduce((a, p) => a + p.criancas, 0)} />
+          <Stat label="Cordões lidos" value={painelEspacos.reduce((a, p) => a + p.rastreados, 0)} />
+        </div>
+        <div className="space-y-2 max-h-80 overflow-auto">
+          {painelEspacos.slice(0, 10).map(p => (
+            <div key={p.espaco.id} className="rounded-lg border border-border bg-secondary/30 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{p.espaco.nome}</p>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {p.ciclos} ciclo(s)</span>
+                    <span className="inline-flex items-center gap-1"><Baby className="h-3 w-3" /> {p.criancas} criança(s)</span>
+                    <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" /> {p.adultos} adulto(s)</span>
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-lg font-bold font-mono-data text-primary">{p.rastreados}</p>
+                  <p className="text-[9px] uppercase text-muted-foreground">lidos</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5 mt-3">
+                {Object.entries(p.idades).map(([faixa, qtd]) => (
+                  <div key={faixa} className="bg-card rounded-md px-2 py-1 text-center border border-border/60">
+                    <p className="text-[9px] text-muted-foreground">{faixa} anos</p>
+                    <p className="text-sm font-bold font-mono-data text-foreground">{qtd}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

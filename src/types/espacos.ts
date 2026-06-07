@@ -64,16 +64,34 @@ export function buildJornadas(ciclos: CicloEspaco[]): Map<string, JornadaProtoco
 
 const STORAGE_ESPACOS = 'sentinela_espacos';
 const STORAGE_CICLOS = 'sentinela_ciclos_espaco';
+const EVENT_ESPACOS_CHANGED = 'sentinela:espacos-changed';
+const EVENT_CICLOS_CHANGED = 'sentinela:ciclos-changed';
 
 export function readEspacos(): EspacoLudico[] {
   try { return JSON.parse(localStorage.getItem(STORAGE_ESPACOS) || '[]'); } catch { return []; }
 }
 export function writeEspacos(list: EspacoLudico[]) {
   localStorage.setItem(STORAGE_ESPACOS, JSON.stringify(list));
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(EVENT_ESPACOS_CHANGED));
 }
 export function readCiclos(): CicloEspaco[] {
   try { return JSON.parse(localStorage.getItem(STORAGE_CICLOS) || '[]'); } catch { return []; }
 }
 export function writeCiclos(list: CicloEspaco[]) {
   localStorage.setItem(STORAGE_CICLOS, JSON.stringify(list));
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(EVENT_CICLOS_CHANGED));
+}
+
+export function subscribeEspacosChange(callback: () => void) {
+  const onStorage = (e: StorageEvent) => {
+    if (!e.key || e.key === STORAGE_ESPACOS || e.key === STORAGE_CICLOS) callback();
+  };
+  window.addEventListener(EVENT_ESPACOS_CHANGED, callback);
+  window.addEventListener(EVENT_CICLOS_CHANGED, callback);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    window.removeEventListener(EVENT_ESPACOS_CHANGED, callback);
+    window.removeEventListener(EVENT_CICLOS_CHANGED, callback);
+    window.removeEventListener('storage', onStorage);
+  };
 }
