@@ -298,6 +298,7 @@ export default function RecreadorEspacoPanel() {
           <div className="border-t border-border pt-4 space-y-2">
             <p className="text-xs uppercase tracking-wider text-primary font-bold flex items-center gap-1.5">
               <ScanLine className="h-3 w-3" /> Rastreio por cordão — escaneie/digite cada código
+            <p className="text-[10px] text-primary/70 font-medium italic">Nota: O cordão deve ter sido vinculado ao grupo no Check-in para ser reconhecido aqui.</p>
             </p>
             <div className="flex gap-2">
               <Input

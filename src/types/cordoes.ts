@@ -169,7 +169,7 @@ export function registrarEntradaEspaco(
   if (idx < 0) return { ok: false, erro: `Cordão ${code} não cadastrado.` };
   const c = all[idx];
   if (c.status === 'disponivel') {
-    return { ok: false, erro: `Cordão ${code} ainda não foi entregue no guichê.` };
+    return { ok: false, erro: `Cordão ${code} ainda não foi vinculado a um protocolo. Realize o vínculo (Check-in) antes de rastrear nos espaços.` };
   }
   // Evita duplicar entrada no mesmo ciclo
   if ((c.visitas || []).some(v => v.cicloId === visita.cicloId)) {

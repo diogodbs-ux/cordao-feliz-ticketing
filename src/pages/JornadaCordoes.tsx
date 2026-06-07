@@ -56,9 +56,9 @@ export default function JornadaCordoes() {
     if (!semFiltroData && (dataDe || dataAte)) {
       base = base.filter(c => {
         const visitas = c.visitas || [];
-        const vinc = c.vinculadoEm ? c.vinculadoEm.slice(0, 10) : null;
+        const vinc = c.vinculadoEm ? new Date(c.vinculadoEm).toLocaleDateString("en-CA") : null;
         const datasISO = [
-          ...visitas.map(v => v.entrada.slice(0, 10)),
+          ...visitas.map(v => new Date(v.entrada).toLocaleDateString("en-CA")),
           ...(vinc ? [vinc] : []),
         ];
         if (datasISO.length === 0) return false;
