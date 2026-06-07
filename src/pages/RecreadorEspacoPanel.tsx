@@ -252,7 +252,7 @@ export default function RecreadorEspacoPanel() {
 
   const removerProtocolo = (proto: string) => {
     if (!cicloAtual) return;
-    setCicloAtual({ ...cicloAtual, protocolos: (cicloAtual.protocolos || []).filter(x => x.protocolo !== proto) });
+    salvarCicloAtual({ ...cicloAtual, protocolos: (cicloAtual.protocolos || []).filter(x => x.protocolo !== proto) });
   };
 
   const hojeReal = new Date().toLocaleDateString('pt-BR');
@@ -532,6 +532,48 @@ export default function RecreadorEspacoPanel() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Indicadores por espaço */}
+      <div className="bg-card rounded-xl shadow-card p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          Operação por espaço — hoje
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+          <Stat label="Espaços ativos" value={espacos.length} />
+          <Stat label="Ciclos" value={painelEspacos.reduce((a, p) => a + p.ciclos, 0)} />
+          <Stat label="Crianças" value={painelEspacos.reduce((a, p) => a + p.criancas, 0)} />
+          <Stat label="Cordões lidos" value={painelEspacos.reduce((a, p) => a + p.rastreados, 0)} />
+        </div>
+        <div className="space-y-2 max-h-80 overflow-auto">
+          {painelEspacos.slice(0, 10).map(p => (
+            <div key={p.espaco.id} className="rounded-lg border border-border bg-secondary/30 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{p.espaco.nome}</p>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {p.ciclos} ciclo(s)</span>
+                    <span className="inline-flex items-center gap-1"><Baby className="h-3 w-3" /> {p.criancas} criança(s)</span>
+                    <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" /> {p.adultos} adulto(s)</span>
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-lg font-bold font-mono-data text-primary">{p.rastreados}</p>
+                  <p className="text-[9px] uppercase text-muted-foreground">lidos</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5 mt-3">
+                {Object.entries(p.idades).map(([faixa, qtd]) => (
+                  <div key={faixa} className="bg-card rounded-md px-2 py-1 text-center border border-border/60">
+                    <p className="text-[9px] text-muted-foreground">{faixa} anos</p>
+                    <p className="text-sm font-bold font-mono-data text-foreground">{qtd}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
