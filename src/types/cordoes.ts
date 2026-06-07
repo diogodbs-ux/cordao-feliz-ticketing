@@ -18,6 +18,7 @@ export interface CordaoUnidade {
   grupoId?: string;
   membroNome?: string;       // nome da criança (ou "Responsável", "Acompanhante")
   membroTipo?: 'crianca' | 'adulto';
+  membroIdade?: number;
   vinculadoEm?: string;      // ISO
   // Trilha de visitas (preenchida pelo recreador de espaço)
   visitas?: VisitaCordao[];
@@ -45,6 +46,7 @@ export interface LoteCordao {
 
 const STORAGE_CORDOES = 'sentinela_cordoes';
 const STORAGE_LOTES = 'sentinela_cordoes_lotes';
+const EVENT_CORDOES_CHANGED = 'sentinela:cordoes-changed';
 
 const COR_PREFIXO: Record<CordaoColor, string> = {
   azul: 'AZ',
@@ -88,12 +90,26 @@ export function readCordoes(): CordaoUnidade[] {
 }
 export function writeCordoes(list: CordaoUnidade[]) {
   localStorage.setItem(STORAGE_CORDOES, JSON.stringify(list));
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(EVENT_CORDOES_CHANGED));
 }
 export function readLotes(): LoteCordao[] {
   try { return JSON.parse(localStorage.getItem(STORAGE_LOTES) || '[]'); } catch { return []; }
 }
 export function writeLotes(list: LoteCordao[]) {
   localStorage.setItem(STORAGE_LOTES, JSON.stringify(list));
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(EVENT_CORDOES_CHANGED));
+}
+
+export function subscribeCordoesChange(callback: () => void) {
+  const onStorage = (e: StorageEvent) => {
+    if (!e.key || e.key === STORAGE_CORDOES || e.key === STORAGE_LOTES) callback();
+  };
+  window.addEventListener(EVENT_CORDOES_CHANGED, callback);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    window.removeEventListener(EVENT_CORDOES_CHANGED, callback);
+    window.removeEventListener('storage', onStorage);
+  };
 }
 
 /** Próximo número disponível para uma cor (continua a sequência). */
@@ -130,7 +146,7 @@ export function gerarLote(cor: CordaoColor, quantidade: number, criadoPor?: stri
 /** Vincula um cordão a um protocolo (no check-in). Retorna mensagem de erro se houver. */
 export function vincularCordao(
   codigo: string,
-  ctx: { protocolo: string; grupoId: string; membroNome?: string; membroTipo?: 'crianca' | 'adulto' }
+  ctx: { protocolo: string; grupoId: string; membroNome?: string; membroTipo?: 'crianca' | 'adulto'; membroIdade?: number }
 ): { ok: true; cordao: CordaoUnidade } | { ok: false; erro: string } {
   const parsed = parseCodigo(codigo);
   if (!parsed) return { ok: false, erro: `Código inválido: ${codigo}` };
@@ -139,8 +155,8 @@ export function vincularCordao(
   const idx = all.findIndex(c => c.codigo === code);
   if (idx < 0) return { ok: false, erro: `Cordão ${code} não cadastrado. Imprima o lote no Admin.` };
   const c = all[idx];
-  if (c.status === 'entregue' && c.protocolo && c.protocolo !== ctx.protocolo) {
-    return { ok: false, erro: `Cordão ${code} já vinculado ao protocolo ${c.protocolo}.` };
+  if (c.protocolo && c.protocolo !== ctx.protocolo) {
+    return { ok: false, erro: `Cordão ${code} pertence ao protocolo ${c.protocolo}. Protocolo correto deste cordão: ${c.protocolo}.` };
   }
   const updated: CordaoUnidade = {
     ...c,
@@ -149,6 +165,7 @@ export function vincularCordao(
     grupoId: ctx.grupoId,
     membroNome: ctx.membroNome,
     membroTipo: ctx.membroTipo,
+    membroIdade: ctx.membroIdade,
     vinculadoEm: new Date().toISOString(),
   };
   all[idx] = updated;
