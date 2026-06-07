@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 const CORES: CordaoColor[] = ['azul', 'verde', 'amarelo', 'vermelho', 'rosa', 'cinza', 'preto'];
 
-function toISO(d: Date) { return d.toISOString().slice(0, 10); }
+function toISO(d: Date) { return d.toLocaleDateString("en-CA"); }
 
 export default function JornadaCordoes() {
   const [todos, setTodos] = useState<CordaoUnidade[]>([]);
