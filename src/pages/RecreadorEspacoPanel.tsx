@@ -314,7 +314,7 @@ export default function RecreadorEspacoPanel() {
         </div>
       ) : (
         <div className="bg-card rounded-2xl shadow-elevated p-6 space-y-5 border-2 border-primary/40">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-xs uppercase tracking-wider text-cordao-verde font-bold flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-cordao-verde animate-pulse" /> Ciclo em andamento
@@ -325,9 +325,15 @@ export default function RecreadorEspacoPanel() {
                 {espaco?.capacidadeCiclo && ` · Cap.: ${espaco.capacidadeCiclo}`}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-4xl font-bold font-mono-data text-primary">{cicloAtual.totalCriancas}</p>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">crianças</p>
+            <div className="flex items-center gap-3 ml-auto">
+              <div className="rounded-xl bg-secondary/50 border border-border px-4 py-2 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-center gap-1"><Clock className="h-3 w-3" /> tempo</p>
+                <p className="text-2xl font-bold font-mono-data text-foreground">{duracaoLabel}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-4xl font-bold font-mono-data text-primary">{cicloAtual.totalCriancas}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">crianças</p>
+              </div>
             </div>
           </div>
 
@@ -362,8 +368,8 @@ export default function RecreadorEspacoPanel() {
           <div className="border-t border-border pt-4 space-y-2">
             <p className="text-xs uppercase tracking-wider text-primary font-bold flex items-center gap-1.5">
               <ScanLine className="h-3 w-3" /> Rastreio por cordão — escaneie/digite cada código
-            <p className="text-[10px] text-primary/70 font-medium italic">Nota: O cordão deve ter sido vinculado ao grupo no Check-in para ser reconhecido aqui.</p>
             </p>
+            <p className="text-[10px] text-muted-foreground">O cordão precisa estar vinculado no Check-in; digite código, nome ou protocolo para aparecer abaixo.</p>
             <div className="flex gap-2">
               <Input
                 ref={codigoInputRef}
@@ -391,8 +397,23 @@ export default function RecreadorEspacoPanel() {
               <p className="text-[11px] text-cordao-vermelho font-medium">⚠ {erroCodigo}</p>
             )}
             <p className="text-[10px] text-muted-foreground">
-              {cordoesDisponiveis.length} cordão(ões) entregue(s) hoje · sugestões automáticas no campo
+              {cordoesDisponiveis.length} cordão(ões) entregue(s) no estoque · {sugestoesCodigo.length} sugestão(ões)
             </p>
+            {codigoInput.trim() && sugestoesCodigo.length > 0 && (
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {sugestoesCodigo.map(c => (
+                  <button
+                    key={c.codigo}
+                    type="button"
+                    onClick={() => { setCodigoInput(c.codigo); setErroCodigo(null); setTimeout(() => codigoInputRef.current?.focus(), 30); }}
+                    className="text-left rounded-lg border border-border bg-secondary/40 px-3 py-2 hover:bg-secondary transition-colors"
+                  >
+                    <span className="font-mono-data text-xs font-bold text-foreground">{c.codigo}</span>
+                    <span className="text-xs text-muted-foreground"> · {c.nome || 'sem nome'}{c.protocolo ? ` · ${c.protocolo}` : ''}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {codigosCiclo.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {codigosCiclo.map(c => (
