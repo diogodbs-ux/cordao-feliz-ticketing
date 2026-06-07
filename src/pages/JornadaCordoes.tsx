@@ -16,7 +16,7 @@ function toISO(d: Date) { return d.toISOString().slice(0, 10); }
 export default function JornadaCordoes() {
   const [todos, setTodos] = useState<CordaoUnidade[]>([]);
   const [busca, setBusca] = useState('');
-  const hojeISO = toISO(new Date());
+  const hojeISO = new Date().toLocaleDateString("en-CA");
   const [dataDe, setDataDe] = useState<string>(hojeISO);
   const [dataAte, setDataAte] = useState<string>(hojeISO);
   const [filtroCor, setFiltroCor] = useState<'todas' | CordaoColor>('todas');
