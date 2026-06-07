@@ -267,6 +267,30 @@ export default function RecreadorEspacoPanel() {
     return acc;
   }, [ciclosHoje]);
 
+  const painelEspacos = useMemo(() => espacos.map(e => {
+    const cs = ciclos.filter(c => c.espacoId === e.id && new Date(c.inicio).toLocaleDateString('pt-BR') === hojeReal);
+    const visitas = cordoesBase.flatMap(c => (c.visitas || [])
+      .filter(v => v.espacoId === e.id && new Date(v.entrada).toLocaleDateString('pt-BR') === hojeReal)
+      .map(v => ({ cordao: c, visita: v })));
+    const idades = { '0-3': 0, '4-6': 0, '7-9': 0, '10-12': 0 };
+    visitas.forEach(({ cordao }) => {
+      const idade = cordao.membroIdade;
+      if (idade === undefined || cordao.membroTipo !== 'crianca') return;
+      if (idade <= 3) idades['0-3']++;
+      else if (idade <= 6) idades['4-6']++;
+      else if (idade <= 9) idades['7-9']++;
+      else idades['10-12']++;
+    });
+    return {
+      espaco: e,
+      ciclos: cs.length,
+      criancas: cs.reduce((a, c) => a + c.totalCriancas, 0),
+      adultos: cs.reduce((a, c) => a + c.totalAdultos, 0),
+      rastreados: visitas.length,
+      idades,
+    };
+  }).sort((a, b) => b.criancas - a.criancas || b.ciclos - a.ciclos), [espacos, ciclos, cordoesBase, hojeReal]);
+
   if (espacos.length === 0) {
     return (
       <div className="p-6 max-w-2xl mx-auto text-center">
