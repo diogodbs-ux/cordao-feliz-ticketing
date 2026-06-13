@@ -431,19 +431,25 @@ export default function RecreadorEspacoPanel() {
             <p className="text-[10px] text-muted-foreground">
               {cordoesDisponiveis.length} cordão(ões) entregue(s) no estoque · {sugestoesCodigo.length} sugestão(ões)
             </p>
-            {codigoInput.trim() && sugestoesCodigo.length > 0 && (
-              <div className="grid gap-1.5 sm:grid-cols-2">
-                {sugestoesCodigo.map(c => (
-                  <button
-                    key={c.codigo}
-                    type="button"
-                    onClick={() => { setCodigoInput(c.codigo); setErroCodigo(null); setTimeout(() => codigoInputRef.current?.focus(), 30); }}
-                    className="text-left rounded-lg border border-border bg-secondary/40 px-3 py-2 hover:bg-secondary transition-colors"
-                  >
-                    <span className="font-mono-data text-xs font-bold text-foreground">{c.codigo}</span>
-                    <span className="text-xs text-muted-foreground"> · {c.nome || 'sem nome'}{c.protocolo ? ` · ${c.protocolo}` : ''}</span>
-                  </button>
-                ))}
+            {sugestoesCodigo.length > 0 && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
+                  {codigoInput.trim() ? 'Sugestões' : 'Cordões entregues — clique para selecionar'}
+                </p>
+                <div className="grid gap-1.5 sm:grid-cols-2 max-h-56 overflow-auto">
+                  {sugestoesCodigo.map(c => (
+                    <button
+                      key={c.codigo}
+                      type="button"
+                      onClick={() => { setCodigoInput(c.codigo); setErroCodigo(null); setTimeout(() => codigoInputRef.current?.focus(), 30); }}
+                      className="text-left rounded-lg border border-border bg-secondary/40 px-3 py-2 hover:bg-secondary transition-colors flex items-center gap-2"
+                    >
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COR_HEX[c.cor] }} />
+                      <span className="font-mono-data text-xs font-bold text-foreground">{c.codigo}</span>
+                      <span className="text-xs text-muted-foreground truncate"> · {c.nome || 'sem nome'}{c.protocolo ? ` · ${c.protocolo}` : ''}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             {codigosCiclo.length > 0 && (
