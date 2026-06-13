@@ -1,6 +1,9 @@
 // Sistema de cordões numerados sequenciais por cor
 // Vínculo: protocolo (check-in) -> códigos -> ciclos de espaço (jornada individual)
 import { CordaoColor } from './index';
+import { logAuditoria } from '@/lib/auditoria';
+import { enqueue } from '@/lib/syncQueue';
+
 
 export type CordaoStatus =
   | 'disponivel'      // impresso, ainda não entregue
@@ -149,13 +152,24 @@ export function vincularCordao(
   ctx: { protocolo: string; grupoId: string; membroNome?: string; membroTipo?: 'crianca' | 'adulto'; membroIdade?: number }
 ): { ok: true; cordao: CordaoUnidade } | { ok: false; erro: string } {
   const parsed = parseCodigo(codigo);
-  if (!parsed) return { ok: false, erro: `Código inválido: ${codigo}` };
+  if (!parsed) {
+    logAuditoria('cordao.vincular.erro', { codigo, protocolo: ctx.protocolo, detalhe: 'Código inválido' });
+    return { ok: false, erro: `Código inválido: ${codigo}` };
+  }
   const code = formatCodigo(parsed.cor, parsed.numero);
   const all = readCordoes();
   const idx = all.findIndex(c => c.codigo === code);
-  if (idx < 0) return { ok: false, erro: `Cordão ${code} não cadastrado. Imprima o lote no Admin.` };
+  if (idx < 0) {
+    logAuditoria('cordao.vincular.erro', { codigo: code, protocolo: ctx.protocolo, detalhe: 'Cordão não cadastrado no estoque' });
+    return { ok: false, erro: `Cordão ${code} não cadastrado. Imprima o lote no Admin.` };
+  }
   const c = all[idx];
   if (c.protocolo && c.protocolo !== ctx.protocolo) {
+    logAuditoria('cordao.vincular.conflito_protocolo', {
+      codigo: code, protocolo: ctx.protocolo, protocoloEsperado: c.protocolo,
+      membroNome: c.membroNome,
+      detalhe: `Tentativa de vincular cordão de outro protocolo (correto: ${c.protocolo}).`,
+    });
     return { ok: false, erro: `Cordão ${code} pertence ao protocolo ${c.protocolo}. Protocolo correto deste cordão: ${c.protocolo}.` };
   }
   const updated: CordaoUnidade = {
@@ -170,6 +184,8 @@ export function vincularCordao(
   };
   all[idx] = updated;
   writeCordoes(all);
+  logAuditoria('cordao.vincular.ok', { codigo: code, protocolo: ctx.protocolo, membroNome: ctx.membroNome });
+  try { enqueue('cordao.vincular', { codigo: code, protocolo: ctx.protocolo, grupoId: ctx.grupoId, membroNome: ctx.membroNome }); } catch { /* noop */ }
   return { ok: true, cordao: updated };
 }
 
@@ -179,16 +195,22 @@ export function registrarEntradaEspaco(
   visita: { cicloId: string; espacoId: string; espacoNome: string }
 ): { ok: true; cordao: CordaoUnidade } | { ok: false; erro: string } {
   const parsed = parseCodigo(codigo);
-  if (!parsed) return { ok: false, erro: `Código inválido: ${codigo}` };
+  if (!parsed) {
+    logAuditoria('cordao.entrada.erro', { codigo, cicloId: visita.cicloId, espacoId: visita.espacoId, espacoNome: visita.espacoNome, detalhe: 'Código inválido' });
+    return { ok: false, erro: `Código inválido: ${codigo}` };
+  }
   const code = formatCodigo(parsed.cor, parsed.numero);
   const all = readCordoes();
   const idx = all.findIndex(c => c.codigo === code);
-  if (idx < 0) return { ok: false, erro: `Cordão ${code} não cadastrado.` };
+  if (idx < 0) {
+    logAuditoria('cordao.entrada.erro', { codigo: code, cicloId: visita.cicloId, espacoNome: visita.espacoNome, detalhe: 'Cordão não cadastrado' });
+    return { ok: false, erro: `Cordão ${code} não cadastrado.` };
+  }
   const c = all[idx];
   if (c.status === 'disponivel') {
+    logAuditoria('cordao.entrada.erro', { codigo: code, cicloId: visita.cicloId, espacoNome: visita.espacoNome, detalhe: 'Cordão não vinculado a protocolo' });
     return { ok: false, erro: `Cordão ${code} ainda não foi vinculado a um protocolo. Realize o vínculo (Check-in) antes de rastrear nos espaços.` };
   }
-  // Evita duplicar entrada no mesmo ciclo
   if ((c.visitas || []).some(v => v.cicloId === visita.cicloId)) {
     return { ok: false, erro: `Cordão ${code} já registrado neste ciclo.` };
   }
@@ -198,6 +220,11 @@ export function registrarEntradaEspaco(
   };
   all[idx] = updated;
   writeCordoes(all);
+  logAuditoria('cordao.entrada.ok', {
+    codigo: code, protocolo: c.protocolo, cicloId: visita.cicloId,
+    espacoId: visita.espacoId, espacoNome: visita.espacoNome, membroNome: c.membroNome,
+  });
+  try { enqueue('cordao.entrada', { codigo: code, cicloId: visita.cicloId, espacoId: visita.espacoId }); } catch { /* noop */ }
   return { ok: true, cordao: updated };
 }
 
