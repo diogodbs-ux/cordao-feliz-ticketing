@@ -21,6 +21,8 @@ export const ALL_MENU_ITEMS: MenuItemDef[] = [
   { path: '/admin/historico', label: 'Histórico & Geo' },
   { path: '/admin/consolidado', label: 'Consolidado Anual' },
   { path: '/admin/relatorios', label: 'Relatórios' },
+  { path: '/admin/ciclos', label: 'Ciclos por Espaço (Dashboard)' },
+  { path: '/admin/auditoria', label: 'Auditoria' },
   { path: '/admin/permissoes', label: 'Permissões' },
   { path: '/admin/usuarios', label: 'Usuários' },
   { path: '/admin/configuracoes', label: 'Configurações' },
@@ -39,11 +41,11 @@ export const DEFAULT_PERMISSOES: PermissoesMap = {
   admin: ALL_MENU_ITEMS.map(i => i.path),
   coordenador: [
     '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
-    '/fechamento', '/admin/listas-especiais',
+    '/fechamento', '/admin/listas-especiais', '/admin/ciclos',
   ],
   supervisor: [
     '/fechamento', '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
-    '/admin/relatorios',
+    '/admin/relatorios', '/admin/ciclos', '/admin/auditoria',
   ],
   recreador: ['/recreador'],
   recreador_espaco: ['/espaco'],
