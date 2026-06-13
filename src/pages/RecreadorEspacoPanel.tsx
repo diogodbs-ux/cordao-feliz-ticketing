@@ -10,6 +10,7 @@ import { CordaoUnidade, registrarEntradaEspaco, fecharSaidasDoCiclo, parseCodigo
 import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine, Trash2, Clock, Users, Baby, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { logAuditoria } from '@/lib/auditoria';
 
 const COR_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9', verde: '#3CB371', amarelo: '#F5C518',
@@ -78,10 +79,11 @@ export default function RecreadorEspacoPanel() {
 
   const sugestoesCodigo = useMemo(() => {
     const q = codigoInput.trim().toLowerCase();
-    return cordoesDisponiveis
-      .filter(c => !codigosCiclo.some(x => x.codigo === c.codigo))
-      .filter(c => !q || c.codigo.toLowerCase().includes(q) || (c.nome || '').toLowerCase().includes(q) || (c.protocolo || '').toLowerCase().includes(q))
-      .slice(0, 8);
+    const lista = cordoesDisponiveis.filter(c => !codigosCiclo.some(x => x.codigo === c.codigo));
+    if (!q) return lista.slice(0, 12);
+    return lista
+      .filter(c => c.codigo.toLowerCase().includes(q) || (c.nome || '').toLowerCase().includes(q) || (c.protocolo || '').toLowerCase().includes(q))
+      .slice(0, 12);
   }, [codigoInput, cordoesDisponiveis, codigosCiclo]);
 
   const duracaoCicloSeg = cicloAtual ? Math.max(0, Math.floor((agora - new Date(cicloAtual.inicio).getTime()) / 1000)) : 0;
@@ -123,6 +125,7 @@ export default function RecreadorEspacoPanel() {
       totalAdultos: 0,
     };
     salvarCicloAtual(novo);
+    logAuditoria('ciclo.iniciar', { cicloId: novo.id, espacoId: espaco.id, espacoNome: espaco.nome });
     toast.success(`Ciclo iniciado em ${espaco.nome}`);
   };
 
@@ -149,6 +152,10 @@ export default function RecreadorEspacoPanel() {
     persistCiclos(readCiclos().map(c => c.id === cicloAtual.id ? finalizado : c));
     // Marca saída de todos os cordões registrados neste ciclo
     const saidas = fecharSaidasDoCiclo(cicloAtual.id);
+    logAuditoria('ciclo.finalizar', {
+      cicloId: cicloAtual.id, espacoId: cicloAtual.espacoId, espacoNome: cicloAtual.espacoNome,
+      detalhe: `Crianças: ${cicloAtual.totalCriancas} · Adultos: ${cicloAtual.totalAdultos} · Saídas: ${saidas}`,
+    });
     setCicloAtual(null);
     setProtocoloInput('');
     setCodigoInput('');
@@ -158,6 +165,7 @@ export default function RecreadorEspacoPanel() {
 
   const cancelar = () => {
     if (confirm('Descartar este ciclo? A contagem será perdida.')) {
+      if (cicloAtual) logAuditoria('ciclo.descartar', { cicloId: cicloAtual.id, espacoId: cicloAtual.espacoId, espacoNome: cicloAtual.espacoNome });
       persistCiclos(readCiclos().filter(c => c.id !== cicloAtual?.id));
       setCicloAtual(null);
       setProtocoloInput('');
