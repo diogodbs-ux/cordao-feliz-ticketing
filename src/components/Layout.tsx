@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
   BarChart3, History, Cake, Presentation, QrCode,
-  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield,
+  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBadge from '@/components/OfflineBadge';
@@ -25,6 +25,8 @@ const ALL_NAV: NavItem[] = [
   { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
   { label: 'Consolidado Anual', icon: Target, path: '/admin/consolidado' },
   { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
+  { label: 'Ciclos por Espaço', icon: Activity, path: '/admin/ciclos' },
+  { label: 'Auditoria', icon: Shield, path: '/admin/auditoria' },
   { label: 'Permissões', icon: Shield, path: '/admin/permissoes' },
   { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
   { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
