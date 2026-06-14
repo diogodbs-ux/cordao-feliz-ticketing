@@ -69,7 +69,7 @@ export function gerarOuObterToken(grupo: GrupoVisita): RastreioToken {
     expiraEm: fimDoDiaOperacional(agora).toISOString(),
   };
   write([...all, novo]);
-  logAuditoria('rastreamento.token.gerado', { protocolo, token, detalhe: `Token público criado para ${grupo.responsavel.nome}` });
+  logAuditoria('rastreamento.token.gerado', { protocolo, detalhe: `Token público criado para ${grupo.responsavel.nome}` });
   return novo;
 }
 
@@ -119,13 +119,13 @@ export function consultarLocalizacao(
   // valida que o nome informado bate com pelo menos uma criança do grupo
   const algumBate = criancasCordoes.some(c => c.membroNome && normalizar(c.membroNome).includes(nomeBusca));
   if (!algumBate) {
-    logAuditoria('rastreamento.consulta.bloqueada', { protocolo: t.protocolo, token, detalhe: `Nome não confere: "${nomeCriancaInformado}"` });
+    logAuditoria('rastreamento.consulta.bloqueada', { protocolo: t.protocolo, detalhe: `Nome não confere: "${nomeCriancaInformado}"` });
     return { ok: false, erro: 'Nome não confere com nenhuma criança deste protocolo. Confira a grafia.' };
   }
 
   const out = criancasCordoes.map(formatarLocalizacao);
 
-  logAuditoria('rastreamento.consulta.ok', { protocolo: t.protocolo, token, detalhe: `Consulta de ${nomeCriancaInformado} — ${out.length} criança(s)` });
+  logAuditoria('rastreamento.consulta.ok', { protocolo: t.protocolo, detalhe: `Consulta de ${nomeCriancaInformado} — ${out.length} criança(s)` });
 
   return { ok: true, criancas: out, responsavelNome: t.responsavelNome, protocolo: t.protocolo };
 }
