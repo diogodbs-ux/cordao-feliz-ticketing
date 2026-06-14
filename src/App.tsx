@@ -28,6 +28,7 @@ import JornadaCordoes from "@/pages/JornadaCordoes";
 import AdminPermissoes from "@/pages/AdminPermissoes";
 import AdminAuditoria from "@/pages/AdminAuditoria";
 import AdminCiclosDashboard from "@/pages/AdminCiclosDashboard";
+import AcompanharPublico from "@/pages/AcompanharPublico";
 import NotFound from "@/pages/NotFound";
 import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
 
@@ -67,6 +68,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/acompanhar/:token" element={<AcompanharPublico />} />
               <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route index element={<HomeRedirect />} />
                 <Route path="admin" element={<PermissionRoute path="/admin" roles={['admin']}><AdminDashboard /></PermissionRoute>} />
