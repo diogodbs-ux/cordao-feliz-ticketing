@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle2, Accessibility, X, Printer, Tag, ScanLine, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { imprimirCordoes, CordaoPrintItem } from '@/lib/print';
+import { imprimirCordoes, imprimirCartaoRastreamento, CordaoPrintItem } from '@/lib/print';
+import { gerarOuObterToken, buildPublicUrl } from '@/lib/rastreamento';
 import { CordaoUnidade, vincularCordao, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes, subscribeCordoesChange } from '@/types/cordoes';
 import { toast } from 'sonner';
 
@@ -124,6 +125,17 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
         return;
       }
       toast.success(`${membros.length} cordões vinculados ao protocolo.`);
+      // Gera token público + imprime cartão de acompanhamento para o responsável.
+      try {
+        const tk = gerarOuObterToken(grupo);
+        const url = buildPublicUrl(tk.token);
+        imprimirCartaoRastreamento({
+          token: tk.token, url,
+          responsavelNome: grupo.responsavel.nome,
+          protocolo: grupo.responsavel.protocolo || grupo.id,
+        }).catch(() => { /* noop */ });
+        toast.message('Cartão de acompanhamento gerado', { description: `Token ${tk.token} — entregue ao responsável.` });
+      } catch { /* noop */ }
     }
     onConfirm();
   };

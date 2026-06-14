@@ -1,4 +1,5 @@
 import { CordaoColor, getCordaoLabel } from '@/types';
+import QRCode from 'qrcode';
 
 export interface CordaoPrintItem {
   nome: string;
@@ -89,4 +90,56 @@ function escapeHtml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+/**
+ * Imprime um cartão de acompanhamento ao vivo (QR público + token + instruções).
+ * Vai para o responsável, dispensa login.
+ */
+export async function imprimirCartaoRastreamento(opts: {
+  token: string;
+  url: string;
+  responsavelNome: string;
+  protocolo: string;
+  largura?: '58mm' | '80mm';
+}) {
+  const largura = opts.largura || '80mm';
+  const qrDataUrl = await QRCode.toDataURL(opts.url, { width: 260, margin: 1, errorCorrectionLevel: 'M' });
+
+  const win = window.open('', '_blank', 'width=400,height=600');
+  if (!win) { alert('Habilite popups para imprimir o cartão.'); return; }
+
+  win.document.write(`<!doctype html>
+<html><head><meta charset="utf-8"><title>Acompanhamento — ${escapeHtml(opts.responsavelNome)}</title>
+<style>
+  @page { size: ${largura} auto; margin: 2mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 0; color: #000; }
+  .card { padding: 4mm 3mm; text-align: center; }
+  .titulo { background: linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; padding: 3mm; border-radius: 6px; font-weight: 800; font-size: 11pt; letter-spacing: .5px; }
+  .qr { margin: 4mm auto 2mm; width: 60mm; max-width: 100%; }
+  .qr img { width: 100%; height: auto; }
+  .token { font-family: ui-monospace, Menlo, monospace; font-size: 14pt; font-weight: 800; letter-spacing: 3px; margin: 1mm 0; }
+  .resp { font-size: 10pt; font-weight: 700; }
+  .proto { font-size: 8pt; color: #555; margin-bottom: 2mm; }
+  .inst { font-size: 8pt; color: #333; text-align: left; margin-top: 3mm; line-height: 1.4; border-top: 1px dashed #999; padding-top: 2mm; }
+  .inst b { color: #2563eb; }
+  @media screen { body { padding: 12px; background: #f5f5f5; } .card { background:#fff; max-width: 300px; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,.1); border-radius: 6px; } }
+</style></head><body>
+<div class="card">
+  <div class="titulo">📍 Acompanhamento ao Vivo</div>
+  <div class="qr"><img src="${qrDataUrl}" alt="QR" /></div>
+  <div class="token">${escapeHtml(opts.token)}</div>
+  <div class="resp">${escapeHtml(opts.responsavelNome)}</div>
+  <div class="proto">Protocolo ${escapeHtml(opts.protocolo)}</div>
+  <div class="inst">
+    <b>1.</b> Aponte a câmera do celular para o QR.<br/>
+    <b>2.</b> Digite o <b>nome da sua criança</b>.<br/>
+    <b>3.</b> Veja em tempo real onde ela está e quanto tempo já está no espaço.<br/>
+    <br/>Link válido até as 17h00 de hoje.
+  </div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},250);};</script>
+</body></html>`);
+  win.document.close();
 }

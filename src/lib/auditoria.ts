@@ -11,7 +11,10 @@ export type AuditoriaAcao =
   | 'ciclo.iniciar'
   | 'ciclo.finalizar'
   | 'ciclo.descartar'
-  | 'checkin.confirmar';
+  | 'checkin.confirmar'
+  | 'rastreamento.token.gerado'
+  | 'rastreamento.consulta.ok'
+  | 'rastreamento.consulta.bloqueada';
 
 export interface AuditoriaEvento {
   id: string;
