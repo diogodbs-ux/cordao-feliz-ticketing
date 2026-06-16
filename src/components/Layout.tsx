@@ -5,12 +5,13 @@ import logo from '@/assets/logo-completa.png';
 import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
-  BarChart3, History, Cake, Presentation, QrCode,
-  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity,
+  BarChart3, History, Cake, Presentation, QrCode, Download,
+  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity, DoorOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBadge from '@/components/OfflineBadge';
 import { getAllowedPathsForUser } from '@/lib/permissoes';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 type NavItem = { label: string; icon: any; path: string };
 
@@ -26,6 +27,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Consolidado Anual', icon: Target, path: '/admin/consolidado' },
   { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
   { label: 'Ciclos por Espaço', icon: Activity, path: '/admin/ciclos' },
+  { label: 'Acompanhamento (Tokens)', icon: QrCode, path: '/admin/rastreamento' },
   { label: 'Auditoria', icon: Shield, path: '/admin/auditoria' },
   { label: 'Permissões', icon: Shield, path: '/admin/permissoes' },
   { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
@@ -34,6 +36,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
   { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
   { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
+  { label: 'Portaria — Devolução', icon: DoorOpen, path: '/portaria/devolucao' },
   { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
   { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
   { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
@@ -44,6 +47,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [permsVersion, setPermsVersion] = useState(0);
+  const { canInstall, promptInstall } = usePWAInstall();
 
   useEffect(() => {
     const handler = () => setPermsVersion(v => v + 1);
@@ -106,6 +110,11 @@ export default function Layout() {
         </nav>
 
         <div className="p-3 border-t border-border">
+          {canInstall && (
+            <Button size="sm" variant="outline" className="w-full justify-start gap-2 mb-2" onClick={promptInstall}>
+              <Download className="h-4 w-4" /> Instalar app
+            </Button>
+          )}
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
               {user.nome.charAt(0).toUpperCase()}

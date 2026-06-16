@@ -22,6 +22,7 @@ export const ALL_MENU_ITEMS: MenuItemDef[] = [
   { path: '/admin/consolidado', label: 'Consolidado Anual' },
   { path: '/admin/relatorios', label: 'Relatórios' },
   { path: '/admin/ciclos', label: 'Ciclos por Espaço (Dashboard)' },
+  { path: '/admin/rastreamento', label: 'Acompanhamento Público (Tokens)' },
   { path: '/admin/auditoria', label: 'Auditoria' },
   { path: '/admin/permissoes', label: 'Permissões' },
   { path: '/admin/usuarios', label: 'Usuários' },
@@ -30,6 +31,7 @@ export const ALL_MENU_ITEMS: MenuItemDef[] = [
   { path: '/coordenador', label: 'Painel em Tempo Real' },
   { path: '/coordenador/espacos', label: 'Espaços Lúdicos' },
   { path: '/coordenador/jornadas', label: 'Jornadas (cordão)' },
+  { path: '/portaria/devolucao', label: 'Portaria — Devolução' },
   { path: '/recreador', label: 'Check-in (Guichê)' },
   { path: '/espaco', label: 'Meu Espaço' },
 ];
@@ -38,17 +40,18 @@ export type PermissoesMap = Record<UserRole, string[]>;
 
 // Defaults: espelham a navegação atual do Layout.tsx
 export const DEFAULT_PERMISSOES: PermissoesMap = {
-  admin: ALL_MENU_ITEMS.map(i => i.path),
+  admin: [],
   coordenador: [
     '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
     '/fechamento', '/admin/listas-especiais', '/admin/ciclos',
+    '/admin/rastreamento', '/portaria/devolucao',
   ],
   supervisor: [
     '/fechamento', '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
-    '/admin/relatorios', '/admin/ciclos', '/admin/auditoria',
+    '/admin/relatorios', '/admin/ciclos', '/admin/auditoria', '/admin/rastreamento',
   ],
-  recreador: ['/recreador'],
-  recreador_espaco: ['/espaco'],
+  recreador: ['/recreador', '/portaria/devolucao'],
+  recreador_espaco: ['/espaco', '/portaria/devolucao'],
   observador: ['/recreador'],
 };
 

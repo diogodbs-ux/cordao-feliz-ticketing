@@ -6,6 +6,7 @@ export type SyncOp =
   | { type: 'cordao.vincular'; payload: any }
   | { type: 'cordao.entrada'; payload: any }
   | { type: 'cordao.saida'; payload: any }
+  | { type: 'cordao.devolver'; payload: any }
   | { type: 'ciclo.create'; payload: any }
   | { type: 'checkin.create'; payload: any };
 

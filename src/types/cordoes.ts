@@ -8,7 +8,7 @@ import { enqueue } from '@/lib/syncQueue';
 export type CordaoStatus =
   | 'disponivel'      // impresso, ainda não entregue
   | 'entregue'        // vinculado a um protocolo no check-in
-  | 'devolvido';      // (futuro) saída do parque
+  | 'devolvido';      // devolvido no portão (fim da visita)
 
 export interface CordaoUnidade {
   codigo: string;            // ex: "AZ-0457"
@@ -22,7 +22,11 @@ export interface CordaoUnidade {
   membroNome?: string;       // nome da criança (ou "Responsável", "Acompanhante")
   membroTipo?: 'crianca' | 'adulto';
   membroIdade?: number;
+  pcd?: boolean;
+  pcdDescricao?: string;
   vinculadoEm?: string;      // ISO
+  devolvidoEm?: string;      // ISO — devolução no portão
+  duracaoTotalSeg?: number;  // tempo total no parque (segundos)
   // Trilha de visitas (preenchida pelo recreador de espaço)
   visitas?: VisitaCordao[];
   criadoEm: string;
@@ -149,7 +153,7 @@ export function gerarLote(cor: CordaoColor, quantidade: number, criadoPor?: stri
 /** Vincula um cordão a um protocolo (no check-in). Retorna mensagem de erro se houver. */
 export function vincularCordao(
   codigo: string,
-  ctx: { protocolo: string; grupoId: string; membroNome?: string; membroTipo?: 'crianca' | 'adulto'; membroIdade?: number }
+  ctx: { protocolo: string; grupoId: string; membroNome?: string; membroTipo?: 'crianca' | 'adulto'; membroIdade?: number; pcd?: boolean; pcdDescricao?: string }
 ): { ok: true; cordao: CordaoUnidade } | { ok: false; erro: string } {
   const parsed = parseCodigo(codigo);
   if (!parsed) {
@@ -180,6 +184,8 @@ export function vincularCordao(
     membroNome: ctx.membroNome,
     membroTipo: ctx.membroTipo,
     membroIdade: ctx.membroIdade,
+    pcd: ctx.pcd,
+    pcdDescricao: ctx.pcdDescricao,
     vinculadoEm: new Date().toISOString(),
   };
   all[idx] = updated;
@@ -187,6 +193,33 @@ export function vincularCordao(
   logAuditoria('cordao.vincular.ok', { codigo: code, protocolo: ctx.protocolo, membroNome: ctx.membroNome });
   try { enqueue('cordao.vincular', { codigo: code, protocolo: ctx.protocolo, grupoId: ctx.grupoId, membroNome: ctx.membroNome }); } catch { /* noop */ }
   return { ok: true, cordao: updated };
+}
+
+/** Devolve um cordão no portão: fecha visitas abertas, marca status devolvido e calcula tempo total. */
+export function devolverCordao(codigo: string): { ok: true; cordao: CordaoUnidade; duracaoSeg: number } | { ok: false; erro: string } {
+  const parsed = parseCodigo(codigo);
+  if (!parsed) return { ok: false, erro: `Código inválido: ${codigo}` };
+  const code = formatCodigo(parsed.cor, parsed.numero);
+  const all = readCordoes();
+  const idx = all.findIndex(c => c.codigo === code);
+  if (idx < 0) return { ok: false, erro: `Cordão ${code} não cadastrado.` };
+  const c = all[idx];
+  if (c.status === 'devolvido') return { ok: false, erro: `Cordão ${code} já foi devolvido em ${new Date(c.devolvidoEm!).toLocaleString('pt-BR')}.` };
+  if (c.status !== 'entregue' || !c.protocolo) return { ok: false, erro: `Cordão ${code} não está em uso (status: ${c.status}).` };
+  const now = new Date();
+  const fim = now.toISOString();
+  const visitas = (c.visitas || []).map(v => v.saida ? v : { ...v, saida: fim });
+  const inicio = c.vinculadoEm ? new Date(c.vinculadoEm).getTime() : now.getTime();
+  const duracaoSeg = Math.max(0, Math.floor((now.getTime() - inicio) / 1000));
+  const updated: CordaoUnidade = { ...c, status: 'devolvido', devolvidoEm: fim, duracaoTotalSeg: duracaoSeg, visitas };
+  all[idx] = updated;
+  writeCordoes(all);
+  logAuditoria('cordao.devolver.ok', {
+    codigo: code, protocolo: c.protocolo, membroNome: c.membroNome,
+    detalhe: `Devolução no portão · permanência ${Math.floor(duracaoSeg/60)}min`,
+  });
+  try { enqueue('cordao.devolver', { codigo: code, protocolo: c.protocolo, duracaoSeg }); } catch { /* noop */ }
+  return { ok: true, cordao: updated, duracaoSeg };
 }
 
 /** Registra entrada de um cordão num ciclo de espaço. */

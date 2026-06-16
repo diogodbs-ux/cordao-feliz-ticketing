@@ -11,6 +11,8 @@ import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { logAuditoria } from '@/lib/auditoria';
+import { beepSuperlotacao, beepPCD, beepOk } from '@/lib/sounds';
+import { Accessibility, Volume2 } from 'lucide-react';
 
 const COR_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9', verde: '#3CB371', amarelo: '#F5C518',
@@ -33,6 +35,9 @@ export default function RecreadorEspacoPanel() {
   const codigoInputRef = useRef<HTMLInputElement>(null);
   const [erroCodigo, setErroCodigo] = useState<string | null>(null);
   const [agora, setAgora] = useState(() => Date.now());
+  const [audioOn, setAudioOn] = useState(true);
+  const [alertaPCD, setAlertaPCD] = useState<{ nome: string; desc?: string } | null>(null);
+  const alertou80Ref = useRef(false);
 
   useEffect(() => {
     const carregar = () => {
@@ -59,6 +64,25 @@ export default function RecreadorEspacoPanel() {
     const id = setInterval(() => setAgora(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Alerta sonoro de superlotação (≥80% da capacidade)
+  useEffect(() => {
+    if (!cicloAtual) { alertou80Ref.current = false; return; }
+    const cap = espacos.find(e => e.id === cicloAtual.espacoId)?.capacidadeCiclo;
+    if (!cap || cap <= 0) return;
+    const ratio = cicloAtual.totalCriancas / cap;
+    if (ratio >= 0.8 && !alertou80Ref.current) {
+      alertou80Ref.current = true;
+      if (audioOn) beepSuperlotacao();
+      toast.warning(`⚠ Superlotação ${Math.round(ratio * 100)}% — ${cicloAtual.totalCriancas}/${cap} crianças`);
+      logAuditoria('alerta.superlotacao', {
+        cicloId: cicloAtual.id, espacoId: cicloAtual.espacoId, espacoNome: cicloAtual.espacoNome,
+        detalhe: `${cicloAtual.totalCriancas}/${cap} (${Math.round(ratio * 100)}%)`,
+      });
+    } else if (ratio < 0.7) {
+      alertou80Ref.current = false; // permite re-alertar se voltar a subir
+    }
+  }, [cicloAtual?.totalCriancas, cicloAtual?.espacoId, audioOn, espacos]);
 
   const espaco = espacos.find(e => e.id === espacoId);
 
@@ -229,7 +253,21 @@ export default function RecreadorEspacoPanel() {
     }
     salvarCicloAtual(next);
     setCodigoInput('');
-    toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
+    // Alerta especial PCD
+    if (cord?.pcd) {
+      if (audioOn) beepPCD();
+      setAlertaPCD({ nome: cord.membroNome || code, desc: cord.pcdDescricao });
+      logAuditoria('alerta.pcd_entrada', {
+        codigo: code, protocolo: cord.protocolo, cicloId: cicloAtual.id,
+        espacoId: cicloAtual.espacoId, espacoNome: cicloAtual.espacoNome,
+        membroNome: cord.membroNome, detalhe: cord.pcdDescricao || 'PCD',
+      });
+      setTimeout(() => setAlertaPCD(null), 6000);
+      toast.warning(`★ PCD: ${cord.membroNome} ${cord.pcdDescricao ? `(${cord.pcdDescricao})` : ''} entrou em ${cicloAtual.espacoNome}`);
+    } else {
+      if (audioOn) beepOk();
+      toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
+    }
     // Auto-foco no próximo
     setTimeout(() => codigoInputRef.current?.focus(), 60);
   };
@@ -313,10 +351,29 @@ export default function RecreadorEspacoPanel() {
 
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Recreador de Espaço</h1>
-        <p className="text-sm text-muted-foreground">Registre ciclos de entrada por contagem rápida — substitui a planilha manual</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Recreador de Espaço</h1>
+          <p className="text-sm text-muted-foreground">Registre ciclos de entrada por contagem rápida — substitui a planilha manual</p>
+        </div>
+        <Button size="sm" variant={audioOn ? 'default' : 'outline'} onClick={() => setAudioOn(v => !v)} className="gap-1.5 flex-shrink-0" title="Liga/desliga sons (superlotação, PCD)">
+          <Volume2 className="h-4 w-4" /> {audioOn ? 'Som ON' : 'Som OFF'}
+        </Button>
       </div>
+
+      {alertaPCD && (
+        <div className="fixed inset-0 z-50 bg-primary/30 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-none animate-in fade-in">
+          <div className="bg-card border-4 border-primary rounded-2xl shadow-popup p-8 max-w-lg text-center pointer-events-auto">
+            <Accessibility className="h-16 w-16 mx-auto text-primary animate-pulse mb-3" />
+            <p className="text-xs uppercase tracking-widest text-primary font-bold">Atenção especial — PCD</p>
+            <p className="text-2xl font-bold text-foreground mt-2">{alertaPCD.nome}</p>
+            {alertaPCD.desc && <p className="text-sm text-muted-foreground mt-1">{alertaPCD.desc}</p>}
+            <p className="text-xs text-muted-foreground mt-4">Garanta acolhimento prioritário neste espaço.</p>
+            <Button size="sm" className="mt-4" onClick={() => setAlertaPCD(null)}>Ok, entendi</Button>
+          </div>
+        </div>
+      )}
+
 
       {/* Seletor de espaço */}
       <div className="bg-card rounded-xl shadow-card p-5">

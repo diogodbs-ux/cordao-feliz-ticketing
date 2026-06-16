@@ -8,13 +8,16 @@ export type AuditoriaAcao =
   | 'cordao.vincular.conflito_protocolo'
   | 'cordao.entrada.ok'
   | 'cordao.entrada.erro'
+  | 'cordao.devolver.ok'
   | 'ciclo.iniciar'
   | 'ciclo.finalizar'
   | 'ciclo.descartar'
   | 'checkin.confirmar'
   | 'rastreamento.token.gerado'
   | 'rastreamento.consulta.ok'
-  | 'rastreamento.consulta.bloqueada';
+  | 'rastreamento.consulta.bloqueada'
+  | 'alerta.superlotacao'
+  | 'alerta.pcd_entrada';
 
 export interface AuditoriaEvento {
   id: string;
