@@ -142,6 +142,7 @@ export function consultarLocalizacao(
 
   const out = criancasCordoes.map(formatarLocalizacao);
 
+  bumpConsulta(t.token);
   logAuditoria('rastreamento.consulta.ok', { protocolo: t.protocolo, detalhe: `Consulta de ${nomeCriancaInformado} — ${out.length} criança(s)` });
 
   return { ok: true, criancas: out, responsavelNome: t.responsavelNome, protocolo: t.protocolo };
