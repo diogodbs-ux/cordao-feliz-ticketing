@@ -15,6 +15,23 @@ export interface RastreioToken {
   responsavelNome: string;
   criadoEm: string;       // ISO
   expiraEm: string;       // ISO — fim do dia operacional (17h00 local)
+  consultas?: number;     // contador de acessos ao link público
+  ultimaConsulta?: string; // ISO
+}
+
+export function listarTokensAtivos(): RastreioToken[] {
+  const agora = new Date();
+  return read()
+    .filter(t => new Date(t.expiraEm) > agora)
+    .sort((a, b) => (b.ultimaConsulta || b.criadoEm).localeCompare(a.ultimaConsulta || a.criadoEm));
+}
+
+function bumpConsulta(token: string) {
+  const all = read();
+  const idx = all.findIndex(t => t.token === token);
+  if (idx < 0) return;
+  all[idx] = { ...all[idx], consultas: (all[idx].consultas || 0) + 1, ultimaConsulta: new Date().toISOString() };
+  write(all);
 }
 
 interface CriancaLocalizacao {
