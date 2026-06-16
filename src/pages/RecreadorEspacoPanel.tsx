@@ -253,7 +253,21 @@ export default function RecreadorEspacoPanel() {
     }
     salvarCicloAtual(next);
     setCodigoInput('');
-    toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
+    // Alerta especial PCD
+    if (cord?.pcd) {
+      if (audioOn) beepPCD();
+      setAlertaPCD({ nome: cord.membroNome || code, desc: cord.pcdDescricao });
+      logAuditoria('alerta.pcd_entrada', {
+        codigo: code, protocolo: cord.protocolo, cicloId: cicloAtual.id,
+        espacoId: cicloAtual.espacoId, espacoNome: cicloAtual.espacoNome,
+        membroNome: cord.membroNome, detalhe: cord.pcdDescricao || 'PCD',
+      });
+      setTimeout(() => setAlertaPCD(null), 6000);
+      toast.warning(`★ PCD: ${cord.membroNome} ${cord.pcdDescricao ? `(${cord.pcdDescricao})` : ''} entrou em ${cicloAtual.espacoNome}`);
+    } else {
+      if (audioOn) beepOk();
+      toast.success(`${code} ${cord?.membroNome ? `· ${cord.membroNome}` : ''}`);
+    }
     // Auto-foco no próximo
     setTimeout(() => codigoInputRef.current?.focus(), 60);
   };
