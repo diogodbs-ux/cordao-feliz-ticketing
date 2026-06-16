@@ -11,6 +11,8 @@ import { Plus, Minus, Play, Square, History, MapPin, RotateCcw, Tag, X, ScanLine
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { logAuditoria } from '@/lib/auditoria';
+import { beepSuperlotacao, beepPCD, beepOk } from '@/lib/sounds';
+import { Accessibility, Volume2 } from 'lucide-react';
 
 const COR_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9', verde: '#3CB371', amarelo: '#F5C518',
@@ -33,6 +35,9 @@ export default function RecreadorEspacoPanel() {
   const codigoInputRef = useRef<HTMLInputElement>(null);
   const [erroCodigo, setErroCodigo] = useState<string | null>(null);
   const [agora, setAgora] = useState(() => Date.now());
+  const [audioOn, setAudioOn] = useState(true);
+  const [alertaPCD, setAlertaPCD] = useState<{ nome: string; desc?: string } | null>(null);
+  const alertou80Ref = useRef(false);
 
   useEffect(() => {
     const carregar = () => {
