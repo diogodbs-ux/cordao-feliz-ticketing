@@ -65,6 +65,25 @@ export default function RecreadorEspacoPanel() {
     return () => clearInterval(id);
   }, []);
 
+  // Alerta sonoro de superlotação (≥80% da capacidade)
+  useEffect(() => {
+    if (!cicloAtual) { alertou80Ref.current = false; return; }
+    const cap = espacos.find(e => e.id === cicloAtual.espacoId)?.capacidadeCiclo;
+    if (!cap || cap <= 0) return;
+    const ratio = cicloAtual.totalCriancas / cap;
+    if (ratio >= 0.8 && !alertou80Ref.current) {
+      alertou80Ref.current = true;
+      if (audioOn) beepSuperlotacao();
+      toast.warning(`⚠ Superlotação ${Math.round(ratio * 100)}% — ${cicloAtual.totalCriancas}/${cap} crianças`);
+      logAuditoria('alerta.superlotacao', {
+        cicloId: cicloAtual.id, espacoId: cicloAtual.espacoId, espacoNome: cicloAtual.espacoNome,
+        detalhe: `${cicloAtual.totalCriancas}/${cap} (${Math.round(ratio * 100)}%)`,
+      });
+    } else if (ratio < 0.7) {
+      alertou80Ref.current = false; // permite re-alertar se voltar a subir
+    }
+  }, [cicloAtual?.totalCriancas, cicloAtual?.espacoId, audioOn, espacos]);
+
   const espaco = espacos.find(e => e.id === espacoId);
 
   const cordoesEntregues = useMemo(() => {
