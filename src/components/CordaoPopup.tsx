@@ -117,6 +117,8 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
           membroNome: m.nome,
           membroTipo: m.membroTipo,
           membroIdade: m.idade,
+          pcd: m.pcd,
+          pcdDescricao: m.pcdDesc,
         });
         if (r.ok === false) erros.push(r.erro);
       });
