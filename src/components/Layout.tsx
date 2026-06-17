@@ -38,6 +38,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
   { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
   { label: 'Portaria — Devolução', icon: DoorOpen, path: '/portaria/devolucao' },
+  { label: 'Encerramento 18h (Auto)', icon: DoorClosed, path: '/admin/encerramento' },
   { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
   { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
   { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
