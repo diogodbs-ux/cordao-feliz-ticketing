@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
   BarChart3, History, Cake, Presentation, QrCode, Download,
-  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity, DoorOpen,
+  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity, DoorOpen, DoorClosed,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBadge from '@/components/OfflineBadge';
 import { getAllowedPathsForUser } from '@/lib/permissoes';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { useAutoEncerramento } from '@/hooks/useAutoEncerramento';
 
 type NavItem = { label: string; icon: any; path: string };
 
