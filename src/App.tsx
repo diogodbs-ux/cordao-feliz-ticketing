@@ -31,6 +31,7 @@ import AdminCiclosDashboard from "@/pages/AdminCiclosDashboard";
 import AcompanharPublico from "@/pages/AcompanharPublico";
 import AdminRastreamento from "@/pages/AdminRastreamento";
 import PortariaDevolucao from "@/pages/PortariaDevolucao";
+import AdminEncerramento from "@/pages/AdminEncerramento";
 import NotFound from "@/pages/NotFound";
 import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
 
