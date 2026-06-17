@@ -45,7 +45,7 @@ export const DEFAULT_PERMISSOES: PermissoesMap = {
   coordenador: [
     '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
     '/fechamento', '/admin/listas-especiais', '/admin/ciclos',
-    '/admin/rastreamento', '/portaria/devolucao',
+    '/admin/rastreamento', '/portaria/devolucao', '/admin/encerramento',
   ],
   supervisor: [
     '/fechamento', '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
