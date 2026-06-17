@@ -17,7 +17,8 @@ export type AuditoriaAcao =
   | 'rastreamento.consulta.ok'
   | 'rastreamento.consulta.bloqueada'
   | 'alerta.superlotacao'
-  | 'alerta.pcd_entrada';
+  | 'alerta.pcd_entrada'
+  | 'encerramento.executado';
 
 export interface AuditoriaEvento {
   id: string;

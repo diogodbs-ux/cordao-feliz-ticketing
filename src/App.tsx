@@ -31,6 +31,7 @@ import AdminCiclosDashboard from "@/pages/AdminCiclosDashboard";
 import AcompanharPublico from "@/pages/AcompanharPublico";
 import AdminRastreamento from "@/pages/AdminRastreamento";
 import PortariaDevolucao from "@/pages/PortariaDevolucao";
+import AdminEncerramento from "@/pages/AdminEncerramento";
 import NotFound from "@/pages/NotFound";
 import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
 
@@ -96,6 +97,7 @@ const App = () => (
                 <Route path="admin/ciclos" element={<PermissionRoute path="/admin/ciclos" roles={['admin', 'coordenador', 'supervisor']}><AdminCiclosDashboard /></PermissionRoute>} />
                 <Route path="admin/rastreamento" element={<PermissionRoute path="/admin/rastreamento" roles={['admin', 'coordenador', 'supervisor']}><AdminRastreamento /></PermissionRoute>} />
                 <Route path="portaria/devolucao" element={<PermissionRoute path="/portaria/devolucao" roles={['admin', 'coordenador', 'recreador', 'recreador_espaco']}><PortariaDevolucao /></PermissionRoute>} />
+                <Route path="admin/encerramento" element={<PermissionRoute path="/admin/encerramento" roles={['admin', 'coordenador']}><AdminEncerramento /></PermissionRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
   BarChart3, History, Cake, Presentation, QrCode, Download,
-  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity, DoorOpen,
+  MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity, DoorOpen, DoorClosed,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBadge from '@/components/OfflineBadge';
 import { getAllowedPathsForUser } from '@/lib/permissoes';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { useAutoEncerramento } from '@/hooks/useAutoEncerramento';
 
 type NavItem = { label: string; icon: any; path: string };
 
@@ -37,6 +38,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
   { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
   { label: 'Portaria — Devolução', icon: DoorOpen, path: '/portaria/devolucao' },
+  { label: 'Encerramento 18h (Auto)', icon: DoorClosed, path: '/admin/encerramento' },
   { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
   { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
   { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
@@ -48,6 +50,7 @@ export default function Layout() {
   const location = useLocation();
   const [permsVersion, setPermsVersion] = useState(0);
   const { canInstall, promptInstall } = usePWAInstall();
+  useAutoEncerramento();
 
   useEffect(() => {
     const handler = () => setPermsVersion(v => v + 1);
