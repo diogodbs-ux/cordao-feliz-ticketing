@@ -50,6 +50,7 @@ export default function Layout() {
   const location = useLocation();
   const [permsVersion, setPermsVersion] = useState(0);
   const { canInstall, promptInstall } = usePWAInstall();
+  useAutoEncerramento();
 
   useEffect(() => {
     const handler = () => setPermsVersion(v => v + 1);
