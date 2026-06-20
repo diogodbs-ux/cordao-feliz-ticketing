@@ -7,6 +7,7 @@ import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
   BarChart3, History, Cake, Presentation, QrCode, Download,
   MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity, DoorOpen, DoorClosed,
+  Flame, IdCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBadge from '@/components/OfflineBadge';
