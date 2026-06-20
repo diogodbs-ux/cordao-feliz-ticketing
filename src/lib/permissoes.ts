@@ -48,10 +48,12 @@ export const DEFAULT_PERMISSOES: PermissoesMap = {
     '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
     '/fechamento', '/admin/listas-especiais', '/admin/ciclos',
     '/admin/rastreamento', '/portaria/devolucao', '/admin/encerramento',
+    '/admin/heatmap', '/admin/crachas',
   ],
   supervisor: [
     '/fechamento', '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
     '/admin/relatorios', '/admin/ciclos', '/admin/auditoria', '/admin/rastreamento',
+    '/admin/heatmap',
   ],
   recreador: ['/recreador', '/portaria/devolucao'],
   recreador_espaco: ['/espaco', '/portaria/devolucao'],
