@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { CordaoColor, getCordaoLabel, getCordaoTailwindBg } from '@/types';
-import { Shield, Users, Baby, Accessibility, CheckCircle2, BarChart3, Clock, Building, Cake, TrendingUp } from 'lucide-react';
+import { Shield, Users, Baby, Accessibility, CheckCircle2, BarChart3, Clock, Building, Cake, TrendingUp, Tv, Pause, Play } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
