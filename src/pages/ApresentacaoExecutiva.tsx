@@ -24,6 +24,15 @@ function getHojeDDMMYYYY(): string {
 export default function ApresentacaoExecutiva() {
   const { grupos, checkins, stats } = useData();
   const hoje = getHojeDDMMYYYY();
+  const [tvMode, setTvMode] = useState(false);
+  const [tvPaused, setTvPaused] = useState(false);
+  const [tvSlide, setTvSlide] = useState(0);
+  const TV_SLIDES = 4; // KPIs, Cordões, Guichês, Timeline
+  useEffect(() => {
+    if (!tvMode || tvPaused) return;
+    const id = setInterval(() => setTvSlide(s => (s + 1) % TV_SLIDES), 8000);
+    return () => clearInterval(id);
+  }, [tvMode, tvPaused]);
 
   const gruposHoje = useMemo(() =>
     grupos.filter(g => {
