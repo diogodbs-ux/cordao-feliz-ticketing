@@ -40,6 +40,8 @@ const ALL_NAV: NavItem[] = [
   { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
   { label: 'Portaria — Devolução', icon: DoorOpen, path: '/portaria/devolucao' },
   { label: 'Encerramento 18h (Auto)', icon: DoorClosed, path: '/admin/encerramento' },
+  { label: 'Heatmap do Parque', icon: Flame, path: '/admin/heatmap' },
+  { label: 'Crachás dos Recreadores', icon: IdCard, path: '/admin/crachas' },
   { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
   { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
   { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
