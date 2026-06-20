@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle2, Accessibility, X, Printer, Tag, ScanLine, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Accessibility, X, Printer, Tag, ScanLine, AlertTriangle, Cake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { imprimirCordoes, imprimirCartaoRastreamento, CordaoPrintItem } from '@/lib/print';
 import { gerarOuObterToken, buildPublicUrl } from '@/lib/rastreamento';
+import { aniversarianteDeHoje, ehAniversarianteHoje } from '@/lib/aniversariantes';
 import { CordaoUnidade, vincularCordao, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes, subscribeCordoesChange } from '@/types/cordoes';
 import { toast } from 'sonner';
 
@@ -169,6 +170,28 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
             </button>
           </div>
 
+          {(() => {
+            const aniv = aniversarianteDeHoje(grupo.responsavel.nome, grupo.responsavel.criancas.map(c => c.nome));
+            if (!aniv) return null;
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                className="mx-6 mt-4 rounded-2xl p-4 bg-gradient-to-r from-amber-400 via-pink-400 to-fuchsia-500 text-white shadow-popup flex items-center gap-3"
+              >
+                <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-3xl">
+                  🎂
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] uppercase tracking-[0.2em] font-bold opacity-90 flex items-center gap-1">
+                    <Cake className="h-3 w-3" /> Aniversariante de hoje!
+                  </p>
+                  <p className="text-xl font-extrabold leading-tight">{aniv}</p>
+                  <p className="text-xs opacity-90">Atenção especial — parabenize na entrega do cordão.</p>
+                </div>
+              </motion.div>
+            );
+          })()}
+
           <div className="p-6">
             {/* Toggle de vinculação */}
             <div className={cn(
@@ -215,7 +238,14 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
                     </span>
                   </div>
                   <div className="p-3 space-y-1.5">
-                    <p className="text-base font-bold text-foreground leading-tight">{m.nome}</p>
+                    <p className="text-base font-bold text-foreground leading-tight flex items-center gap-1">
+                      {m.nome}
+                      {m.membroTipo === 'crianca' && ehAniversarianteHoje(m.nome) && (
+                        <span title="Aniversariante de hoje" className="inline-flex items-center gap-0.5 text-amber-500">
+                          <Cake className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">{m.tipo}</p>
                     {m.pcd && (
                       <div className="flex items-center gap-1 text-primary">

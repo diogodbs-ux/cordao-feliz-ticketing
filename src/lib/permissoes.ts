@@ -33,6 +33,8 @@ export const ALL_MENU_ITEMS: MenuItemDef[] = [
   { path: '/coordenador/jornadas', label: 'Jornadas (cordão)' },
   { path: '/portaria/devolucao', label: 'Portaria — Devolução' },
   { path: '/admin/encerramento', label: 'Encerramento 18h (Auto)' },
+  { path: '/admin/heatmap', label: 'Heatmap do Parque' },
+  { path: '/admin/crachas', label: 'Crachás dos Recreadores' },
   { path: '/recreador', label: 'Check-in (Guichê)' },
   { path: '/espaco', label: 'Meu Espaço' },
 ];
@@ -46,10 +48,12 @@ export const DEFAULT_PERMISSOES: PermissoesMap = {
     '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
     '/fechamento', '/admin/listas-especiais', '/admin/ciclos',
     '/admin/rastreamento', '/portaria/devolucao', '/admin/encerramento',
+    '/admin/heatmap', '/admin/crachas',
   ],
   supervisor: [
     '/fechamento', '/coordenador', '/coordenador/espacos', '/coordenador/jornadas',
     '/admin/relatorios', '/admin/ciclos', '/admin/auditoria', '/admin/rastreamento',
+    '/admin/heatmap',
   ],
   recreador: ['/recreador', '/portaria/devolucao'],
   recreador_espaco: ['/espaco', '/portaria/devolucao'],

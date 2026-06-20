@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MapPin, Clock, ShieldCheck, ShieldAlert, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { buscarToken, consultarLocalizacao } from '@/lib/rastreamento';
+import { ativarPush, desativarPush, estaAtivo, iniciarPolling, isPushSupported } from '@/lib/pushNotif';
+import { Bell, BellOff } from 'lucide-react';
 import { CordaoColor, getCordaoLabel } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -130,6 +132,8 @@ export default function AcompanharPublico() {
         ) : (
           <ResultadoView
             data={resultado}
+            token={token}
+            nomeCrianca={nome}
             onAtualizar={() => setTick(t => t + 1)}
             autoRefresh={autoRefresh}
             onToggleAuto={() => setAutoRefresh(v => !v)}
@@ -145,13 +149,33 @@ export default function AcompanharPublico() {
 }
 
 function ResultadoView({
-  data, onAtualizar, autoRefresh, onToggleAuto,
+  data, token, nomeCrianca, onAtualizar, autoRefresh, onToggleAuto,
 }: {
   data: Extract<ReturnType<typeof consultarLocalizacao>, { ok: true }>;
+  token: string;
+  nomeCrianca: string;
   onAtualizar: () => void;
   autoRefresh: boolean;
   onToggleAuto: () => void;
 }) {
+  const pushSupported = isPushSupported();
+  const [pushOn, setPushOn] = useState(() => estaAtivo(token, nomeCrianca));
+
+  useEffect(() => {
+    if (!pushOn) return;
+    const stop = iniciarPolling(20_000);
+    return stop;
+  }, [pushOn]);
+
+  const togglePush = async () => {
+    if (pushOn) { desativarPush(token, nomeCrianca); setPushOn(false); }
+    else {
+      const r = await ativarPush(token, nomeCrianca);
+      if (r.ok) setPushOn(true);
+      else alert(r.motivo || 'Não foi possível ativar.');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -159,7 +183,13 @@ function ResultadoView({
           <p className="text-xs text-muted-foreground">Protocolo {data.protocolo}</p>
           <h2 className="text-lg font-bold">{data.responsavelNome}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {pushSupported && (
+            <Button size="sm" variant={pushOn ? 'default' : 'outline'} onClick={togglePush} className="gap-1.5 h-9">
+              {pushOn ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+              Avisos {pushOn ? 'ON' : 'OFF'}
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={onAtualizar} className="gap-1.5 h-9">
             <RefreshCw className="h-3.5 w-3.5" />
             Atualizar

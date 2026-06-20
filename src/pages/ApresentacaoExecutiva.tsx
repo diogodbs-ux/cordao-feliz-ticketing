@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { CordaoColor, getCordaoLabel, getCordaoTailwindBg } from '@/types';
-import { Shield, Users, Baby, Accessibility, CheckCircle2, BarChart3, Clock, Building, Cake, TrendingUp } from 'lucide-react';
+import { Shield, Users, Baby, Accessibility, CheckCircle2, BarChart3, Clock, Building, Cake, TrendingUp, Tv, Pause, Play } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -23,6 +24,15 @@ function getHojeDDMMYYYY(): string {
 export default function ApresentacaoExecutiva() {
   const { grupos, checkins, stats } = useData();
   const hoje = getHojeDDMMYYYY();
+  const [tvMode, setTvMode] = useState(false);
+  const [tvPaused, setTvPaused] = useState(false);
+  const [tvSlide, setTvSlide] = useState(0);
+  const TV_SLIDES = 4; // KPIs, Cordões, Guichês, Timeline
+  useEffect(() => {
+    if (!tvMode || tvPaused) return;
+    const id = setInterval(() => setTvSlide(s => (s + 1) % TV_SLIDES), 8000);
+    return () => clearInterval(id);
+  }, [tvMode, tvPaused]);
 
   const gruposHoje = useMemo(() =>
     grupos.filter(g => {
@@ -91,16 +101,100 @@ export default function ApresentacaoExecutiva() {
     </div>
   );
 
+  if (tvMode) {
+    const slides = [
+      { titulo: 'KPIs Operacionais', render: () => (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 w-full">
+          <TVKpi label="Agendados" value={totalAgendados} />
+          <TVKpi label="Atendidos" value={totalAtendidos} accent="text-cordao-verde" />
+          <TVKpi label="Crianças" value={totalCriancas} />
+          <TVKpi label="PCD" value={totalPCD} accent="text-primary" />
+          <TVKpi label="Presença" value={`${taxaPresenca}%`} />
+          <TVKpi label="Pendentes" value={totalAgendados - totalAtendidos} />
+        </div>
+      ) },
+      { titulo: 'Distribuição por Cordão', render: () => (
+        <ResponsiveContainer width="100%" height={520}>
+          <PieChart>
+            <Pie data={cordaoData} cx="50%" cy="50%" innerRadius={120} outerRadius={220} dataKey="value"
+              label={({ name, value }) => `${name}: ${value}`}
+              labelLine={true}
+            >
+              {cordaoData.map((e, i) => <Cell key={i} fill={e.color} />)}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      ) },
+      { titulo: 'Ranking de Guichês', render: () => (
+        <ResponsiveContainer width="100%" height={520}>
+          <BarChart data={guicheData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="name" fontSize={24} />
+            <YAxis fontSize={20} />
+            <Tooltip />
+            <Bar dataKey="atendimentos" fill="hsl(217, 91%, 60%)" radius={[12, 12, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      ) },
+      { titulo: 'Fluxo por Hora', render: () => (
+        <ResponsiveContainer width="100%" height={520}>
+          <BarChart data={timelineData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="hora" fontSize={24} />
+            <YAxis fontSize={20} />
+            <Tooltip />
+            <Bar dataKey="atendimentos" fill="hsl(142, 71%, 45%)" radius={[12, 12, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      ) },
+    ];
+    const cur = slides[tvSlide];
+    return (
+      <div className="fixed inset-0 bg-background flex flex-col text-foreground z-50">
+        <div className="flex items-center justify-between px-10 py-6 border-b border-border">
+          <div className="flex items-center gap-4">
+            <Shield className="h-10 w-10 text-primary" />
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Sentinela Infância</p>
+              <h1 className="text-3xl font-extrabold">{cur.titulo}</h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <p className="text-2xl font-mono-data">{hoje}</p>
+            <Button size="lg" variant="outline" onClick={() => setTvPaused(p => !p)} className="gap-2">
+              {tvPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+              {tvPaused ? 'Retomar' : 'Pausar'}
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => setTvMode(false)}>Sair</Button>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-10">{cur.render()}</div>
+        <div className="flex items-center justify-center gap-3 pb-6">
+          {slides.map((_, i) => (
+            <button key={i} onClick={() => setTvSlide(i)}
+              className={cn('h-2 w-12 rounded-full transition-all', i === tvSlide ? 'bg-primary' : 'bg-border')} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-3 bg-primary/10 px-4 py-2 rounded-full">
-          <Shield className="h-5 w-5 text-primary" />
-          <span className="text-sm font-bold text-primary tracking-wider uppercase">Sentinela Infância</span>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="text-center space-y-2 flex-1">
+          <div className="inline-flex items-center gap-3 bg-primary/10 px-4 py-2 rounded-full">
+            <Shield className="h-5 w-5 text-primary" />
+            <span className="text-sm font-bold text-primary tracking-wider uppercase">Sentinela Infância</span>
+          </div>
+          <h1 className="text-3xl font-extrabold text-foreground">Painel Executivo</h1>
+          <p className="text-muted-foreground">Resumo operacional — {hoje}</p>
         </div>
-        <h1 className="text-3xl font-extrabold text-foreground">Painel Executivo</h1>
-        <p className="text-muted-foreground">Resumo operacional — {hoje}</p>
+        <Button onClick={() => { setTvMode(true); setTvSlide(0); }} className="gap-2">
+          <Tv className="h-4 w-4" /> Modo TV (rotação automática)
+        </Button>
       </div>
 
       {/* KPI Cards */}
@@ -209,6 +303,15 @@ export default function ApresentacaoExecutiva() {
       <p className="text-center text-xs text-muted-foreground">
         Sentinela Infância © {new Date().getFullYear()} — Sistema de Gestão de Visitantes
       </p>
+    </div>
+  );
+}
+
+function TVKpi({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
+  return (
+    <div className="text-center">
+      <p className={`text-8xl font-extrabold font-mono-data ${accent || "text-foreground"}`}>{value}</p>
+      <p className="text-xl font-semibold text-muted-foreground mt-2 uppercase tracking-wider">{label}</p>
     </div>
   );
 }

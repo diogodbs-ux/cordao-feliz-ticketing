@@ -32,6 +32,8 @@ import AcompanharPublico from "@/pages/AcompanharPublico";
 import AdminRastreamento from "@/pages/AdminRastreamento";
 import PortariaDevolucao from "@/pages/PortariaDevolucao";
 import AdminEncerramento from "@/pages/AdminEncerramento";
+import AdminHeatmap from "@/pages/AdminHeatmap";
+import { CrachasRecreadoresAdmin, CrachaPublico } from "@/pages/CrachasRecreadores";
 import NotFound from "@/pages/NotFound";
 import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
 
@@ -72,6 +74,7 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/acompanhar/:token" element={<AcompanharPublico />} />
+              <Route path="/cracha/:userId" element={<CrachaPublico />} />
               <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route index element={<HomeRedirect />} />
                 <Route path="admin" element={<PermissionRoute path="/admin" roles={['admin']}><AdminDashboard /></PermissionRoute>} />
@@ -98,6 +101,8 @@ const App = () => (
                 <Route path="admin/rastreamento" element={<PermissionRoute path="/admin/rastreamento" roles={['admin', 'coordenador', 'supervisor']}><AdminRastreamento /></PermissionRoute>} />
                 <Route path="portaria/devolucao" element={<PermissionRoute path="/portaria/devolucao" roles={['admin', 'coordenador', 'recreador', 'recreador_espaco']}><PortariaDevolucao /></PermissionRoute>} />
                 <Route path="admin/encerramento" element={<PermissionRoute path="/admin/encerramento" roles={['admin', 'coordenador']}><AdminEncerramento /></PermissionRoute>} />
+                <Route path="admin/heatmap" element={<PermissionRoute path="/admin/heatmap" roles={['admin', 'coordenador', 'supervisor']}><AdminHeatmap /></PermissionRoute>} />
+                <Route path="admin/crachas" element={<PermissionRoute path="/admin/crachas" roles={['admin', 'coordenador']}><CrachasRecreadoresAdmin /></PermissionRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
