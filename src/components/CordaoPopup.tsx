@@ -170,6 +170,28 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
             </button>
           </div>
 
+          {(() => {
+            const aniv = aniversarianteDeHoje(grupo.responsavel.nome, grupo.responsavel.criancas.map(c => c.nome));
+            if (!aniv) return null;
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                className="mx-6 mt-4 rounded-2xl p-4 bg-gradient-to-r from-amber-400 via-pink-400 to-fuchsia-500 text-white shadow-popup flex items-center gap-3"
+              >
+                <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-3xl">
+                  🎂
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] uppercase tracking-[0.2em] font-bold opacity-90 flex items-center gap-1">
+                    <Cake className="h-3 w-3" /> Aniversariante de hoje!
+                  </p>
+                  <p className="text-xl font-extrabold leading-tight">{aniv}</p>
+                  <p className="text-xs opacity-90">Atenção especial — parabenize na entrega do cordão.</p>
+                </div>
+              </motion.div>
+            );
+          })()}
+
           <div className="p-6">
             {/* Toggle de vinculação */}
             <div className={cn(
