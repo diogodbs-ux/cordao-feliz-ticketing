@@ -33,6 +33,8 @@ export const ALL_MENU_ITEMS: MenuItemDef[] = [
   { path: '/coordenador/jornadas', label: 'Jornadas (cordão)' },
   { path: '/portaria/devolucao', label: 'Portaria — Devolução' },
   { path: '/admin/encerramento', label: 'Encerramento 18h (Auto)' },
+  { path: '/admin/heatmap', label: 'Heatmap do Parque' },
+  { path: '/admin/crachas', label: 'Crachás dos Recreadores' },
   { path: '/recreador', label: 'Check-in (Guichê)' },
   { path: '/espaco', label: 'Meu Espaço' },
 ];
