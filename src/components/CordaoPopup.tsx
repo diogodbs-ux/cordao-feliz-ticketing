@@ -238,7 +238,14 @@ export default function CordaoPopup({ grupo, guiche, onConfirm, onClose }: Corda
                     </span>
                   </div>
                   <div className="p-3 space-y-1.5">
-                    <p className="text-base font-bold text-foreground leading-tight">{m.nome}</p>
+                    <p className="text-base font-bold text-foreground leading-tight flex items-center gap-1">
+                      {m.nome}
+                      {m.membroTipo === 'crianca' && ehAniversarianteHoje(m.nome) && (
+                        <span title="Aniversariante de hoje" className="inline-flex items-center gap-0.5 text-amber-500">
+                          <Cake className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">{m.tipo}</p>
                     {m.pcd && (
                       <div className="flex items-center gap-1 text-primary">
