@@ -132,6 +132,8 @@ export default function AcompanharPublico() {
         ) : (
           <ResultadoView
             data={resultado}
+            token={token}
+            nomeCrianca={nome}
             onAtualizar={() => setTick(t => t + 1)}
             autoRefresh={autoRefresh}
             onToggleAuto={() => setAutoRefresh(v => !v)}
