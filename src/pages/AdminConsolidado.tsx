@@ -37,6 +37,27 @@ export default function AdminConsolidado() {
     return ((a - b) / b) * 100;
   };
 
+  // Hoje vs média 7d
+  const comparativo = useMemo(() => {
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const todayKey = hoje.toDateString();
+    const hojeC = checkins.filter(c => new Date(c.dataHora).toDateString() === todayKey);
+    const dias: Record<string, number> = {};
+    checkins.forEach(c => {
+      const d = new Date(c.dataHora); d.setHours(0, 0, 0, 0);
+      const diff = (hoje.getTime() - d.getTime()) / 86400000;
+      if (diff >= 1 && diff <= 7) {
+        const k = d.toDateString();
+        dias[k] = (dias[k] || 0) + 1;
+      }
+    });
+    const totais = Object.values(dias);
+    const media = totais.length > 0 ? totais.reduce((a, b) => a + b, 0) / totais.length : 0;
+    const hojeQtd = hojeC.length;
+    const delta = media > 0 ? ((hojeQtd - media) / media) * 100 : 0;
+    return { hojeQtd, media: Math.round(media), delta };
+  }, [checkins]);
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -47,6 +68,29 @@ export default function AdminConsolidado() {
         <div className="flex items-center gap-2">
           <Selector label="Ano A" value={anoA} options={anos} onChange={setAnoA} />
           <Selector label="Ano B" value={anoB} options={[...anos, anoA - 1, anoA - 2].filter((v, i, a) => a.indexOf(v) === i)} onChange={setAnoB} />
+        </div>
+      </div>
+
+      {/* Hoje vs média 7d */}
+      <div className="bg-card rounded-2xl shadow-card p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Hoje</p>
+          <p className="text-4xl font-extrabold font-mono-data text-foreground">{comparativo.hojeQtd}</p>
+          <p className="text-xs text-muted-foreground">check-ins</p>
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Média últimos 7 dias</p>
+          <p className="text-4xl font-extrabold font-mono-data text-foreground">{comparativo.media}</p>
+          <p className="text-xs text-muted-foreground">check-ins/dia</p>
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Variação</p>
+          <p className={cn('text-4xl font-extrabold font-mono-data',
+            comparativo.delta > 5 ? 'text-cordao-verde' : comparativo.delta < -5 ? 'text-destructive' : 'text-foreground'
+          )}>
+            {comparativo.delta > 0 ? '+' : ''}{comparativo.delta.toFixed(1)}%
+          </p>
+          <p className="text-xs text-muted-foreground">{comparativo.delta > 5 ? 'acima da média' : comparativo.delta < -5 ? 'abaixo da média' : 'dentro da média'}</p>
         </div>
       </div>
 
