@@ -306,3 +306,12 @@ export default function ApresentacaoExecutiva() {
     </div>
   );
 }
+
+function TVKpi({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
+  return (
+    <div className="text-center">
+      <p className={`text-8xl font-extrabold font-mono-data ${accent || "text-foreground"}`}>{value}</p>
+      <p className="text-xl font-semibold text-muted-foreground mt-2 uppercase tracking-wider">{label}</p>
+    </div>
+  );
+}
