@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GrupoVisita, getCordaoTailwindBg, getCordaoTailwindText, getCordaoLabel, CordaoColor } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle2, Accessibility, X, Printer, Tag, ScanLine, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Accessibility, X, Printer, Tag, ScanLine, AlertTriangle, Cake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { imprimirCordoes, imprimirCartaoRastreamento, CordaoPrintItem } from '@/lib/print';
 import { gerarOuObterToken, buildPublicUrl } from '@/lib/rastreamento';
+import { aniversarianteDeHoje, ehAniversarianteHoje } from '@/lib/aniversariantes';
 import { CordaoUnidade, vincularCordao, parseCodigo, formatCodigo, getCordaoByCodigo, readCordoes, subscribeCordoesChange } from '@/types/cordoes';
 import { toast } from 'sonner';
 
