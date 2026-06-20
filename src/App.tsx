@@ -74,6 +74,7 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/acompanhar/:token" element={<AcompanharPublico />} />
+              <Route path="/cracha/:userId" element={<CrachaPublico />} />
               <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route index element={<HomeRedirect />} />
                 <Route path="admin" element={<PermissionRoute path="/admin" roles={['admin']}><AdminDashboard /></PermissionRoute>} />
