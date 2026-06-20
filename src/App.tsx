@@ -32,6 +32,8 @@ import AcompanharPublico from "@/pages/AcompanharPublico";
 import AdminRastreamento from "@/pages/AdminRastreamento";
 import PortariaDevolucao from "@/pages/PortariaDevolucao";
 import AdminEncerramento from "@/pages/AdminEncerramento";
+import AdminHeatmap from "@/pages/AdminHeatmap";
+import { CrachasRecreadoresAdmin, CrachaPublico } from "@/pages/CrachasRecreadores";
 import NotFound from "@/pages/NotFound";
 import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
 
