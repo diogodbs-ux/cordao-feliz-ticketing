@@ -66,6 +66,33 @@ export default function AdminConfiguracoes() {
     toast.success(`Meta de ${anoMeta} salva!`);
   };
 
+  // ---- Branding (logo customizável — período eleitoral) ----
+  const [branding, setBranding] = useState<Branding>(getBranding());
+  const [logoPreview, setLogoPreview] = useState<string>(getLogoSrc());
+  useEffect(() => subscribeBranding(() => {
+    setBranding(getBranding());
+    setLogoPreview(getLogoSrc());
+  }), []);
+
+  const handleUploadLogo = async (e: React.ChangeEvent<HTMLInputElement>, campo: 'logoDataUrl' | 'logoSecundariaDataUrl') => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Selecione um arquivo de imagem (PNG, JPG, SVG).'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Imagem muito grande. Limite: 5 MB.'); return; }
+    try {
+      const dataUrl = await fileToLogoDataUrl(file, 512);
+      saveBranding({ [campo]: dataUrl });
+      toast.success('Logo atualizada!');
+    } catch { toast.error('Não foi possível processar a imagem.'); }
+  };
+
+  const salvarTextos = () => {
+    saveBranding({ orgName: branding.orgName, orgFooter: branding.orgFooter, ocultarLogoPadrao: branding.ocultarLogoPadrao });
+    toast.success('Identidade salva!');
+  };
+
+
 
   const roleDescriptions: Record<UserRole, { label: string; desc: string; color: string }> = {
     admin: { label: 'Administrador', desc: 'Acesso total: dashboard, importação, usuários, relatórios, configurações, listas especiais e gráficos históricos.', color: 'bg-cordao-preto' },
