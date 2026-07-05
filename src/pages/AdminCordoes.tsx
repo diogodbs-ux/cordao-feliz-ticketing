@@ -220,11 +220,13 @@ export default function AdminCordoes() {
 }
 
 // ---- impressão (folha A4 com etiquetas + barcode + logo) ----
-function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
+async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
   if (itens.length === 0) {
     toast.error('Nenhum cordão para imprimir.');
     return;
   }
+  const logoUrl = await getLogoDataUrlForCanvas();
+  const orgName = getBranding().orgName;
   const w = window.open('', '_blank', 'width=900,height=700');
   if (!w) { toast.error('Permita pop-ups para imprimir.'); return; }
 
