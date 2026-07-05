@@ -245,12 +245,12 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
     return `
       <div class="card">
         <div class="bar" style="background:${corHex[it.cor]};color:${txtColor}">
-          <img src="${logoUrl}" class="bar-logo" alt="" />
+          ${logoUrl ? `<img src="${logoUrl}" class="bar-logo" alt="" />` : ''}
           <span>${it.cor.toUpperCase()}</span>
         </div>
         <div class="bc">${svgStr}</div>
         <div class="code">${it.codigo}</div>
-        <div class="foot">CIDADE MAIS INFÂNCIA</div>
+        <div class="foot">${orgName.toUpperCase()}</div>
       </div>
     `;
   }).join('');
