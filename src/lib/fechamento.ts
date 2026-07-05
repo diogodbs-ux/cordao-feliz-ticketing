@@ -172,7 +172,7 @@ export async function gerarPDF(f: FechamentoNumeros): Promise<Blob> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
   doc.setTextColor(100);
-  doc.text('Cidade Mais Infância', W / 2, y, { align: 'center' });
+  doc.text(getBranding().orgName, W / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(11);
   doc.text(`Data de operação: ${f.data}`, W / 2, y, { align: 'center' });
