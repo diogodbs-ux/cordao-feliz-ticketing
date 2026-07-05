@@ -53,6 +53,10 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [permsVersion, setPermsVersion] = useState(0);
+  const [brandTick, setBrandTick] = useState(0);
+  useEffect(() => subscribeBranding(() => setBrandTick(t => t + 1)), []);
+  const brand = getBranding();
+  void brandTick;
   const { canInstall, promptInstall } = usePWAInstall();
   useAutoEncerramento();
 
