@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import JsBarcode from 'jsbarcode';
-import logoUrl from '@/assets/logo-completa.png';
+import { getLogoDataUrlForCanvas, getBranding } from '@/lib/branding';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
