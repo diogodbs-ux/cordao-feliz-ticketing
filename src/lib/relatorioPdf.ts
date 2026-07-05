@@ -1,7 +1,7 @@
 // Geração de Relatório Final de Operação em PDF profissional (jsPDF + autoTable)
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import logoUrl from '@/assets/logo-completa.png';
+import { getLogoDataUrlForCanvas, getBranding } from '@/lib/branding';
 import { CordaoColor, getCordaoLabel } from '@/types';
 
 export interface RelatorioFinalData {
