@@ -90,7 +90,7 @@ export default function Login() {
           </form>
 
           <p className="text-center text-xs text-muted-foreground">
-            Governo do Estado do Ceará — Cidade Mais Infância
+            {getBranding().orgFooter}
           </p>
         </div>
       </motion.div>
