@@ -90,7 +90,7 @@ export async function gerarImagemPNG(f: FechamentoNumeros): Promise<Blob> {
 
   ctx.fillStyle = '#94A3B8';
   ctx.font = '28px system-ui, -apple-system, sans-serif';
-  ctx.fillText('Cidade Mais Infância — ' + f.data, W / 2, 140);
+  ctx.fillText(getBranding().orgName + ' — ' + f.data, W / 2, 140);
 
   // Cordões
   ctx.textAlign = 'left';
