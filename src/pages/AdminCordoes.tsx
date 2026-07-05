@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import JsBarcode from 'jsbarcode';
-import logoUrl from '@/assets/logo-completa.png';
+import { getLogoDataUrlForCanvas, getBranding } from '@/lib/branding';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -220,11 +220,13 @@ export default function AdminCordoes() {
 }
 
 // ---- impressão (folha A4 com etiquetas + barcode + logo) ----
-function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
+async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
   if (itens.length === 0) {
     toast.error('Nenhum cordão para imprimir.');
     return;
   }
+  const logoUrl = await getLogoDataUrlForCanvas();
+  const orgName = getBranding().orgName;
   const w = window.open('', '_blank', 'width=900,height=700');
   if (!w) { toast.error('Permita pop-ups para imprimir.'); return; }
 
@@ -243,12 +245,12 @@ function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
     return `
       <div class="card">
         <div class="bar" style="background:${corHex[it.cor]};color:${txtColor}">
-          <img src="${logoUrl}" class="bar-logo" alt="" />
+          ${logoUrl ? `<img src="${logoUrl}" class="bar-logo" alt="" />` : ''}
           <span>${it.cor.toUpperCase()}</span>
         </div>
         <div class="bc">${svgStr}</div>
         <div class="code">${it.codigo}</div>
-        <div class="foot">CIDADE MAIS INFÂNCIA</div>
+        <div class="foot">${orgName.toUpperCase()}</div>
       </div>
     `;
   }).join('');
@@ -276,10 +278,10 @@ function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
     </style>
     </head><body>
       <div class="header">
-        <img src="${logoUrl}" class="brand" alt="Cidade Mais Infância" />
+        ${logoUrl ? `<img src="${logoUrl}" class="brand" alt="${orgName}" />` : ''}
         <div class="meta">
           <h1>${titulo}</h1>
-          <p>Cidade Mais Infância · ${itens.length} cordões · gerado em ${new Date().toLocaleString('pt-BR')}</p>
+          <p>${orgName} · ${itens.length} cordões · gerado em ${new Date().toLocaleString('pt-BR')}</p>
         </div>
       </div>
       <div class="grid">${cards}</div>

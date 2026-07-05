@@ -1,7 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import logo from '@/assets/logo-completa.png';
+import BrandLogo from '@/components/BrandLogo';
+import { getBranding, subscribeBranding } from '@/lib/branding';
 import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
@@ -52,6 +53,10 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [permsVersion, setPermsVersion] = useState(0);
+  const [brandTick, setBrandTick] = useState(0);
+  useEffect(() => subscribeBranding(() => setBrandTick(t => t + 1)), []);
+  const brand = getBranding();
+  void brandTick;
   const { canInstall, promptInstall } = usePWAInstall();
   useAutoEncerramento();
 
@@ -84,10 +89,10 @@ export default function Layout() {
       <aside className="w-64 bg-card border-r border-border flex flex-col shadow-card">
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Logo" className="h-10 w-auto opacity-80" />
+            <BrandLogo className="h-10 w-10 object-contain opacity-90 rounded" fallbackInitials />
             <div className="min-w-0">
               <p className="text-xs font-semibold text-foreground truncate">Sentinela</p>
-              <p className="text-[10px] text-muted-foreground truncate">Cidade Mais Infância</p>
+              <p className="text-[10px] text-muted-foreground truncate">{brand.orgName}</p>
             </div>
           </div>
           <div className="mt-3"><OfflineBadge /></div>

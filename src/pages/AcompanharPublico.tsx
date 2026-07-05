@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MapPin, Clock, ShieldCheck, ShieldAlert, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { buscarToken, consultarLocalizacao } from '@/lib/rastreamento';
-import { ativarPush, desativarPush, estaAtivo, iniciarPolling, isPushSupported } from '@/lib/pushNotif';
+import { ativarPush, desativarPush, estaAtivo, iniciarPolling, isPushSupported, getPermissionState, ensureServiceWorker } from '@/lib/pushNotif';
 import { Bell, BellOff } from 'lucide-react';
 import { CordaoColor, getCordaoLabel } from '@/types';
 import { cn } from '@/lib/utils';
@@ -77,7 +77,7 @@ export default function AcompanharPublico() {
           </div>
           <div>
             <h1 className="font-bold text-foreground leading-tight">Acompanhamento ao Vivo</h1>
-            <p className="text-xs text-muted-foreground">Cidade Mais Infância · Sentinela</p>
+            <p className="text-xs text-muted-foreground">Sentinela</p>
           </div>
         </div>
       </header>
@@ -160,6 +160,10 @@ function ResultadoView({
 }) {
   const pushSupported = isPushSupported();
   const [pushOn, setPushOn] = useState(() => estaAtivo(token, nomeCrianca));
+  const [permState, setPermState] = useState(getPermissionState());
+  const [permMsg, setPermMsg] = useState<string | null>(null);
+
+  useEffect(() => { ensureServiceWorker(); }, []);
 
   useEffect(() => {
     if (!pushOn) return;
@@ -168,12 +172,12 @@ function ResultadoView({
   }, [pushOn]);
 
   const togglePush = async () => {
-    if (pushOn) { desativarPush(token, nomeCrianca); setPushOn(false); }
-    else {
-      const r = await ativarPush(token, nomeCrianca);
-      if (r.ok) setPushOn(true);
-      else alert(r.motivo || 'Não foi possível ativar.');
-    }
+    setPermMsg(null);
+    if (pushOn) { desativarPush(token, nomeCrianca); setPushOn(false); return; }
+    const r = await ativarPush(token, nomeCrianca);
+    setPermState(r.state);
+    if (r.ok) setPushOn(true);
+    else setPermMsg(r.motivo || 'Não foi possível ativar.');
   };
 
   return (
@@ -199,6 +203,15 @@ function ResultadoView({
           </Button>
         </div>
       </div>
+
+      {permMsg && (
+        <div className={cn(
+          'text-xs rounded-lg p-3 border',
+          permState === 'denied' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-800'
+        )}>
+          {permMsg}
+        </div>
+      )}
 
       <div className="grid gap-3">
         {data.criancas.map(c => {

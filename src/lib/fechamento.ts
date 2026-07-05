@@ -1,4 +1,5 @@
 import { GrupoVisita, CordaoColor, calcAdultCordoes } from '@/types';
+import { getBranding } from '@/lib/branding';
 
 export interface FechamentoNumeros {
   data: string; // dd/mm/yyyy
@@ -89,7 +90,7 @@ export async function gerarImagemPNG(f: FechamentoNumeros): Promise<Blob> {
 
   ctx.fillStyle = '#94A3B8';
   ctx.font = '28px system-ui, -apple-system, sans-serif';
-  ctx.fillText('Cidade Mais Infância — ' + f.data, W / 2, 140);
+  ctx.fillText(getBranding().orgName + ' — ' + f.data, W / 2, 140);
 
   // Cordões
   ctx.textAlign = 'left';
@@ -171,7 +172,7 @@ export async function gerarPDF(f: FechamentoNumeros): Promise<Blob> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
   doc.setTextColor(100);
-  doc.text('Cidade Mais Infância', W / 2, y, { align: 'center' });
+  doc.text(getBranding().orgName, W / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(11);
   doc.text(`Data de operação: ${f.data}`, W / 2, y, { align: 'center' });

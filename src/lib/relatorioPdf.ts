@@ -1,7 +1,7 @@
 // Geração de Relatório Final de Operação em PDF profissional (jsPDF + autoTable)
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import logoUrl from '@/assets/logo-completa.png';
+import { getLogoDataUrlForCanvas, getBranding } from '@/lib/branding';
 import { CordaoColor, getCordaoLabel } from '@/types';
 
 export interface RelatorioFinalData {
@@ -60,7 +60,8 @@ export async function gerarRelatorioFinalPDF(d: RelatorioFinalData): Promise<voi
   const margin = 14;
 
   let logoData: string | null = null;
-  try { logoData = await loadImageAsDataURL(logoUrl); } catch { /* ignore */ }
+  try { logoData = (await getLogoDataUrlForCanvas()) || null; } catch { /* ignore */ }
+  const orgName = getBranding().orgName;
 
   // ---------- HEADER (em cada página via didDrawPage) ----------
   const drawHeader = () => {
@@ -76,7 +77,7 @@ export async function gerarRelatorioFinalPDF(d: RelatorioFinalData): Promise<voi
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
     doc.setTextColor(110, 120, 140);
-    doc.text(`Cidade Mais Infância · Sentinela · ${d.periodoLabel} (${d.dataLabel})`, margin + 18, 16);
+    doc.text(`${orgName} · Sentinela · ${d.periodoLabel} (${d.dataLabel})`, margin + 18, 16);
     doc.setDrawColor(220, 226, 234);
     doc.setLineWidth(0.2);
     doc.line(margin, 22, pageW - margin, 22);

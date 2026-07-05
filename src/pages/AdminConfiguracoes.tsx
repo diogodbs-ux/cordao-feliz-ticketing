@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Bell, Shield, Save, Target } from 'lucide-react';
+import { Settings, Bell, Shield, Save, Target, Image as ImageIcon, Upload, Trash2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 import { MetaAnual, getMetaDoAno, upsertMeta } from '@/types/metas';
+import { Branding, getBranding, saveBranding, resetBranding, fileToLogoDataUrl, getLogoSrc, subscribeBranding } from '@/lib/branding';
 
 const STORAGE_KEY = 'sentinela_alert_config';
 
@@ -65,6 +66,33 @@ export default function AdminConfiguracoes() {
     toast.success(`Meta de ${anoMeta} salva!`);
   };
 
+  // ---- Branding (logo customizável — período eleitoral) ----
+  const [branding, setBranding] = useState<Branding>(getBranding());
+  const [logoPreview, setLogoPreview] = useState<string>(getLogoSrc());
+  useEffect(() => subscribeBranding(() => {
+    setBranding(getBranding());
+    setLogoPreview(getLogoSrc());
+  }), []);
+
+  const handleUploadLogo = async (e: React.ChangeEvent<HTMLInputElement>, campo: 'logoDataUrl' | 'logoSecundariaDataUrl') => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Selecione um arquivo de imagem (PNG, JPG, SVG).'); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Imagem muito grande. Limite: 5 MB.'); return; }
+    try {
+      const dataUrl = await fileToLogoDataUrl(file, 512);
+      saveBranding({ [campo]: dataUrl });
+      toast.success('Logo atualizada!');
+    } catch { toast.error('Não foi possível processar a imagem.'); }
+  };
+
+  const salvarTextos = () => {
+    saveBranding({ orgName: branding.orgName, orgFooter: branding.orgFooter, ocultarLogoPadrao: branding.ocultarLogoPadrao });
+    toast.success('Identidade salva!');
+  };
+
+
 
   const roleDescriptions: Record<UserRole, { label: string; desc: string; color: string }> = {
     admin: { label: 'Administrador', desc: 'Acesso total: dashboard, importação, usuários, relatórios, configurações, listas especiais e gráficos históricos.', color: 'bg-cordao-preto' },
@@ -81,6 +109,113 @@ export default function AdminConfiguracoes() {
         <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
         <p className="text-sm text-muted-foreground">Ajustes de alertas e definição de perfis do sistema</p>
       </div>
+
+      {/* Identidade Visual / Branding */}
+      <div className="bg-card rounded-xl shadow-card p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+          <ImageIcon className="h-4 w-4 text-primary" />
+          Identidade Visual (Logos e Nome)
+        </h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          Personalize a logo e o nome exibido em telas, crachás, etiquetas e relatórios.
+          Útil em <b>períodos eleitorais</b>: substitua a logo institucional pela logo neutra
+          (ex.: Governo do Estado) e reverta depois com um clique.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Logo principal */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider">Logo principal</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center gap-3 bg-secondary/20 min-h-[160px] justify-center">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo atual" className="max-h-24 max-w-full object-contain" />
+              ) : (
+                <div className="text-xs text-muted-foreground text-center px-4">
+                  Nenhuma logo ativa.<br />O sistema exibirá apenas o nome.
+                </div>
+              )}
+              <div className="flex gap-2 flex-wrap justify-center">
+                <label className="cursor-pointer">
+                  <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden" onChange={e => handleUploadLogo(e, 'logoDataUrl')} />
+                  <span className="inline-flex items-center gap-1.5 text-xs bg-primary text-primary-foreground rounded-md px-3 py-1.5 hover:bg-primary/90">
+                    <Upload className="h-3.5 w-3.5" /> Enviar nova
+                  </span>
+                </label>
+                {branding.logoDataUrl && (
+                  <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => { saveBranding({ logoDataUrl: '' }); toast.success('Logo customizada removida.'); }}>
+                    <Trash2 className="h-3.5 w-3.5" /> Remover custom
+                  </Button>
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">PNG/JPG/SVG · até 5 MB · redimensionado para 512px</p>
+            </div>
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <div>
+                <p className="text-xs font-medium">Ocultar logo padrão</p>
+                <p className="text-[10px] text-muted-foreground">Ative durante período eleitoral para não exibir a logo institucional se não houver customização.</p>
+              </div>
+              <Switch
+                checked={branding.ocultarLogoPadrao}
+                onCheckedChange={v => setBranding(b => ({ ...b, ocultarLogoPadrao: v }))}
+              />
+            </div>
+          </div>
+
+          {/* Logo secundária */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider">Logo secundária (opcional)</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center gap-3 bg-secondary/20 min-h-[160px] justify-center">
+              {branding.logoSecundariaDataUrl ? (
+                <img src={branding.logoSecundariaDataUrl} alt="Logo secundária" className="max-h-24 max-w-full object-contain" />
+              ) : (
+                <div className="text-xs text-muted-foreground text-center px-4">
+                  Nenhuma logo secundária.<br />Ex.: Governo do Estado, patrocinador.
+                </div>
+              )}
+              <div className="flex gap-2 flex-wrap justify-center">
+                <label className="cursor-pointer">
+                  <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden" onChange={e => handleUploadLogo(e, 'logoSecundariaDataUrl')} />
+                  <span className="inline-flex items-center gap-1.5 text-xs bg-primary text-primary-foreground rounded-md px-3 py-1.5 hover:bg-primary/90">
+                    <Upload className="h-3.5 w-3.5" /> Enviar
+                  </span>
+                </label>
+                {branding.logoSecundariaDataUrl && (
+                  <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => { saveBranding({ logoSecundariaDataUrl: '' }); toast.success('Logo secundária removida.'); }}>
+                    <Trash2 className="h-3.5 w-3.5" /> Remover
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div className="space-y-2">
+            <Label>Nome da organização (exibido em telas e relatórios)</Label>
+            <Input value={branding.orgName} onChange={e => setBranding(b => ({ ...b, orgName: e.target.value }))} />
+          </div>
+          <div className="space-y-2">
+            <Label>Rodapé / crédito institucional</Label>
+            <Input value={branding.orgFooter} onChange={e => setBranding(b => ({ ...b, orgFooter: e.target.value }))} />
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-4">
+          <Button onClick={salvarTextos} className="gap-2">
+            <Save className="h-4 w-4" /> Salvar identidade
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => { resetBranding(); toast.success('Identidade restaurada para o padrão.'); }}>
+            <RotateCcw className="h-4 w-4" /> Restaurar padrão
+          </Button>
+        </div>
+
+        {branding.atualizadoEm && (
+          <p className="text-[10px] text-muted-foreground mt-3">
+            Última alteração: {new Date(branding.atualizadoEm).toLocaleString('pt-BR')}
+          </p>
+        )}
+      </div>
+
 
       {/* Metas Anuais */}
       <div className="bg-card rounded-xl shadow-card p-6">
