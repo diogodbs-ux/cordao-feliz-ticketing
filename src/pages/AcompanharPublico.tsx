@@ -160,6 +160,10 @@ function ResultadoView({
 }) {
   const pushSupported = isPushSupported();
   const [pushOn, setPushOn] = useState(() => estaAtivo(token, nomeCrianca));
+  const [permState, setPermState] = useState(getPermissionState());
+  const [permMsg, setPermMsg] = useState<string | null>(null);
+
+  useEffect(() => { ensureServiceWorker(); }, []);
 
   useEffect(() => {
     if (!pushOn) return;
@@ -168,12 +172,12 @@ function ResultadoView({
   }, [pushOn]);
 
   const togglePush = async () => {
-    if (pushOn) { desativarPush(token, nomeCrianca); setPushOn(false); }
-    else {
-      const r = await ativarPush(token, nomeCrianca);
-      if (r.ok) setPushOn(true);
-      else alert(r.motivo || 'Não foi possível ativar.');
-    }
+    setPermMsg(null);
+    if (pushOn) { desativarPush(token, nomeCrianca); setPushOn(false); return; }
+    const r = await ativarPush(token, nomeCrianca);
+    setPermState(r.state);
+    if (r.ok) setPushOn(true);
+    else setPermMsg(r.motivo || 'Não foi possível ativar.');
   };
 
   return (
