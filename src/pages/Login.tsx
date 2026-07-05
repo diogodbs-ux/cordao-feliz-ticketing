@@ -37,7 +37,7 @@ export default function Login() {
       >
         <div className="bg-card rounded-xl shadow-elevated p-8 space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            <img src={logo} alt="Cidade Mais Infância" className="h-24 w-auto" />
+            <BrandLogo className="h-24 w-auto max-w-[220px] object-contain" fallbackInitials />
             <div className="text-center">
               <h1 className="text-2xl font-bold text-foreground">Sentinela Infância</h1>
               <p className="text-sm text-muted-foreground mt-1">Sistema de Gestão Operacional</p>
