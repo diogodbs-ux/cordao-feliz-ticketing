@@ -1,7 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import logo from '@/assets/logo-completa.png';
+import BrandLogo from '@/components/BrandLogo';
+import { getBranding, subscribeBranding } from '@/lib/branding';
 import { Button } from '@/components/ui/button';
 import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
