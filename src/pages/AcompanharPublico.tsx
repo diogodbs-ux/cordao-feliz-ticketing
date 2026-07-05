@@ -204,6 +204,15 @@ function ResultadoView({
         </div>
       </div>
 
+      {permMsg && (
+        <div className={cn(
+          'text-xs rounded-lg p-3 border',
+          permState === 'denied' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-800'
+        )}>
+          {permMsg}
+        </div>
+      )}
+
       <div className="grid gap-3">
         {data.criancas.map(c => {
           const cor = c.cor as CordaoColor;
