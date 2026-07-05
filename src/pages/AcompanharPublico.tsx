@@ -77,7 +77,7 @@ export default function AcompanharPublico() {
           </div>
           <div>
             <h1 className="font-bold text-foreground leading-tight">Acompanhamento ao Vivo</h1>
-            <p className="text-xs text-muted-foreground">Cidade Mais Infância · Sentinela</p>
+            <p className="text-xs text-muted-foreground">Sentinela</p>
           </div>
         </div>
       </header>
