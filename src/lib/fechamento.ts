@@ -1,4 +1,5 @@
 import { GrupoVisita, CordaoColor, calcAdultCordoes } from '@/types';
+import { getBranding } from '@/lib/branding';
 
 export interface FechamentoNumeros {
   data: string; // dd/mm/yyyy
