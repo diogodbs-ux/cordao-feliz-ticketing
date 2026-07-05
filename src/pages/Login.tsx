@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import logo from '@/assets/logo-completa.png';
+import BrandLogo from '@/components/BrandLogo';
+import { getBranding } from '@/lib/branding';
 import { motion } from 'framer-motion';
 import { Shield, AlertCircle } from 'lucide-react';
 
