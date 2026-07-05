@@ -278,10 +278,10 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
     </style>
     </head><body>
       <div class="header">
-        <img src="${logoUrl}" class="brand" alt="Cidade Mais Infância" />
+        ${logoUrl ? `<img src="${logoUrl}" class="brand" alt="${orgName}" />` : ''}
         <div class="meta">
           <h1>${titulo}</h1>
-          <p>Cidade Mais Infância · ${itens.length} cordões · gerado em ${new Date().toLocaleString('pt-BR')}</p>
+          <p>${orgName} · ${itens.length} cordões · gerado em ${new Date().toLocaleString('pt-BR')}</p>
         </div>
       </div>
       <div class="grid">${cards}</div>
