@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Bell, Shield, Save, Target } from 'lucide-react';
+import { Settings, Bell, Shield, Save, Target, Image as ImageIcon, Upload, Trash2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 import { MetaAnual, getMetaDoAno, upsertMeta } from '@/types/metas';
+import { Branding, getBranding, saveBranding, resetBranding, fileToLogoDataUrl, getLogoSrc, subscribeBranding } from '@/lib/branding';
 
 const STORAGE_KEY = 'sentinela_alert_config';
 
