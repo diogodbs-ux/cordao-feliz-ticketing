@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MapPin, Clock, ShieldCheck, ShieldAlert, Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import { buscarToken, consultarLocalizacao } from '@/lib/rastreamento';
-import { ativarPush, desativarPush, estaAtivo, iniciarPolling, isPushSupported } from '@/lib/pushNotif';
+import { ativarPush, desativarPush, estaAtivo, iniciarPolling, isPushSupported, getPermissionState, ensureServiceWorker } from '@/lib/pushNotif';
 import { Bell, BellOff } from 'lucide-react';
 import { CordaoColor, getCordaoLabel } from '@/types';
 import { cn } from '@/lib/utils';
