@@ -15,7 +15,19 @@ interface NodeEspaco {
   cx: number;
   cy: number;
   r: number;
+  ciclo?: CicloEspaco;
 }
+
+function tempoDecorrido(inicioISO: string, agora: number) {
+  const seg = Math.max(0, Math.floor((agora - new Date(inicioISO).getTime()) / 1000));
+  const h = Math.floor(seg / 3600);
+  const m = Math.floor((seg % 3600) / 60);
+  const s = seg % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 
 function ocupacaoCor(taxa: number): string {
   if (taxa >= 0.9) return 'hsl(0 84% 56%)';      // vermelho
