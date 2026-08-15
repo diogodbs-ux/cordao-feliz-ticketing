@@ -41,11 +41,17 @@ export default function AdminHeatmap() {
   const { checkins } = useData();
   const [espacos, setEspacos] = useState<EspacoLudico[]>(readEspacos);
   const [ciclos, setCiclos] = useState<CicloEspaco[]>(readCiclos);
+  const [agora, setAgora] = useState(() => Date.now());
 
   useEffect(() => {
     const refresh = () => { setEspacos(readEspacos()); setCiclos(readCiclos()); };
     refresh();
     return subscribeEspacosChange(refresh);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   const nodes: NodeEspaco[] = useMemo(() => {
@@ -73,12 +79,17 @@ export default function AdminHeatmap() {
         cx: padX + col * stepX,
         cy: padY + row * stepY,
         r,
+        ciclo: cicloAberto,
       };
     });
   }, [espacos, ciclos]);
 
   const totalAtivos = nodes.reduce((a, n) => a + n.ativos, 0);
   const lotados = nodes.filter(n => n.taxa >= 0.8).length;
+  const emAndamento = useMemo(
+    () => ciclos.filter(c => !c.fim).sort((a, b) => b.inicio.localeCompare(a.inicio)),
+    [ciclos]
+  );
   const predicao = useMemo(() => preverProximos30Min(checkins), [checkins]);
 
   return (
@@ -91,9 +102,39 @@ export default function AdminHeatmap() {
         <div className="flex items-center gap-4 text-sm">
           <Stat icon={<Users className="h-4 w-4 text-primary" />} label="Crianças ativas" value={totalAtivos} />
           <Stat icon={<AlertTriangle className="h-4 w-4 text-amber-500" />} label="Espaços lotados" value={lotados} />
-          <Stat icon={<Activity className="h-4 w-4 text-cordao-verde" />} label="Espaços ativos" value={nodes.length} />
+          <Stat icon={<Activity className="h-4 w-4 text-cordao-verde" />} label="Atividades em andamento" value={emAndamento.length} />
+          <Stat icon={<Activity className="h-4 w-4 text-muted-foreground" />} label="Espaços ativos" value={nodes.length} />
         </div>
       </div>
+
+      {/* Atividades em andamento — quem iniciou, onde e há quanto tempo */}
+      <div className="bg-card rounded-2xl shadow-card p-5">
+        <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <Activity className="h-4 w-4 text-cordao-verde" /> Atividades em andamento
+        </p>
+        {emAndamento.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma atividade iniciada agora. Quando um recreador iniciar um ciclo em “Meu Espaço”, ele aparece aqui em tempo real.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {emAndamento.map(c => (
+              <div key={c.id} className="rounded-xl border border-cordao-verde/30 bg-cordao-verde/5 p-4">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-cordao-verde animate-pulse" />
+                  <p className="text-sm font-bold text-foreground truncate">{c.espacoNome}</p>
+                  <span className="ml-auto text-sm font-mono-data font-bold text-foreground">{tempoDecorrido(c.inicio, agora)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 truncate">
+                  Recreador: <span className="font-medium text-foreground">{c.recreadorNome || '—'}</span>
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Início às {new Date(c.inicio).toLocaleTimeString('pt-BR')} · {c.totalCriancas} criança(s) · {c.totalAdultos} adulto(s)
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
 
       {/* Predição */}
       <div className={cn(
