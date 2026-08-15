@@ -410,9 +410,14 @@ export default function RecreadorEspacoPanel() {
               </p>
               <p className="text-lg font-bold text-foreground mt-1">{cicloAtual.espacoNome}</p>
               <p className="text-xs text-muted-foreground">
+                Recreador responsável: <span className="font-semibold text-foreground">{cicloAtual.recreadorNome || user?.nome || '—'}</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
                 Iniciado às {new Date(cicloAtual.inicio).toLocaleTimeString('pt-BR')}
                 {espaco?.capacidadeCiclo && ` · Cap.: ${espaco.capacidadeCiclo}`}
+                {' · visível para a coordenação em tempo real'}
               </p>
+
             </div>
             <div className="flex items-center gap-3 ml-auto">
               <div className="rounded-xl bg-secondary/50 border border-border px-4 py-2 text-center">
