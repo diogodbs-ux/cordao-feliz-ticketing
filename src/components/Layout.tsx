@@ -104,15 +104,17 @@ export default function Layout() {
   if (!user) return null;
 
   const allowed = getAllowedPathsForUser(user);
-  // Mantém ordem original de ALL_NAV; usa o primeiro label encontrado para cada path permitido
   const seen = new Set<string>();
-  const navItems = ALL_NAV.filter(item => {
-    if (!allowed.includes(item.path)) return false;
-    const key = item.path;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const groups = NAV_GROUPS
+    .map(g => ({
+      ...g,
+      items: g.items.filter(item => {
+        if (!allowed.includes(item.path) || seen.has(item.path)) return false;
+        seen.add(item.path);
+        return true;
+      }),
+    }))
+    .filter(g => g.items.length > 0);
   void permsVersion;
 
   return (
@@ -129,27 +131,36 @@ export default function Layout() {
           <div className="mt-3"><OfflineBadge /></div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
-          {navItems.map(item => {
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.path + item.label}
-                onClick={() => navigate(item.path)}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                  active
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                )}
-              >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{item.label}</span>
-                {active && <ChevronRight className="h-3 w-3 ml-auto" />}
-              </button>
-            );
-          })}
+        <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
+          {groups.map(group => (
+            <div key={group.section} className="space-y-1">
+              <div className="px-3 pb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/70">{group.section}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">{group.hint}</p>
+              </div>
+              {group.items.map(item => {
+                const active = location.pathname === item.path;
+                return (
+                  <button
+                    key={item.path + item.label}
+                    onClick={() => navigate(item.path)}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                      active
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                    {active && <ChevronRight className="h-3 w-3 ml-auto" />}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
+
 
         <div className="p-3 border-t border-border">
           {canInstall && (
