@@ -180,6 +180,17 @@ export default function AdminHeatmap() {
           <rect width="1000" height="560" fill="url(#parkBg)" rx="16" />
           {nodes.map(n => (
             <g key={n.espaco.id}>
+              {n.ciclo && (
+                <circle
+                  cx={n.cx} cy={n.cy} r={n.r + 12}
+                  fill="none"
+                  stroke="hsl(142 71% 45%)"
+                  strokeWidth="2"
+                  strokeDasharray="5 5"
+                  className="pulsing"
+                />
+              )}
+
               <circle
                 cx={n.cx} cy={n.cy} r={n.r + 6}
                 fill={ocupacaoCor(n.taxa)}
