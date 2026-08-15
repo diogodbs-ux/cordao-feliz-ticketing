@@ -17,36 +17,67 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useAutoEncerramento } from '@/hooks/useAutoEncerramento';
 
 type NavItem = { label: string; icon: any; path: string };
+type NavGroup = { section: string; hint: string; items: NavItem[] };
 
-const ALL_NAV: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-  { label: 'Importar Dados', icon: ClipboardCheck, path: '/admin/importar' },
-  { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
-  { label: 'QR Codes', icon: QrCode, path: '/admin/qrcodes' },
-  { label: 'Espaços Lúdicos (Admin)', icon: MapPin, path: '/admin/espacos' },
-  { label: 'Cordões Numerados', icon: Tag, path: '/admin/cordoes' },
-  { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
-  { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
-  { label: 'Consolidado Anual', icon: Target, path: '/admin/consolidado' },
-  { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
-  { label: 'Ciclos por Espaço', icon: Activity, path: '/admin/ciclos' },
-  { label: 'Acompanhamento (Tokens)', icon: QrCode, path: '/admin/rastreamento' },
-  { label: 'Auditoria', icon: Shield, path: '/admin/auditoria' },
-  { label: 'Permissões', icon: Shield, path: '/admin/permissoes' },
-  { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
-  { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
-  { label: 'Apresentação', icon: Presentation, path: '/apresentacao' },
-  { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
-  { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
-  { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
-  { label: 'Portaria — Devolução', icon: DoorOpen, path: '/portaria/devolucao' },
-  { label: 'Encerramento 18h (Auto)', icon: DoorClosed, path: '/admin/encerramento' },
-  { label: 'Heatmap do Parque', icon: Flame, path: '/admin/heatmap' },
-  { label: 'Crachás dos Recreadores', icon: IdCard, path: '/admin/crachas' },
-  { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
-  { label: 'Check-in (Observador)', icon: Eye, path: '/recreador' },
-  { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
+const NAV_GROUPS: NavGroup[] = [
+  {
+    section: 'Receptivo (Guichê)',
+    hint: 'Entrada de visitantes',
+    items: [
+      { label: 'Check-in', icon: ClipboardCheck, path: '/recreador' },
+      { label: 'Portaria — Devolução', icon: DoorOpen, path: '/portaria/devolucao' },
+      { label: 'QR Codes', icon: QrCode, path: '/admin/qrcodes' },
+    ],
+  },
+  {
+    section: 'Espaços Lúdicos (Recreadores)',
+    hint: 'Operação dentro dos espaços',
+    items: [
+      { label: 'Meu Espaço', icon: MapPin, path: '/espaco' },
+      { label: 'Crachás dos Recreadores', icon: IdCard, path: '/admin/crachas' },
+    ],
+  },
+  {
+    section: 'Coordenação (Tempo Real)',
+    hint: 'Monitoramento da operação',
+    items: [
+      { label: 'Painel em Tempo Real', icon: LayoutDashboard, path: '/coordenador' },
+      { label: 'Espaços Lúdicos', icon: MapPin, path: '/coordenador/espacos' },
+      { label: 'Heatmap do Parque', icon: Flame, path: '/admin/heatmap' },
+      { label: 'Ciclos por Espaço', icon: Activity, path: '/admin/ciclos' },
+      { label: 'Jornadas (cordão)', icon: RouteIcon, path: '/coordenador/jornadas' },
+      { label: 'Acompanhamento (Tokens)', icon: QrCode, path: '/admin/rastreamento' },
+    ],
+  },
+  {
+    section: 'Gestão & Análise',
+    hint: 'Indicadores e relatórios',
+    items: [
+      { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
+      { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
+      { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
+      { label: 'Encerramento 18h (Auto)', icon: DoorClosed, path: '/admin/encerramento' },
+      { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },
+      { label: 'Consolidado Anual', icon: Target, path: '/admin/consolidado' },
+      { label: 'Apresentação', icon: Presentation, path: '/apresentacao' },
+    ],
+  },
+  {
+    section: 'Administração',
+    hint: 'Cadastros e configurações',
+    items: [
+      { label: 'Importar Dados', icon: ClipboardCheck, path: '/admin/importar' },
+      { label: 'Listas Especiais', icon: Cake, path: '/admin/listas-especiais' },
+      { label: 'Espaços Lúdicos (Admin)', icon: MapPin, path: '/admin/espacos' },
+      { label: 'Cordões Numerados', icon: Tag, path: '/admin/cordoes' },
+      { label: 'Usuários', icon: Users, path: '/admin/usuarios' },
+      { label: 'Permissões', icon: Shield, path: '/admin/permissoes' },
+      { label: 'Auditoria', icon: Shield, path: '/admin/auditoria' },
+      { label: 'Configurações', icon: Settings, path: '/admin/configuracoes' },
+    ],
+  },
 ];
+
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -73,15 +104,17 @@ export default function Layout() {
   if (!user) return null;
 
   const allowed = getAllowedPathsForUser(user);
-  // Mantém ordem original de ALL_NAV; usa o primeiro label encontrado para cada path permitido
   const seen = new Set<string>();
-  const navItems = ALL_NAV.filter(item => {
-    if (!allowed.includes(item.path)) return false;
-    const key = item.path;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const groups = NAV_GROUPS
+    .map(g => ({
+      ...g,
+      items: g.items.filter(item => {
+        if (!allowed.includes(item.path) || seen.has(item.path)) return false;
+        seen.add(item.path);
+        return true;
+      }),
+    }))
+    .filter(g => g.items.length > 0);
   void permsVersion;
 
   return (
@@ -98,27 +131,36 @@ export default function Layout() {
           <div className="mt-3"><OfflineBadge /></div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
-          {navItems.map(item => {
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.path + item.label}
-                onClick={() => navigate(item.path)}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                  active
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                )}
-              >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{item.label}</span>
-                {active && <ChevronRight className="h-3 w-3 ml-auto" />}
-              </button>
-            );
-          })}
+        <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
+          {groups.map(group => (
+            <div key={group.section} className="space-y-1">
+              <div className="px-3 pb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/70">{group.section}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">{group.hint}</p>
+              </div>
+              {group.items.map(item => {
+                const active = location.pathname === item.path;
+                return (
+                  <button
+                    key={item.path + item.label}
+                    onClick={() => navigate(item.path)}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                      active
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                    {active && <ChevronRight className="h-3 w-3 ml-auto" />}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
+
 
         <div className="p-3 border-t border-border">
           {canInstall && (
