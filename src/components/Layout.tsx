@@ -93,6 +93,22 @@ export default function Layout() {
   const { canInstall, promptInstall } = usePWAInstall();
   useAutoEncerramento();
 
+  const [modulos, setModulos] = useState(() => readModulos());
+  const [cicloAberto, setCicloAberto] = useState<{ espacoNome: string; inicio: string } | null>(null);
+
+  useEffect(() => subscribeModulos(() => setModulos(readModulos())), []);
+
+  useEffect(() => {
+    if (!user || !modulos.travarNavegacaoCicloAtivo) { setCicloAberto(null); return; }
+    const check = () => {
+      const aberto = readCiclos().find(c => !c.fim && c.recreadorId === user.id);
+      setCicloAberto(aberto ? { espacoNome: aberto.espacoNome, inicio: aberto.inicio } : null);
+    };
+    check();
+    const id = setInterval(check, 4000);
+    return () => clearInterval(id);
+  }, [user, modulos.travarNavegacaoCicloAtivo]);
+
   useEffect(() => {
     const handler = () => setPermsVersion(v => v + 1);
     window.addEventListener('sentinela:permissoes-changed', handler);
@@ -111,6 +127,7 @@ export default function Layout() {
     .map(g => ({
       ...g,
       items: g.items.filter(item => {
+        if (modulos.telasOcultas.includes(item.path)) return false;
         if (!allowed.includes(item.path) || seen.has(item.path)) return false;
         seen.add(item.path);
         return true;
@@ -118,6 +135,9 @@ export default function Layout() {
     }))
     .filter(g => g.items.length > 0);
   void permsVersion;
+
+  const travado = !!cicloAberto && location.pathname === '/espaco';
+
 
   return (
     <div className="min-h-screen flex bg-background">
