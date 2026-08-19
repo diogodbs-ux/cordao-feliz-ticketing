@@ -136,7 +136,7 @@ export default function Layout() {
     .filter(g => g.items.length > 0);
   void permsVersion;
 
-  const travado = !!cicloAberto && location.pathname === '/espaco';
+  const travado = !!cicloAberto;
 
 
   return (
@@ -151,6 +151,15 @@ export default function Layout() {
             </div>
           </div>
           <div className="mt-3"><OfflineBadge /></div>
+          {travado && (
+            <button
+              onClick={() => navigate('/espaco')}
+              className="mt-3 w-full text-left rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-2"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1"><Lock className="h-3 w-3" /> Navegação travada</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Ciclo aberto em {cicloAberto?.espacoNome} desde {new Date(cicloAberto!.inicio).toLocaleTimeString('pt-BR')}. Finalize para liberar.</p>
+            </button>
+          )}
         </div>
 
         <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
@@ -162,20 +171,24 @@ export default function Layout() {
               </div>
               {group.items.map(item => {
                 const active = location.pathname === item.path;
+                const bloqueado = travado && item.path !== '/espaco';
                 return (
                   <button
                     key={item.path + item.label}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => { if (!bloqueado) navigate(item.path); }}
+                    disabled={bloqueado}
+                    title={bloqueado ? 'Navegação travada: finalize o ciclo ativo no Meu Espaço' : undefined}
                     className={cn(
                       'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                       active
                         ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                      bloqueado && 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
                     )}
                   >
                     <item.icon className="h-4 w-4 flex-shrink-0" />
                     <span className="truncate">{item.label}</span>
-                    {active && <ChevronRight className="h-3 w-3 ml-auto" />}
+                    {bloqueado ? <Lock className="h-3 w-3 ml-auto" /> : active && <ChevronRight className="h-3 w-3 ml-auto" />}
                   </button>
                 );
               })}
