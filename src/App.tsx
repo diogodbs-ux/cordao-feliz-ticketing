@@ -36,6 +36,7 @@ import AdminHeatmap from "@/pages/AdminHeatmap";
 import { CrachasRecreadoresAdmin, CrachaPublico } from "@/pages/CrachasRecreadores";
 import NotFound from "@/pages/NotFound";
 import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
+import { isTelaOculta } from "@/lib/modulos";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ function PermissionRoute({ children, path, roles }: { children: React.ReactNode;
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   void roles;
+  if (isTelaOculta(path)) return <Navigate to="/" replace />;
   if (!user || !hasUserMenuAccess(user, path)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
@@ -58,7 +60,7 @@ function HomeRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   const allowed = getAllowedPathsForUser(user);
-  const firstAllowed = ALL_MENU_ITEMS.find(item => allowed.includes(item.path))?.path;
+  const firstAllowed = ALL_MENU_ITEMS.find(item => allowed.includes(item.path) && !isTelaOculta(item.path))?.path;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
   return <Navigate to={firstAllowed || '/login'} replace />;
 }

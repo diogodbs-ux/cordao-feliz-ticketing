@@ -8,11 +8,13 @@ import {
   LogOut, Users, LayoutDashboard, Settings, ClipboardCheck, ChevronRight, Eye,
   BarChart3, History, Cake, Presentation, QrCode, Download,
   MapPin, FileBarChart, Target, Tag, Route as RouteIcon, Shield, Activity, DoorOpen, DoorClosed,
-  Flame, IdCard,
+  Flame, IdCard, Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OfflineBadge from '@/components/OfflineBadge';
 import { getAllowedPathsForUser } from '@/lib/permissoes';
+import { readModulos, subscribeModulos } from '@/lib/modulos';
+import { readCiclos } from '@/types/espacos';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useAutoEncerramento } from '@/hooks/useAutoEncerramento';
 
@@ -91,6 +93,22 @@ export default function Layout() {
   const { canInstall, promptInstall } = usePWAInstall();
   useAutoEncerramento();
 
+  const [modulos, setModulos] = useState(() => readModulos());
+  const [cicloAberto, setCicloAberto] = useState<{ espacoNome: string; inicio: string } | null>(null);
+
+  useEffect(() => subscribeModulos(() => setModulos(readModulos())), []);
+
+  useEffect(() => {
+    if (!user || !modulos.travarNavegacaoCicloAtivo) { setCicloAberto(null); return; }
+    const check = () => {
+      const aberto = readCiclos().find(c => !c.fim && c.recreadorId === user.id);
+      setCicloAberto(aberto ? { espacoNome: aberto.espacoNome, inicio: aberto.inicio } : null);
+    };
+    check();
+    const id = setInterval(check, 4000);
+    return () => clearInterval(id);
+  }, [user, modulos.travarNavegacaoCicloAtivo]);
+
   useEffect(() => {
     const handler = () => setPermsVersion(v => v + 1);
     window.addEventListener('sentinela:permissoes-changed', handler);
@@ -109,6 +127,7 @@ export default function Layout() {
     .map(g => ({
       ...g,
       items: g.items.filter(item => {
+        if (modulos.telasOcultas.includes(item.path)) return false;
         if (!allowed.includes(item.path) || seen.has(item.path)) return false;
         seen.add(item.path);
         return true;
@@ -116,6 +135,9 @@ export default function Layout() {
     }))
     .filter(g => g.items.length > 0);
   void permsVersion;
+
+  const travado = !!cicloAberto;
+
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -129,6 +151,15 @@ export default function Layout() {
             </div>
           </div>
           <div className="mt-3"><OfflineBadge /></div>
+          {travado && (
+            <button
+              onClick={() => navigate('/espaco')}
+              className="mt-3 w-full text-left rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-2"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1"><Lock className="h-3 w-3" /> Navegação travada</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Ciclo aberto em {cicloAberto?.espacoNome} desde {new Date(cicloAberto!.inicio).toLocaleTimeString('pt-BR')}. Finalize para liberar.</p>
+            </button>
+          )}
         </div>
 
         <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
@@ -140,20 +171,24 @@ export default function Layout() {
               </div>
               {group.items.map(item => {
                 const active = location.pathname === item.path;
+                const bloqueado = travado && item.path !== '/espaco';
                 return (
                   <button
                     key={item.path + item.label}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => { if (!bloqueado) navigate(item.path); }}
+                    disabled={bloqueado}
+                    title={bloqueado ? 'Navegação travada: finalize o ciclo ativo no Meu Espaço' : undefined}
                     className={cn(
                       'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                       active
                         ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                      bloqueado && 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
                     )}
                   >
                     <item.icon className="h-4 w-4 flex-shrink-0" />
                     <span className="truncate">{item.label}</span>
-                    {active && <ChevronRight className="h-3 w-3 ml-auto" />}
+                    {bloqueado ? <Lock className="h-3 w-3 ml-auto" /> : active && <ChevronRight className="h-3 w-3 ml-auto" />}
                   </button>
                 );
               })}

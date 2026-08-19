@@ -12,7 +12,8 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { logAuditoria } from '@/lib/auditoria';
 import { beepSuperlotacao, beepPCD, beepOk } from '@/lib/sounds';
-import { Accessibility, Volume2 } from 'lucide-react';
+import { Accessibility, Volume2, Lock, CheckCircle2, CircleDot, Circle } from 'lucide-react';
+import { readModulos, subscribeModulos } from '@/lib/modulos';
 
 const COR_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9', verde: '#3CB371', amarelo: '#F5C518',
@@ -38,6 +39,8 @@ export default function RecreadorEspacoPanel() {
   const [audioOn, setAudioOn] = useState(true);
   const [alertaPCD, setAlertaPCD] = useState<{ nome: string; desc?: string } | null>(null);
   const alertou80Ref = useRef(false);
+  const [modulos, setModulos] = useState(() => readModulos());
+  useEffect(() => subscribeModulos(() => setModulos(readModulos())), []);
 
   useEffect(() => {
     const carregar = () => {
@@ -360,6 +363,68 @@ export default function RecreadorEspacoPanel() {
           <Volume2 className="h-4 w-4" /> {audioOn ? 'Som ON' : 'Som OFF'}
         </Button>
       </div>
+
+      {/* Quem está operando e onde */}
+      <div className="bg-card rounded-xl shadow-card p-4 flex flex-wrap items-center gap-4">
+        <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+          {(user?.nome || '?').charAt(0).toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recreador logado</p>
+          <p className="text-sm font-bold text-foreground truncate">{user?.nome || '—'}</p>
+          <p className="text-[11px] text-muted-foreground capitalize">{user?.role?.replace('_', ' ')}{user?.guiche ? ` · Guichê ${user.guiche}` : ''}</p>
+        </div>
+        <div className="min-w-0 border-l border-border pl-4">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Espaço alocado</p>
+          <p className="text-sm font-bold text-foreground truncate flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5 text-primary" />
+            {cicloAtual?.espacoNome || espaco?.nome || 'nenhum selecionado'}
+          </p>
+        </div>
+        <div className="ml-auto text-right">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</p>
+          <p className={cn('text-sm font-bold', cicloAtual ? 'text-cordao-verde' : 'text-muted-foreground')}>
+            {cicloAtual ? `Ciclo ativo · ${duracaoLabel}` : 'Sem ciclo aberto'}
+          </p>
+        </div>
+      </div>
+
+      {cicloAtual && modulos.travarNavegacaoCicloAtivo && (
+        <div className="rounded-xl border border-primary/40 bg-primary/10 p-3 flex items-center gap-2">
+          <Lock className="h-4 w-4 text-primary flex-shrink-0" />
+          <p className="text-xs text-foreground">
+            <strong>Navegação travada</strong> — as outras abas ficam bloqueadas até você finalizar (ou descartar) este ciclo.
+          </p>
+        </div>
+      )}
+
+      {/* Passo a passo da atividade (visível para supervisão/coordenação) */}
+      {cicloAtual && (
+        <div className="bg-card rounded-xl shadow-card p-5 border-l-4 border-cordao-verde">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-xs uppercase tracking-wider text-cordao-verde font-bold flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-cordao-verde animate-pulse" /> Atividade em andamento
+            </p>
+            <p className="text-[11px] text-muted-foreground">Espelhado em tempo real para coordenação (Heatmap, Espaços Lúdicos e Ciclos por Espaço)</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Início</p><p className="text-sm font-bold font-mono-data text-foreground">{new Date(cicloAtual.inicio).toLocaleTimeString('pt-BR')}</p></div>
+            <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Espaço</p><p className="text-sm font-bold text-foreground truncate">{cicloAtual.espacoNome}</p></div>
+            <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recreador</p><p className="text-sm font-bold text-foreground truncate">{cicloAtual.recreadorNome || user?.nome || '—'}</p></div>
+            <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tempo corrido</p><p className="text-sm font-bold font-mono-data text-foreground">{duracaoLabel}</p></div>
+          </div>
+          <div className="flex items-center gap-2 mt-4 text-[11px] flex-wrap">
+            <span className="inline-flex items-center gap-1 text-cordao-verde font-semibold"><CheckCircle2 className="h-3.5 w-3.5" /> 1. Ciclo iniciado</span>
+            <span className="text-muted-foreground">→</span>
+            <span className={cn('inline-flex items-center gap-1 font-semibold', codigosCiclo.length > 0 ? 'text-cordao-verde' : 'text-primary')}>
+              {codigosCiclo.length > 0 ? <CheckCircle2 className="h-3.5 w-3.5" /> : <CircleDot className="h-3.5 w-3.5 animate-pulse" />}
+              2. Leitura dos cordões ({codigosCiclo.length})
+            </span>
+            <span className="text-muted-foreground">→</span>
+            <span className="inline-flex items-center gap-1 text-muted-foreground"><Circle className="h-3.5 w-3.5" /> 3. Finalizar ciclo</span>
+          </div>
+        </div>
+      )}
 
       {alertaPCD && (
         <div className="fixed inset-0 z-50 bg-primary/30 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-none animate-in fade-in">

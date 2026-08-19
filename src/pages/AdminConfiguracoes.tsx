@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Bell, Shield, Save, Target, Image as ImageIcon, Upload, Trash2, RotateCcw } from 'lucide-react';
+import { Settings, Bell, Shield, Save, Target, Image as ImageIcon, Upload, Trash2, RotateCcw, EyeOff, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/types';
 import { MetaAnual, getMetaDoAno, upsertMeta } from '@/types/metas';
+import { ModulosConfig, readModulos, writeModulos } from '@/lib/modulos';
+import { ALL_MENU_ITEMS } from '@/lib/permissoes';
 import { Branding, getBranding, saveBranding, resetBranding, fileToLogoDataUrl, getLogoSrc, subscribeBranding } from '@/lib/branding';
 
 const STORAGE_KEY = 'sentinela_alert_config';
@@ -32,6 +34,19 @@ export default function AdminConfiguracoes() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     setConfig(toSave);
     toast.success('Configurações salvas com sucesso!');
+  };
+
+  // ---- Módulos / telas visíveis ----
+  const [modulos, setModulos] = useState<ModulosConfig>(() => readModulos());
+  const salvarModulos = (next: ModulosConfig) => {
+    setModulos(next);
+    writeModulos(next);
+    toast.success('Módulos atualizados');
+  };
+  const toggleTela = (path: string, visivel: boolean) => {
+    const ocultas = new Set(modulos.telasOcultas);
+    if (visivel) ocultas.delete(path); else ocultas.add(path);
+    salvarModulos({ ...modulos, telasOcultas: Array.from(ocultas) });
   };
 
   // ---- Metas ----
@@ -344,6 +359,44 @@ export default function AdminConfiguracoes() {
             <Save className="h-4 w-4" />
             Salvar Configurações
           </Button>
+        </div>
+      </div>
+
+      {/* Módulos & travas operacionais */}
+      <div className="bg-card rounded-xl shadow-card p-6">
+        <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+          <EyeOff className="h-4 w-4 text-muted-foreground" />
+          Módulos & Telas Visíveis
+        </h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          Desative telas que não fazem parte da operação atual — elas desaparecem do menu de todos os perfis (inclusive admin) e a rota fica bloqueada.
+          Ex.: se os cordões forem descartáveis, desative <strong>Portaria — Devolução</strong>.
+        </p>
+
+        <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-secondary/30 p-4 mb-4">
+          <div>
+            <p className="text-sm font-medium text-foreground flex items-center gap-2"><Lock className="h-3.5 w-3.5" /> Travar navegação durante ciclo ativo</p>
+            <p className="text-xs text-muted-foreground">O recreador fica preso na tela <strong>Meu Espaço</strong> até finalizar (ou descartar) o ciclo aberto.</p>
+          </div>
+          <Switch
+            checked={modulos.travarNavegacaoCicloAtivo}
+            onCheckedChange={v => salvarModulos({ ...modulos, travarNavegacaoCicloAtivo: v })}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          {ALL_MENU_ITEMS.map(item => {
+            const visivel = !modulos.telasOcultas.includes(item.path);
+            return (
+              <div key={item.path} className="flex items-center justify-between gap-3 py-2 border-b border-border/60">
+                <div className="min-w-0">
+                  <p className={cn('text-sm truncate', visivel ? 'text-foreground' : 'text-muted-foreground line-through')}>{item.label}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono-data truncate">{item.path}</p>
+                </div>
+                <Switch checked={visivel} onCheckedChange={v => toggleTela(item.path, v)} />
+              </div>
+            );
+          })}
         </div>
       </div>
 
