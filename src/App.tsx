@@ -36,6 +36,7 @@ import AdminHeatmap from "@/pages/AdminHeatmap";
 import { CrachasRecreadoresAdmin, CrachaPublico } from "@/pages/CrachasRecreadores";
 import NotFound from "@/pages/NotFound";
 import { ALL_MENU_ITEMS, getAllowedPathsForUser, hasUserMenuAccess } from "@/lib/permissoes";
+import { isTelaOculta } from "@/lib/modulos";
 
 const queryClient = new QueryClient();
 
@@ -59,7 +60,7 @@ function HomeRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   const allowed = getAllowedPathsForUser(user);
-  const firstAllowed = ALL_MENU_ITEMS.find(item => allowed.includes(item.path))?.path;
+  const firstAllowed = ALL_MENU_ITEMS.find(item => allowed.includes(item.path) && !isTelaOculta(item.path))?.path;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
   return <Navigate to={firstAllowed || '/login'} replace />;
 }
