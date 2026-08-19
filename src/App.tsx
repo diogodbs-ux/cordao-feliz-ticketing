@@ -50,6 +50,7 @@ function PermissionRoute({ children, path, roles }: { children: React.ReactNode;
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   void roles;
+  if (isTelaOculta(path)) return <Navigate to="/" replace />;
   if (!user || !hasUserMenuAccess(user, path)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
