@@ -168,25 +168,25 @@ export function gerarLote(
 /** Vincula um cordão a um protocolo (no check-in). Retorna mensagem de erro se houver. */
 export function vincularCordao(
   codigo: string,
-  ctx: { protocolo: string; grupoId: string; membroNome?: string; membroTipo?: 'crianca' | 'adulto'; membroIdade?: number; pcd?: boolean; pcdDescricao?: string }
+  ctx: { protocolo: string; grupoId: string; membroNome?: string; membroTipo?: 'crianca' | 'adulto'; membroIdade?: number; pcd?: boolean; pcdDescricao?: string; guiche?: number; operador?: string }
 ): { ok: true; cordao: CordaoUnidade } | { ok: false; erro: string } {
   const parsed = parseCodigo(codigo);
   if (!parsed) {
-    logAuditoria('cordao.vincular.erro', { codigo, protocolo: ctx.protocolo, detalhe: 'Código inválido' });
+    logAuditoria('cordao.vincular.erro', { codigo, protocolo: ctx.protocolo, guiche: ctx.guiche, detalhe: 'Código inválido' });
     return { ok: false, erro: `Código inválido: ${codigo}` };
   }
   const code = formatCodigo(parsed.cor, parsed.numero);
   const all = readCordoes();
   const idx = all.findIndex(c => c.codigo === code);
   if (idx < 0) {
-    logAuditoria('cordao.vincular.erro', { codigo: code, protocolo: ctx.protocolo, detalhe: 'Cordão não cadastrado no estoque' });
+    logAuditoria('cordao.vincular.erro', { codigo: code, protocolo: ctx.protocolo, guiche: ctx.guiche, detalhe: 'Cordão não cadastrado no estoque' });
     return { ok: false, erro: `Cordão ${code} não cadastrado. Imprima o lote no Admin.` };
   }
   const c = all[idx];
   if (c.protocolo && c.protocolo !== ctx.protocolo) {
     logAuditoria('cordao.vincular.conflito_protocolo', {
       codigo: code, protocolo: ctx.protocolo, protocoloEsperado: c.protocolo,
-      membroNome: c.membroNome,
+      membroNome: c.membroNome, guiche: ctx.guiche,
       detalhe: `Tentativa de vincular cordão de outro protocolo (correto: ${c.protocolo}).`,
     });
     return { ok: false, erro: `Cordão ${code} pertence ao protocolo ${c.protocolo}. Protocolo correto deste cordão: ${c.protocolo}.` };
@@ -202,11 +202,17 @@ export function vincularCordao(
     pcd: ctx.pcd,
     pcdDescricao: ctx.pcdDescricao,
     vinculadoEm: new Date().toISOString(),
+    vinculadoGuiche: ctx.guiche,
+    vinculadoPor: ctx.operador,
   };
   all[idx] = updated;
   writeCordoes(all);
-  logAuditoria('cordao.vincular.ok', { codigo: code, protocolo: ctx.protocolo, membroNome: ctx.membroNome });
-  try { enqueue('cordao.vincular', { codigo: code, protocolo: ctx.protocolo, grupoId: ctx.grupoId, membroNome: ctx.membroNome }); } catch { /* noop */ }
+  logAuditoria('cordao.vincular.ok', {
+    codigo: code, protocolo: ctx.protocolo, membroNome: ctx.membroNome, guiche: ctx.guiche,
+    detalhe: `${ctx.membroTipo === 'crianca' ? 'Criança' : 'Adulto'} · ${parsed.cor.toUpperCase()}${ctx.guiche ? ` · Guichê ${String(ctx.guiche).padStart(2, '0')}` : ''}${ctx.operador ? ` · por ${ctx.operador}` : ''}`,
+  });
+  try { enqueue('cordao.vincular', { codigo: code, protocolo: ctx.protocolo, grupoId: ctx.grupoId, membroNome: ctx.membroNome, guiche: ctx.guiche, operador: ctx.operador }); } catch { /* noop */ }
+
   return { ok: true, cordao: updated };
 }
 
