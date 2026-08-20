@@ -203,15 +203,22 @@ export default function AdminCordoes() {
                     {prefixoCor(l.cor)}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground font-mono-data">
+                    <p className="text-sm font-medium text-foreground font-mono-data flex items-center gap-2">
                       {formatCodigo(l.cor, l.inicio)} → {formatCodigo(l.cor, l.fim)}
+                      {l.autismo && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wide">
+                          <img src={fitaAutismo} alt="" loading="lazy" width={12} height={12} className="h-3 w-3 object-contain" /> TEA
+                        </span>
+                      )}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
                       {l.quantidade} cordões · {new Date(l.criadoEm).toLocaleString('pt-BR')}
                       {l.criadoPor && ` · por ${l.criadoPor}`}
+                      {l.autismo ? ' · com selo TEA' : ''}
                       {l.observacao && ` · ${l.observacao}`}
                     </p>
                   </div>
+
                 </div>
                 <Button size="sm" variant="outline" onClick={() => imprimirLote(l)} className="gap-1.5 flex-shrink-0">
                   <Printer className="h-3.5 w-3.5" /> Imprimir
