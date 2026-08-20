@@ -41,7 +41,9 @@ export default function AdminCordoes() {
 
   const [novaCor, setNovaCor] = useState<CordaoColor>('azul');
   const [novaQtd, setNovaQtd] = useState(50);
+  const [comAutismo, setComAutismo] = useState(false);
   const [obs, setObs] = useState('');
+
 
   const [busca, setBusca] = useState('');
 
