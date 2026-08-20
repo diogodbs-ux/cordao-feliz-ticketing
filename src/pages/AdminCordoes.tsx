@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   CordaoUnidade, LoteCordao, gerarLote, readCordoes, readLotes,
@@ -14,8 +15,24 @@ import { CordaoColor, getCordaoLabel, getCordaoTailwindBg, getCordaoTailwindText
 import { Printer, Plus, Tag, Layers, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import fitaAutismo from '@/assets/fita-autismo.png';
 
 const CORES_CORDAO: CordaoColor[] = ['azul', 'verde', 'amarelo', 'vermelho', 'rosa', 'cinza', 'preto'];
+
+/** Converte o selo TEA em data URL (necessário para a janela de impressão). */
+async function getFitaDataUrl(): Promise<string | null> {
+  try {
+    const res = await fetch(fitaAutismo);
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result as string);
+      fr.onerror = reject;
+      fr.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
 
 export default function AdminCordoes() {
   const { user } = useAuth();
@@ -24,7 +41,9 @@ export default function AdminCordoes() {
 
   const [novaCor, setNovaCor] = useState<CordaoColor>('azul');
   const [novaQtd, setNovaQtd] = useState(50);
+  const [comAutismo, setComAutismo] = useState(false);
   const [obs, setObs] = useState('');
+
 
   const [busca, setBusca] = useState('');
 
@@ -65,8 +84,10 @@ export default function AdminCordoes() {
       return;
     }
     try {
-      const { lote } = gerarLote(novaCor, novaQtd, user?.nome, obs.trim() || undefined);
-      toast.success(`Lote gerado: ${formatCodigo(lote.cor, lote.inicio)} → ${formatCodigo(lote.cor, lote.fim)}`);
+      const { lote } = gerarLote(novaCor, novaQtd, user?.nome, obs.trim() || undefined, { autismo: comAutismo });
+      toast.success(`Lote gerado: ${formatCodigo(lote.cor, lote.inicio)} → ${formatCodigo(lote.cor, lote.fim)}`, {
+        description: comAutismo ? 'Etiquetas com selo TEA (fita de peças).' : 'Etiquetas padrão (sem selo TEA).',
+      });
       setObs('');
       refresh();
     } catch (e: any) {
@@ -76,7 +97,8 @@ export default function AdminCordoes() {
 
   const imprimirLote = (lote: LoteCordao) => {
     const itens = cordoes.filter(c => c.loteId === lote.id);
-    abrirImpressao(itens, `Lote ${prefixoCor(lote.cor)} ${lote.inicio}–${lote.fim}`);
+    abrirImpressao(itens, `Lote ${prefixoCor(lote.cor)} ${lote.inicio}–${lote.fim}${lote.autismo ? ' · TEA' : ''}`);
+
   };
 
   return (
@@ -140,10 +162,30 @@ export default function AdminCordoes() {
             <Input value={obs} onChange={e => setObs(e.target.value)} placeholder="ex.: reposição operação 2026-05-05" className="mt-1" />
           </div>
         </div>
+
+        {/* Selo TEA (autismo) */}
+        <div className={cn(
+          'rounded-xl border p-3 flex items-center justify-between gap-3',
+          comAutismo ? 'border-primary/40 bg-primary/5' : 'border-border bg-secondary/40'
+        )}>
+          <div className="flex items-center gap-3 min-w-0">
+            <img src={fitaAutismo} alt="Selo de conscientização do autismo" loading="lazy" width={28} height={28} className="h-7 w-7 object-contain flex-shrink-0" />
+            <div className="text-xs min-w-0">
+              <p className="font-semibold text-foreground">Gerar com selo do autismo (TEA)</p>
+              <p className="text-muted-foreground">
+                Imprime a fita de peças discretamente no canto da etiqueta. Mantém a mesma sequência da cor —
+                ex.: {prefixoCor(novaCor)} sem selo até 0100 e {prefixoCor(novaCor)}-0101 em diante com selo.
+              </p>
+            </div>
+          </div>
+          <Switch checked={comAutismo} onCheckedChange={setComAutismo} aria-label="Gerar etiquetas com selo TEA" />
+        </div>
+
         <Button onClick={handleGerar} className="gap-2">
-          <Plus className="h-4 w-4" /> Gerar lote sequencial
+          <Plus className="h-4 w-4" /> Gerar lote sequencial {comAutismo ? '(com selo TEA)' : ''}
         </Button>
       </div>
+
 
       {/* Lotes existentes */}
       <div className="bg-card rounded-xl shadow-card p-5">
@@ -161,15 +203,22 @@ export default function AdminCordoes() {
                     {prefixoCor(l.cor)}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground font-mono-data">
+                    <p className="text-sm font-medium text-foreground font-mono-data flex items-center gap-2">
                       {formatCodigo(l.cor, l.inicio)} → {formatCodigo(l.cor, l.fim)}
+                      {l.autismo && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wide">
+                          <img src={fitaAutismo} alt="" loading="lazy" width={12} height={12} className="h-3 w-3 object-contain" /> TEA
+                        </span>
+                      )}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
                       {l.quantidade} cordões · {new Date(l.criadoEm).toLocaleString('pt-BR')}
                       {l.criadoPor && ` · por ${l.criadoPor}`}
+                      {l.autismo ? ' · com selo TEA' : ''}
                       {l.observacao && ` · ${l.observacao}`}
                     </p>
                   </div>
+
                 </div>
                 <Button size="sm" variant="outline" onClick={() => imprimirLote(l)} className="gap-1.5 flex-shrink-0">
                   <Printer className="h-3.5 w-3.5" /> Imprimir
@@ -226,6 +275,7 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
     return;
   }
   const logoUrl = await getLogoDataUrlForCanvas();
+  const fitaUrl = itens.some(i => i.autismo) ? await getFitaDataUrl() : null;
   const orgName = getBranding().orgName;
   const w = window.open('', '_blank', 'width=900,height=700');
   if (!w) { toast.error('Permita pop-ups para imprimir.'); return; }
@@ -249,7 +299,11 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
           <span>${it.cor.toUpperCase()}</span>
         </div>
         <div class="bc">${svgStr}</div>
-        <div class="code">${it.codigo}</div>
+        <div class="code">
+          ${it.codigo}
+          ${it.autismo && fitaUrl ? `<img src="${fitaUrl}" class="tea" alt="TEA" />` : ''}
+        </div>
+
         <div class="foot">${orgName.toUpperCase()}</div>
       </div>
     `;
