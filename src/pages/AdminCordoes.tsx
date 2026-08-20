@@ -275,6 +275,7 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
     return;
   }
   const logoUrl = await getLogoDataUrlForCanvas();
+  const fitaUrl = itens.some(i => i.autismo) ? await getFitaDataUrl() : null;
   const orgName = getBranding().orgName;
   const w = window.open('', '_blank', 'width=900,height=700');
   if (!w) { toast.error('Permita pop-ups para imprimir.'); return; }
@@ -298,7 +299,11 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
           <span>${it.cor.toUpperCase()}</span>
         </div>
         <div class="bc">${svgStr}</div>
-        <div class="code">${it.codigo}</div>
+        <div class="code">
+          ${it.codigo}
+          ${it.autismo && fitaUrl ? `<img src="${fitaUrl}" class="tea" alt="TEA" />` : ''}
+        </div>
+
         <div class="foot">${orgName.toUpperCase()}</div>
       </div>
     `;
