@@ -162,10 +162,30 @@ export default function AdminCordoes() {
             <Input value={obs} onChange={e => setObs(e.target.value)} placeholder="ex.: reposição operação 2026-05-05" className="mt-1" />
           </div>
         </div>
+
+        {/* Selo TEA (autismo) */}
+        <div className={cn(
+          'rounded-xl border p-3 flex items-center justify-between gap-3',
+          comAutismo ? 'border-primary/40 bg-primary/5' : 'border-border bg-secondary/40'
+        )}>
+          <div className="flex items-center gap-3 min-w-0">
+            <img src={fitaAutismo} alt="Selo de conscientização do autismo" loading="lazy" width={28} height={28} className="h-7 w-7 object-contain flex-shrink-0" />
+            <div className="text-xs min-w-0">
+              <p className="font-semibold text-foreground">Gerar com selo do autismo (TEA)</p>
+              <p className="text-muted-foreground">
+                Imprime a fita de peças discretamente no canto da etiqueta. Mantém a mesma sequência da cor —
+                ex.: {prefixoCor(novaCor)} sem selo até 0100 e {prefixoCor(novaCor)}-0101 em diante com selo.
+              </p>
+            </div>
+          </div>
+          <Switch checked={comAutismo} onCheckedChange={setComAutismo} aria-label="Gerar etiquetas com selo TEA" />
+        </div>
+
         <Button onClick={handleGerar} className="gap-2">
-          <Plus className="h-4 w-4" /> Gerar lote sequencial
+          <Plus className="h-4 w-4" /> Gerar lote sequencial {comAutismo ? '(com selo TEA)' : ''}
         </Button>
       </div>
+
 
       {/* Lotes existentes */}
       <div className="bg-card rounded-xl shadow-card p-5">
