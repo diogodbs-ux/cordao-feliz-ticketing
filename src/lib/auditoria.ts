@@ -34,8 +34,11 @@ export interface AuditoriaEvento {
   espacoId?: string;
   espacoNome?: string;
   membroNome?: string;
+  guiche?: number;             // guichê que executou (receptivo)
+  recreadorNome?: string;      // recreador responsável (espaços)
   detalhe?: string;
 }
+
 
 const KEY = 'sentinela_auditoria';
 const EVENT = 'sentinela:auditoria-changed';
