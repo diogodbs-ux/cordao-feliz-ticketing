@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   CordaoUnidade, LoteCordao, gerarLote, readCordoes, readLotes,
@@ -14,8 +15,24 @@ import { CordaoColor, getCordaoLabel, getCordaoTailwindBg, getCordaoTailwindText
 import { Printer, Plus, Tag, Layers, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import fitaAutismo from '@/assets/fita-autismo.png';
 
 const CORES_CORDAO: CordaoColor[] = ['azul', 'verde', 'amarelo', 'vermelho', 'rosa', 'cinza', 'preto'];
+
+/** Converte o selo TEA em data URL (necessário para a janela de impressão). */
+async function getFitaDataUrl(): Promise<string | null> {
+  try {
+    const res = await fetch(fitaAutismo);
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result as string);
+      fr.onerror = reject;
+      fr.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
 
 export default function AdminCordoes() {
   const { user } = useAuth();
