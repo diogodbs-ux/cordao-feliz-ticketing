@@ -27,6 +27,10 @@ export interface CordaoUnidade {
   vinculadoEm?: string;      // ISO
   devolvidoEm?: string;      // ISO — devolução no portão
   duracaoTotalSeg?: number;  // tempo total no parque (segundos)
+  autismo?: boolean;         // etiqueta impressa com o selo TEA (fita de peças)
+  // Auditoria do vínculo
+  vinculadoGuiche?: number;
+  vinculadoPor?: string;
   // Trilha de visitas (preenchida pelo recreador de espaço)
   visitas?: VisitaCordao[];
   criadoEm: string;
@@ -46,10 +50,12 @@ export interface LoteCordao {
   inicio: number;            // primeiro número do lote
   fim: number;               // último número do lote
   quantidade: number;
+  autismo?: boolean;         // lote impresso com o selo TEA
   criadoEm: string;
   criadoPor?: string;
   observacao?: string;
 }
+
 
 const STORAGE_CORDOES = 'sentinela_cordoes';
 const STORAGE_LOTES = 'sentinela_cordoes_lotes';
