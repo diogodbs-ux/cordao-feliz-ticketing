@@ -133,13 +133,20 @@ export function proximoNumero(cor: CordaoColor): number {
 }
 
 /** Gera um lote sequencial de cordões para uma cor. */
-export function gerarLote(cor: CordaoColor, quantidade: number, criadoPor?: string, observacao?: string): { lote: LoteCordao; novos: CordaoUnidade[] } {
+export function gerarLote(
+  cor: CordaoColor,
+  quantidade: number,
+  criadoPor?: string,
+  observacao?: string,
+  opts?: { autismo?: boolean }
+): { lote: LoteCordao; novos: CordaoUnidade[] } {
   if (quantidade <= 0) throw new Error('Quantidade inválida');
+  const autismo = !!opts?.autismo;
   const inicio = proximoNumero(cor);
   const fim = inicio + quantidade - 1;
   const loteId = crypto.randomUUID();
   const now = new Date().toISOString();
-  const lote: LoteCordao = { id: loteId, cor, inicio, fim, quantidade, criadoEm: now, criadoPor, observacao };
+  const lote: LoteCordao = { id: loteId, cor, inicio, fim, quantidade, autismo, criadoEm: now, criadoPor, observacao };
 
   const novos: CordaoUnidade[] = [];
   for (let n = inicio; n <= fim; n++) {
@@ -148,6 +155,7 @@ export function gerarLote(cor: CordaoColor, quantidade: number, criadoPor?: stri
       cor, numero: n,
       status: 'disponivel',
       loteId,
+      autismo,
       criadoEm: now,
     });
   }
@@ -155,6 +163,7 @@ export function gerarLote(cor: CordaoColor, quantidade: number, criadoPor?: stri
   writeCordoes([...readCordoes(), ...novos]);
   return { lote, novos };
 }
+
 
 /** Vincula um cordão a um protocolo (no check-in). Retorna mensagem de erro se houver. */
 export function vincularCordao(
