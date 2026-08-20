@@ -84,8 +84,10 @@ export default function AdminCordoes() {
       return;
     }
     try {
-      const { lote } = gerarLote(novaCor, novaQtd, user?.nome, obs.trim() || undefined);
-      toast.success(`Lote gerado: ${formatCodigo(lote.cor, lote.inicio)} → ${formatCodigo(lote.cor, lote.fim)}`);
+      const { lote } = gerarLote(novaCor, novaQtd, user?.nome, obs.trim() || undefined, { autismo: comAutismo });
+      toast.success(`Lote gerado: ${formatCodigo(lote.cor, lote.inicio)} → ${formatCodigo(lote.cor, lote.fim)}`, {
+        description: comAutismo ? 'Etiquetas com selo TEA (fita de peças).' : 'Etiquetas padrão (sem selo TEA).',
+      });
       setObs('');
       refresh();
     } catch (e: any) {
@@ -95,7 +97,8 @@ export default function AdminCordoes() {
 
   const imprimirLote = (lote: LoteCordao) => {
     const itens = cordoes.filter(c => c.loteId === lote.id);
-    abrirImpressao(itens, `Lote ${prefixoCor(lote.cor)} ${lote.inicio}–${lote.fim}`);
+    abrirImpressao(itens, `Lote ${prefixoCor(lote.cor)} ${lote.inicio}–${lote.fim}${lote.autismo ? ' · TEA' : ''}`);
+
   };
 
   return (
