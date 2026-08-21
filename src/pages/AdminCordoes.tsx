@@ -300,9 +300,10 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
         </div>
         <div class="bc">${svgStr}</div>
         <div class="code">
-          ${it.codigo}
-          ${it.autismo && fitaUrl ? `<img src="${fitaUrl}" class="tea" alt="TEA" />` : ''}
+          <span>${it.codigo}</span>
+          ${it.autismo && fitaUrl ? `<img src="${fitaUrl}" class="tea" alt="TEA" title="Transtorno do Espectro Autista" />` : ''}
         </div>
+
 
         <div class="foot">${orgName.toUpperCase()}</div>
       </div>
