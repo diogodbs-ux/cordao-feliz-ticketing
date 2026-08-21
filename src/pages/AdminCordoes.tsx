@@ -300,9 +300,10 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
         </div>
         <div class="bc">${svgStr}</div>
         <div class="code">
-          ${it.codigo}
-          ${it.autismo && fitaUrl ? `<img src="${fitaUrl}" class="tea" alt="TEA" />` : ''}
+          <span>${it.codigo}</span>
+          ${it.autismo && fitaUrl ? `<img src="${fitaUrl}" class="tea" alt="TEA" title="Transtorno do Espectro Autista" />` : ''}
         </div>
+
 
         <div class="foot">${orgName.toUpperCase()}</div>
       </div>
@@ -326,8 +327,10 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
       .bar-logo { height: 14px; width: auto; background: rgba(255,255,255,0.9); padding: 1px 3px; border-radius: 2px; }
       .bc { display: flex; justify-content: center; padding: 6px 4px 0; }
       .bc svg { width: 90%; height: 38px; }
-      .code { text-align: center; font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; padding: 2px 0 4px; }
+      .code { display:flex; align-items:center; justify-content:center; gap:4px; text-align: center; font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; padding: 2px 0 4px; }
+      .code .tea { height: 11px; width: 11px; object-fit: contain; flex: 0 0 auto; opacity: .95; }
       .foot { text-align:center; font-size: 8px; color:#888; letter-spacing:1px; padding: 0 0 5px; }
+
       @media print { .no-print { display:none; } }
     </style>
     </head><body>
