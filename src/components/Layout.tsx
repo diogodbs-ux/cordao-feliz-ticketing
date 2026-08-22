@@ -57,6 +57,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
       { label: 'Relatórios', icon: BarChart3, path: '/admin/relatorios' },
+      { label: 'Reconciliação', icon: ClipboardCheck, path: '/admin/reconciliacao' },
       { label: 'Fechamento 17h', icon: FileBarChart, path: '/fechamento' },
       { label: 'Encerramento 18h (Auto)', icon: DoorClosed, path: '/admin/encerramento' },
       { label: 'Histórico & Geo', icon: History, path: '/admin/historico' },

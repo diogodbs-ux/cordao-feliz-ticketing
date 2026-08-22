@@ -7,11 +7,14 @@ export interface ModulosConfig {
   telasOcultas: string[];
   /** Trava a navegação do recreador enquanto houver ciclo aberto */
   travarNavegacaoCicloAtivo: boolean;
+  /** Soma a presença estimada dos ciclos de espaço aos painéis gerenciais */
+  contabilizarCiclosComoPresenca: boolean;
 }
 
 export const DEFAULT_MODULOS: ModulosConfig = {
   telasOcultas: ['/portaria/devolucao'],
   travarNavegacaoCicloAtivo: false,
+  contabilizarCiclosComoPresenca: false,
 };
 
 export function readModulos(): ModulosConfig {
@@ -22,6 +25,7 @@ export function readModulos(): ModulosConfig {
     return {
       telasOcultas: Array.isArray(parsed.telasOcultas) ? parsed.telasOcultas : [],
       travarNavegacaoCicloAtivo: !!parsed.travarNavegacaoCicloAtivo,
+      contabilizarCiclosComoPresenca: !!parsed.contabilizarCiclosComoPresenca,
     };
   } catch {
     return DEFAULT_MODULOS;
