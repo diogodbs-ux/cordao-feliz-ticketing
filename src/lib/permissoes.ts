@@ -21,6 +21,7 @@ export const ALL_MENU_ITEMS: MenuItemDef[] = [
   { path: '/admin/historico', label: 'Histórico & Geo' },
   { path: '/admin/consolidado', label: 'Consolidado Anual' },
   { path: '/admin/relatorios', label: 'Relatórios' },
+  { path: '/admin/reconciliacao', label: 'Reconciliação Operacional' },
   { path: '/admin/ciclos', label: 'Ciclos por Espaço (Dashboard)' },
   { path: '/admin/rastreamento', label: 'Acompanhamento Público (Tokens)' },
   { path: '/admin/auditoria', label: 'Auditoria' },
