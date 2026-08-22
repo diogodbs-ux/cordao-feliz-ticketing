@@ -1,14 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import MLInsightsPanel from '@/components/MLInsightsPanel';
 import AlertsPanel from '@/components/AlertsPanel';
 import { CordaoColor, getCordaoLabel, PeriodoFiltro, filtrarPorPeriodo, getOrigemLabel, calcAdultCordoes } from '@/types';
-import { Users, Baby, Accessibility, BarChart3, Calendar, Target } from 'lucide-react';
+import { Users, Baby, Accessibility, BarChart3, Calendar, Target, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { getMetaDoAno } from '@/types/metas';
 import { agregadoMensalDoAno, totalAnual } from '@/lib/consolidado';
 import { Link } from 'react-router-dom';
+import { presencaDeCiclos } from '@/lib/reconciliacao';
+import { readModulos, subscribeModulos } from '@/lib/modulos';
+import { subscribeEspacosChange } from '@/types/espacos';
 
 const CORDAO_HEX: Record<CordaoColor, string> = {
   azul: '#4A90D9',
