@@ -384,6 +384,21 @@ export default function AdminConfiguracoes() {
           />
         </div>
 
+        <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-secondary/30 p-4 mb-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">Contabilizar ciclos do recreador como presença</p>
+            <p className="text-xs text-muted-foreground">
+              Soma aos painéis gerenciais (Dashboard, Coordenação, Relatório Final) a presença estimada dos ciclos de espaço
+              de protocolos que <strong>não passaram pelo guichê</strong>. A contagem é deduplicada por protocolo e marcada como <em>estimada</em>.
+            </p>
+          </div>
+          <Switch
+            checked={modulos.contabilizarCiclosComoPresenca}
+            onCheckedChange={v => salvarModulos({ ...modulos, contabilizarCiclosComoPresenca: v })}
+          />
+        </div>
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
           {ALL_MENU_ITEMS.map(item => {
             const visivel = !modulos.telasOcultas.includes(item.path);
