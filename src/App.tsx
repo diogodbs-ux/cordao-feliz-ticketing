@@ -106,6 +106,7 @@ const App = () => (
                 <Route path="admin/encerramento" element={<PermissionRoute path="/admin/encerramento" roles={['admin', 'coordenador']}><AdminEncerramento /></PermissionRoute>} />
                 <Route path="admin/heatmap" element={<PermissionRoute path="/admin/heatmap" roles={['admin', 'coordenador', 'supervisor']}><AdminHeatmap /></PermissionRoute>} />
                 <Route path="admin/crachas" element={<PermissionRoute path="/admin/crachas" roles={['admin', 'coordenador']}><CrachasRecreadoresAdmin /></PermissionRoute>} />
+                <Route path="admin/reconciliacao" element={<PermissionRoute path="/admin/reconciliacao" roles={['admin', 'coordenador', 'supervisor']}><AdminReconciliacao /></PermissionRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
