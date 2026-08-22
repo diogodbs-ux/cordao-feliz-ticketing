@@ -110,6 +110,18 @@ export default function AdminDashboard() {
   const specialAdults = anivHoje.filter((a: any) => a.checkinRealizado).reduce((acc: number, a: any) => acc + (a.convidados?.filter((c: any) => c.tipo === 'acompanhante').length || 0), 0)
     + instHoje.filter((i: any) => i.checkinRealizado).reduce((acc: number, i: any) => acc + (i.adultos?.length || 0), 0);
 
+  // Presença estimada pelos ciclos de espaço (quando habilitado em Configurações)
+  const [modulos, setModulos] = useState(() => readModulos());
+  const [ciclosTick, setCiclosTick] = useState(0);
+  useEffect(() => subscribeModulos(() => setModulos(readModulos())), []);
+  useEffect(() => subscribeEspacosChange(() => setCiclosTick(t => t + 1)), []);
+  const presCiclos = useMemo(
+    () => (modulos.contabilizarCiclosComoPresenca ? presencaDeCiclos(hoje, grupos) : null),
+    [modulos.contabilizarCiclosComoPresenca, hoje, grupos, ciclosTick],
+  );
+  const estCriancas = periodo === 'hoje' ? (presCiclos?.criancas || 0) : 0;
+  const estAdultos = periodo === 'hoje' ? (presCiclos?.adultos || 0) : 0;
+
   // Meta anual e progresso
   const anoAtual = new Date().getFullYear();
   const metaAtual = useMemo(() => getMetaDoAno(anoAtual), [anoAtual, checkins]);
