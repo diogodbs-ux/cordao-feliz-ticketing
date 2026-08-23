@@ -545,6 +545,8 @@ export default function RecreadorPanel() {
               })}
             </div>
           </div>
+            );
+          })}
         </div>
       )}
 
