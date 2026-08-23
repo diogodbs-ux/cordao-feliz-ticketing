@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { getCordaoTailwindBg, getCordaoTailwindText, GrupoVisita, getOrigemLabel } from '@/types';
+import { getCordaoTailwindBg, getCordaoTailwindText, GrupoVisita, getOrigemLabel, calcAdultCordoes } from '@/types';
+import { cordoesPorProtocolo, subscribeCordoesChange } from '@/types/cordoes';
 import { Search, Users, CheckCircle2, Accessibility, UserPlus, Eye, Info, Cake, Building, ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CordaoPopup from '@/components/CordaoPopup';
@@ -115,6 +116,36 @@ export default function RecreadorPanel() {
     const fromInst = instHoje.filter(i => i.checkinRealizado).reduce((a, l) => a + l.criancas.length, 0);
     return fromGrupos + fromAniv + fromInst;
   }, [gruposHoje, anivHoje, instHoje]);
+
+  // Atendidos hoje (todos os guichês) com status de vínculo de cordões
+  const [cordoesTick, setCordoesTick] = useState(0);
+  useEffect(() => subscribeCordoesChange(() => setCordoesTick(t => t + 1)), []);
+
+  const atendidosHoje = useMemo(() => {
+    return gruposHoje
+      .filter(g => g.checkinRealizado && g.checkinData === hoje)
+      .map(g => {
+        const esperados = g.responsavel.criancas.length + calcAdultCordoes(g.responsavel.criancas.length);
+        const vinculados = cordoesPorProtocolo(g.responsavel.protocolo).length;
+        return { grupo: g, esperados, vinculados };
+      })
+      .sort((a, b) => (b.grupo.checkinHora || '').localeCompare(a.grupo.checkinHora || ''));
+  }, [gruposHoje, hoje, cordoesTick]);
+
+  const porGuiche = useMemo(() => {
+    const map = new Map<number, { atendimentos: number; criancas: number; vinculados: number; esperados: number }>();
+    atendidosHoje.forEach(({ grupo, esperados, vinculados }) => {
+      const g = grupo.guiche || 0;
+      const cur = map.get(g) || { atendimentos: 0, criancas: 0, vinculados: 0, esperados: 0 };
+      cur.atendimentos += 1;
+      cur.criancas += grupo.responsavel.criancas.length;
+      cur.vinculados += vinculados;
+      cur.esperados += esperados;
+      map.set(g, cur);
+    });
+    return Array.from(map.entries()).sort((a, b) => b[1].atendimentos - a[1].atendimentos);
+  }, [atendidosHoje]);
+
 
   const handleConfirm = () => {
     if (!selectedGrupo || !user) return;
@@ -437,6 +468,72 @@ export default function RecreadorPanel() {
           </div>
         )}
       </div>
+
+      {/* Atendidos hoje — todos os guichês */}
+      {atendidosHoje.length > 0 && (
+        <div className="space-y-4">
+          <div className="bg-card rounded-xl shadow-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Produtividade por guichê — {hoje}</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {porGuiche.map(([g, v]) => (
+                <div
+                  key={g}
+                  className={cn(
+                    'rounded-lg border p-3',
+                    g === guiche ? 'border-primary bg-primary/5' : 'border-border bg-secondary/20'
+                  )}
+                >
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {g > 0 ? `Guichê ${String(g).padStart(2, '0')}` : 'Sem guichê'}
+                  </p>
+                  <p className="text-2xl font-bold font-mono-data text-foreground">{v.atendimentos}</p>
+                  <p className="text-[10px] text-muted-foreground">{v.criancas} criança(s)</p>
+                  <p className={cn('text-[10px] font-medium', v.vinculados >= v.esperados ? 'text-cordao-verde' : 'text-cordao-amarelo')}>
+                    {v.vinculados}/{v.esperados} cordões
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-card rounded-xl shadow-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Atendidos hoje ({atendidosHoje.length})</h3>
+            <div className="space-y-2">
+              {atendidosHoje.map(({ grupo, esperados, vinculados }) => {
+                const completo = esperados > 0 && vinculados >= esperados;
+                const parcial = vinculados > 0 && !completo;
+                return (
+                  <button
+                    key={grupo.id}
+                    onClick={() => setDetailGrupo(grupo)}
+                    className="w-full text-left flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:bg-secondary/40 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{grupo.responsavel.nome}</p>
+                      <p className="text-xs text-muted-foreground">
+                        #{grupo.responsavel.protocolo} · {grupo.responsavel.criancas.length} criança(s) ·{' '}
+                        {grupo.guiche ? `Guichê ${String(grupo.guiche).padStart(2, '0')}` : 'sem guichê'} · {grupo.atendidoPor} · {grupo.checkinHora}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        'shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full',
+                        completo
+                          ? 'bg-cordao-verde/15 text-cordao-verde'
+                          : parcial
+                            ? 'bg-cordao-amarelo/20 text-cordao-amarelo'
+                            : 'bg-destructive/10 text-destructive'
+                      )}
+                    >
+                      {completo ? `Vinculado ${vinculados}/${esperados}` : parcial ? `Parcial ${vinculados}/${esperados}` : 'Falta vincular'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <CordaoPopup
         grupo={selectedGrupo}

@@ -160,11 +160,11 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Total Atendidos', value: filteredStats.totalVisitantes + specialKids + specialAdults, icon: Users, color: 'text-primary' },
-          { label: 'Crianças', value: filteredStats.totalCriancas + specialKids, icon: Baby, color: 'text-cordao-verde' },
-          { label: 'Responsáveis', value: filteredStats.totalResponsaveis, icon: Users, color: 'text-cordao-rosa' },
-          { label: 'PCD Atendidos', value: filteredStats.totalPCD, icon: Accessibility, color: 'text-primary' },
-          { label: 'Pendentes', value: pendentes, icon: Calendar, color: 'text-cordao-amarelo' },
+          { label: 'Total Atendidos', value: filteredStats.totalVisitantes + specialKids + specialAdults + estCriancas + estAdultos, icon: Users, color: 'text-primary', extra: estCriancas + estAdultos },
+          { label: 'Crianças', value: filteredStats.totalCriancas + specialKids + estCriancas, icon: Baby, color: 'text-cordao-verde', extra: estCriancas },
+          { label: 'Responsáveis', value: filteredStats.totalResponsaveis, icon: Users, color: 'text-cordao-rosa', extra: 0 },
+          { label: 'PCD Atendidos', value: filteredStats.totalPCD, icon: Accessibility, color: 'text-primary', extra: 0 },
+          { label: 'Pendentes', value: pendentes, icon: Calendar, color: 'text-cordao-amarelo', extra: 0 },
         ].map(s => (
           <div key={s.label} className="bg-card rounded-xl shadow-card p-5">
             <div className="flex items-center justify-between mb-3">
@@ -172,6 +172,11 @@ export default function AdminDashboard() {
               <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</span>
             </div>
             <p className="text-3xl font-bold text-foreground font-mono-data">{s.value}</p>
+            {s.extra > 0 && (
+              <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                <Activity className="h-3 w-3 text-cordao-verde" /> inclui +{s.extra} de ciclos sem guichê
+              </p>
+            )}
           </div>
         ))}
       </div>
