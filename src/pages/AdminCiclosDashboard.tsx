@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CicloEspaco, EspacoLudico, readCiclos, readEspacos, subscribeEspacosChange } from '@/types/espacos';
+import { CicloEspaco, EspacoLudico, readCiclos, readEspacos, subscribeEspacosChange, idadesDeCiclos } from '@/types/espacos';
 import { CordaoUnidade, readCordoes, subscribeCordoesChange } from '@/types/cordoes';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
