@@ -299,10 +299,8 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
           <span>${it.cor.toUpperCase()}</span>
         </div>
         <div class="bc">${svgStr}</div>
-        <div class="code">
-          <span>${it.codigo}</span>
-          ${it.autismo && fitaUrl ? `<img src="${fitaUrl}" class="tea" alt="TEA" title="Transtorno do Espectro Autista" />` : ''}
-        </div>
+        <div class="code"><span>${it.codigo}</span></div>
+        ${it.autismo && fitaUrl ? `<div class="selos"><img src="${fitaUrl}" class="tea" alt="TEA" title="Transtorno do Espectro Autista" /></div>` : ''}
 
 
         <div class="foot">${orgName.toUpperCase()}</div>
@@ -328,7 +326,8 @@ async function abrirImpressao(itens: CordaoUnidade[], titulo: string) {
       .bc { display: flex; justify-content: center; padding: 6px 4px 0; }
       .bc svg { width: 90%; height: 38px; }
       .code { display:flex; align-items:center; justify-content:center; gap:4px; text-align: center; font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; padding: 2px 0 4px; }
-      .code .tea { height: 11px; width: 11px; object-fit: contain; flex: 0 0 auto; opacity: .95; }
+      .selos { display:flex; align-items:center; justify-content:center; gap:6px; padding: 0 0 3px; }
+      .selos img { height: 22px; width: auto; max-width: 22px; object-fit: contain; }
       .foot { text-align:center; font-size: 8px; color:#888; letter-spacing:1px; padding: 0 0 5px; }
 
       @media print { .no-print { display:none; } }
