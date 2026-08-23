@@ -116,6 +116,36 @@ export default function RecreadorPanel() {
     return fromGrupos + fromAniv + fromInst;
   }, [gruposHoje, anivHoje, instHoje]);
 
+  // Atendidos hoje (todos os guichês) com status de vínculo de cordões
+  const [cordoesTick, setCordoesTick] = useState(0);
+  useEffect(() => subscribeCordoesChange(() => setCordoesTick(t => t + 1)), []);
+
+  const atendidosHoje = useMemo(() => {
+    return gruposHoje
+      .filter(g => g.checkinRealizado && g.checkinData === hoje)
+      .map(g => {
+        const esperados = g.responsavel.criancas.length + calcAdultCordoes(g.responsavel.criancas.length);
+        const vinculados = cordoesPorProtocolo(g.protocolo).length;
+        return { grupo: g, esperados, vinculados };
+      })
+      .sort((a, b) => (b.grupo.checkinHora || '').localeCompare(a.grupo.checkinHora || ''));
+  }, [gruposHoje, hoje, cordoesTick]);
+
+  const porGuiche = useMemo(() => {
+    const map = new Map<number, { atendimentos: number; criancas: number; vinculados: number; esperados: number }>();
+    atendidosHoje.forEach(({ grupo, esperados, vinculados }) => {
+      const g = grupo.guiche || 0;
+      const cur = map.get(g) || { atendimentos: 0, criancas: 0, vinculados: 0, esperados: 0 };
+      cur.atendimentos += 1;
+      cur.criancas += grupo.responsavel.criancas.length;
+      cur.vinculados += vinculados;
+      cur.esperados += esperados;
+      map.set(g, cur);
+    });
+    return Array.from(map.entries()).sort((a, b) => b[1].atendimentos - a[1].atendimentos);
+  }, [atendidosHoje]);
+
+
   const handleConfirm = () => {
     if (!selectedGrupo || !user) return;
     if (isObservador) {
