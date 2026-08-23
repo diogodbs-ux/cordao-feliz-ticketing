@@ -95,3 +95,23 @@ export function subscribeEspacosChange(callback: () => void) {
     window.removeEventListener('storage', onStorage);
   };
 }
+
+/** Faixa etária correspondente à cor do cordão (usada nos painéis de ciclos). */
+export const FAIXA_POR_COR: Partial<Record<CordaoColor, string>> = {
+  azul: '0-3',
+  verde: '4-6',
+  amarelo: '7-9',
+  vermelho: '10-12',
+};
+
+/** Distribuição por faixa etária a partir das contagens rápidas por cor dos ciclos. */
+export function idadesDeCiclos(ciclos: CicloEspaco[]): Record<string, number> {
+  const acc: Record<string, number> = { '0-3': 0, '4-6': 0, '7-9': 0, '10-12': 0 };
+  ciclos.forEach(c => {
+    Object.entries(c.porCor || {}).forEach(([cor, qtd]) => {
+      const faixa = FAIXA_POR_COR[cor as CordaoColor];
+      if (faixa) acc[faixa] += Number(qtd) || 0;
+    });
+  });
+  return acc;
+}
