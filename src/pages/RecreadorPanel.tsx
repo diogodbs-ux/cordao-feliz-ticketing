@@ -469,6 +469,72 @@ export default function RecreadorPanel() {
         )}
       </div>
 
+      {/* Atendidos hoje — todos os guichês */}
+      {atendidosHoje.length > 0 && (
+        <div className="space-y-4">
+          <div className="bg-card rounded-xl shadow-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Produtividade por guichê — {hoje}</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {porGuiche.map(([g, v]) => (
+                <div
+                  key={g}
+                  className={cn(
+                    'rounded-lg border p-3',
+                    g === guiche ? 'border-primary bg-primary/5' : 'border-border bg-secondary/20'
+                  )}
+                >
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {g > 0 ? `Guichê ${String(g).padStart(2, '0')}` : 'Sem guichê'}
+                  </p>
+                  <p className="text-2xl font-bold font-mono-data text-foreground">{v.atendimentos}</p>
+                  <p className="text-[10px] text-muted-foreground">{v.criancas} criança(s)</p>
+                  <p className={cn('text-[10px] font-medium', v.vinculados >= v.esperados ? 'text-cordao-verde' : 'text-cordao-amarelo')}>
+                    {v.vinculados}/{v.esperados} cordões
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-card rounded-xl shadow-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Atendidos hoje ({atendidosHoje.length})</h3>
+            <div className="space-y-2">
+              {atendidosHoje.map(({ grupo, esperados, vinculados }) => {
+                const completo = esperados > 0 && vinculados >= esperados;
+                const parcial = vinculados > 0 && !completo;
+                return (
+                  <button
+                    key={grupo.id}
+                    onClick={() => setDetailGrupo(grupo)}
+                    className="w-full text-left flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:bg-secondary/40 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{grupo.responsavel.nome}</p>
+                      <p className="text-xs text-muted-foreground">
+                        #{grupo.responsavel.protocolo} · {grupo.responsavel.criancas.length} criança(s) ·{' '}
+                        {grupo.guiche ? `Guichê ${String(grupo.guiche).padStart(2, '0')}` : 'sem guichê'} · {grupo.atendidoPor} · {grupo.checkinHora}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        'shrink-0 text-[10px] font-semibold px-2 py-1 rounded-full',
+                        completo
+                          ? 'bg-cordao-verde/15 text-cordao-verde'
+                          : parcial
+                            ? 'bg-cordao-amarelo/20 text-cordao-amarelo'
+                            : 'bg-destructive/10 text-destructive'
+                      )}
+                    >
+                      {completo ? `Vinculado ${vinculados}/${esperados}` : parcial ? `Parcial ${vinculados}/${esperados}` : 'Falta vincular'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <CordaoPopup
         grupo={selectedGrupo}
         guiche={guiche}
