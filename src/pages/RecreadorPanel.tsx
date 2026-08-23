@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { getCordaoTailwindBg, getCordaoTailwindText, GrupoVisita, getOrigemLabel } from '@/types';
+import { getCordaoTailwindBg, getCordaoTailwindText, GrupoVisita, getOrigemLabel, calcAdultCordoes } from '@/types';
+import { cordoesPorProtocolo, subscribeCordoesChange } from '@/types/cordoes';
 import { Search, Users, CheckCircle2, Accessibility, UserPlus, Eye, Info, Cake, Building, ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CordaoPopup from '@/components/CordaoPopup';
@@ -125,7 +126,7 @@ export default function RecreadorPanel() {
       .filter(g => g.checkinRealizado && g.checkinData === hoje)
       .map(g => {
         const esperados = g.responsavel.criancas.length + calcAdultCordoes(g.responsavel.criancas.length);
-        const vinculados = cordoesPorProtocolo(g.protocolo).length;
+        const vinculados = cordoesPorProtocolo(g.responsavel.protocolo).length;
         return { grupo: g, esperados, vinculados };
       })
       .sort((a, b) => (b.grupo.checkinHora || '').localeCompare(a.grupo.checkinHora || ''));
