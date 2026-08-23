@@ -496,10 +496,23 @@ export default function RecreadorPanel() {
             </div>
           </div>
 
-          <div className="bg-card rounded-xl shadow-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Atendidos hoje ({atendidosHoje.length})</h3>
+          {([
+            { key: 'pendentes', titulo: 'Falta vincular cordão', tone: 'destructive' as const },
+            { key: 'vinculados', titulo: 'Cordões vinculados', tone: 'ok' as const },
+          ]).map(sec => {
+            const itens = atendidosHoje.filter(({ esperados, vinculados }) => {
+              const completo = esperados > 0 && vinculados >= esperados;
+              return sec.key === 'vinculados' ? completo : !completo;
+            });
+            if (itens.length === 0) return null;
+            return (
+          <div key={sec.key} className="bg-card rounded-xl shadow-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <span className={cn('h-2 w-2 rounded-full', sec.tone === 'ok' ? 'bg-cordao-verde' : 'bg-destructive')} />
+              {sec.titulo} ({itens.length})
+            </h3>
             <div className="space-y-2">
-              {atendidosHoje.map(({ grupo, esperados, vinculados }) => {
+              {itens.map(({ grupo, esperados, vinculados }) => {
                 const completo = esperados > 0 && vinculados >= esperados;
                 const parcial = vinculados > 0 && !completo;
                 return (
