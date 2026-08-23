@@ -58,12 +58,17 @@ export default function AdminCiclosDashboard() {
       const visitas = cordoes.flatMap(c => (c.visitas || [])
         .filter(v => v.espacoId === e.id && dentroPeriodo(v.entrada))
         .map(v => ({ cordao: c })));
-      const idades: Record<string, number> = { '0-3': 0, '4-6': 0, '7-9': 0, '10-12': 0 };
-      visitas.forEach(({ cordao }) => {
-        if (cordao.membroTipo !== 'crianca' || cordao.membroIdade === undefined) return;
-        const faixa = FAIXAS.find(f => cordao.membroIdade! >= f.min && cordao.membroIdade! <= f.max);
-        if (faixa) idades[faixa.label]++;
-      });
+      // Base: contagem rápida por cor lançada pelo recreador no ciclo
+      const idades = idadesDeCiclos(cs);
+      // Complemento: cordões efetivamente lidos com idade informada (sem duplicar a contagem por cor)
+      const semContagemPorCor = cs.every(c => Object.keys(c.porCor || {}).length === 0);
+      if (semContagemPorCor) {
+        visitas.forEach(({ cordao }) => {
+          if (cordao.membroTipo !== 'crianca' || cordao.membroIdade === undefined) return;
+          const faixa = FAIXAS.find(f => cordao.membroIdade! >= f.min && cordao.membroIdade! <= f.max);
+          if (faixa) idades[faixa.label]++;
+        });
+      }
       return {
         espaco: e,
         iniciados: cs.length,
