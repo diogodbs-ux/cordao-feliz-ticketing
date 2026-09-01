@@ -7,6 +7,11 @@ export interface User {
   senha: string;
   role: UserRole;
   guiche?: number;
+  /** foto do recreador (dataURL) exibida aos pais na avaliação */
+  fotoUrl?: string;
+  /** espaço lúdico onde o recreador está alocado */
+  espacoId?: string;
+  espacoNome?: string;
   permissoesExtras?: string[];
   permissoesBloqueadas?: string[];
   ativo: boolean;
