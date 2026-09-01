@@ -62,7 +62,7 @@ export default function AvaliacaoPublica() {
 
   const validar = () => {
     const res = validarVisitante(protocolo, telefone);
-    if (!res.ok) { toast.error(res.erro); return; }
+    if ('erro' in res) { toast.error(res.erro); return; }
     setVisitante(res.visitante);
   };
 
@@ -81,7 +81,7 @@ export default function AvaliacaoPublica() {
       });
     });
     const res = registrarAvaliacoes(visitante, itens);
-    if (!res.ok) { toast.error(res.erro); return; }
+    if ('erro' in res) { toast.error(res.erro); return; }
     setEnviado(true);
     toast.success(`Obrigado! ${res.total} avaliação(ões) enviadas.`);
   };
