@@ -12,6 +12,14 @@ export interface User {
   /** espaço lúdico onde o recreador está alocado */
   espacoId?: string;
   espacoNome?: string;
+  /** organograma: supervisor responsável (para coordenadores) */
+  supervisorId?: string;
+  /** organograma: coordenador responsável (para recreadores) */
+  coordenadorId?: string;
+  /** contato interno da equipe */
+  telefone?: string;
+  /** função/cargo descritivo exibido no organograma */
+  funcao?: string;
   permissoesExtras?: string[];
   permissoesBloqueadas?: string[];
   ativo: boolean;

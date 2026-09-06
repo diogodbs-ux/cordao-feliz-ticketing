@@ -21,7 +21,10 @@ export type AuditoriaAcao =
   | 'encerramento.executado'
   | 'avaliacao.validacao.bloqueada'
   | 'avaliacao.registrada'
-  | 'avaliacao.moderada';
+  | 'avaliacao.moderada'
+  | 'equipe.membro.criado'
+  | 'equipe.membro.atualizado'
+  | 'equipe.membro.removido';
 
 export interface AuditoriaEvento {
   id: string;
